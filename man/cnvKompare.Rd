@@ -40,7 +40,7 @@ cnvKompare(
 
 \item{max_overlap}{For a time-series plot, how many maximum overlapping points are allowed?}
 
-\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90%).}
+\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90\%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.}
 
@@ -60,7 +60,7 @@ A list of overall and pairwise percent concordance, concordant and discordant cy
 This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
 between different CNV callers if the sample ID is specified in unique fashion. For groups with more than 2 samples,
 optionally pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
-which reflects the percentage of each cytoband covered by CNV (rounded to the nearest 5%) and its absolute CN. Optionally,
+which reflects the percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
 the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
 Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
 it to a panel of genes of interest.

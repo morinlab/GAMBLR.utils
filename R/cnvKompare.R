@@ -5,7 +5,7 @@
 #' @details This function will compare CNV data between samples with multiple time points. It can also handle same-sample comparison
 #' between different CNV callers if the sample ID is specified in unique fashion. For groups with more than 2 samples,
 #' optionally pairwise comparisons can be performed. The comparison is made based on the internally calculated score,
-#' which reflects the percentage of each cytoband covered by CNV (rounded to the nearest 5%) and its absolute CN. Optionally,
+#' which reflects the percentage of each cytoband covered by CNV (rounded to the nearest 5\%) and its absolute CN. Optionally,
 #' the heatmap of cnvKompare scores can be returned. In addition, the function will return all concordant and discordant cytobands.
 #' Finally, the time series plot of CNV log ratios will be returned for all lymphoma genes, with further functionality to subset
 #' it to a panel of genes of interest.
@@ -19,7 +19,7 @@
 #' @param this_seq_type Seq type for returned CN segments. One of "genome" (default) or "capture".
 #' @param ignore_cytoband_labels Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.
 #' @param max_overlap For a time-series plot, how many maximum overlapping points are allowed?
-#' @param min_concordance Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90%).
+#' @param min_concordance Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90\%).
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.
 #' @param return_heatmap Boolean argument specifying whether to return a heatmap of cnvKompare scores. Default is TRUE.
 #' @param compare_pairwise Boolean argument specifying whether to perform pairwise comparisons if there are more than 2 time points in the group. Default is TRUE.
