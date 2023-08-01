@@ -23,6 +23,7 @@ Imports:
     GAMBLR.helpers,
     ggplot2,
     ggrepel,
+    glue,
     graphics,
     grDevices,
     maftools,
@@ -38,8 +39,6 @@ Imports:
     tibble,
     tidyr,
     utils
-Suggests: 
-    glue
 Remotes:
     morinLab/GAMBLR,
     morinLab/GAMBLR.helpers
