@@ -227,10 +227,10 @@ cnvKompare = function(patient_id,
   # VAF-like plot
   # genes
   if (projection %in% c("hg19", "grch37")) {
-    for_plot_lg = grch37_lymphoma_genes_bed %>%
+    for_plot_lg = GAMBLR.data::grch37_lymphoma_genes_bed %>%
       as.data.table()
   } else if (projection %in% c("hg38", "grch38")) {
-    for_plot_lg = hg38_lymphoma_genes_bed %>%
+    for_plot_lg = GAMBLR.data::hg38_lymphoma_genes_bed %>%
       as.data.table()
   }
   # did user specify particular genes of interest to display on the plot?

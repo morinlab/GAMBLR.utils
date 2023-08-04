@@ -37,10 +37,10 @@ gene_to_region = function(gene_symbol,
   
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    gene_coordinates = grch37_gene_coordinates
+    gene_coordinates = GAMBLR.data::grch37_gene_coordinates
     chr_select = paste0(c(c(1:22),"X","Y"))
   }else{
-    gene_coordinates = hg38_gene_coordinates
+    gene_coordinates = GAMBLR.data::hg38_gene_coordinates
     chr_select = paste0("chr", c(c(1:22),"X","Y"))
   }
   

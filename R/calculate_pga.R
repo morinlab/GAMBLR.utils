@@ -52,9 +52,9 @@ calculate_pga = function(this_seg,
 
   # ensure the specified projection is correct and define chromosome coordinates
   if (projection == "grch37") {
-    chr_coordinates = chromosome_arms_grch37
+    chr_coordinates = GAMBLR.data::chromosome_arms_grch37
   } else if (projection == "hg38") {
-    chr_coordinates = chromosome_arms_hg38
+    chr_coordinates = GAMBLR.data::chromosome_arms_hg38
   } else {
     stop(
       "You specified projection that is currently not supported. Please provide seg files in either hg38 or grch37."

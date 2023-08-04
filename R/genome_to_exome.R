@@ -41,9 +41,9 @@ genome_to_exome = function(maf,
       if(! genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37", "hg38", "GRCh38", "grch38")){
         stop("The genome build specified is not currently supported. Please refer to genome build in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38.")
       }else if(genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
-        this_genome_coordinates = target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
+        this_genome_coordinates = GAMBLR.data::target_regions_grch37 # if the genome build is a flavour of hg19, get its exome space
       }else if(genome_build %in% c("hg38", "GRCh38", "grch38")){
-        this_genome_coordinates = target_regions_hg38 # exome space for the variations of hg38
+        this_genome_coordinates = GAMBLR.data::target_regions_hg38 # exome space for the variations of hg38
       }
   }else{
       this_genome_coordinates = fread(custom_bed)

@@ -30,9 +30,9 @@ region_to_gene = function(region,
 
   #set mart based on selected genome projection
   if(genome_build == "grch37"){
-    gene_list = grch37_gene_coordinates
+    gene_list = GAMBLR.data::grch37_gene_coordinates
   }else if(genome_build == "hg38"){
-    gene_list = hg38_gene_coordinates
+    gene_list = GAMBLR.data::hg38_gene_coordinates
   }
 
   #rename columns to match downstream formats

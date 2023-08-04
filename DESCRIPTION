@@ -20,6 +20,7 @@ Imports:
     digest,
     dplyr,
     GAMBLR,
+    GAMBLR.data,
     GAMBLR.helpers,
     GenomicRanges,
     ggplot2,
@@ -43,6 +44,7 @@ Imports:
     utils
 Remotes:
     morinLab/GAMBLR,
+    morinLab/GAMBLR.data,
     morinLab/GAMBLR.helpers
 Encoding: UTF-8
 LazyData: true

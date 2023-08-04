@@ -58,7 +58,7 @@ get_coding_ssm_status = function(gene_symbols,
 
   if(missing(gene_symbols)){
     message("defaulting to all lymphoma genes")
-    gene_symbols = pull(lymphoma_genes, Gene)
+    gene_symbols = pull(GAMBLR.data::lymphoma_genes, Gene)
   }
 
   if(missing(these_samples_metadata)){
