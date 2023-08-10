@@ -19,10 +19,10 @@ Transform input maf columns to allow for usage of dplyr verbs.
 Transform input maf columns to allow for usage of dplyr verbs.
 Allowing for a stright-forward plotting workflow as well as downstream data aggregation and manipulation.
 This function expects a set number of columns to exist in the incoming maf in order for this to work.
-To view the columns, see bundled data; [GAMBLR::grande_maf].
+To view the columns, see bundled data in GAMBLR.data.
 }
 \examples{
 
-clean_maf = cleanup_maf(maf_df = grande_maf)
+clean_maf = cleanup_maf(maf_df = GAMBLR.data::sample_data$grch37$maf)
 
 }

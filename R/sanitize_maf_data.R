@@ -21,10 +21,11 @@
 #'
 #' @examples
 #'
-#' safe_oncomatrix_path = sanitize_maf_data(mutation_maf_data = grande_maf,
-#'                                          genes_keep = c("MYC", "ID3", "ARID1A",
-#'                                                         "FOXO1", "TP53", "FAT4",
-#'                                                         "IGLL5"))
+#' safe_oncomatrix_path = sanitize_maf_data(
+#'  mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
+#'  genes_keep = c("MYC", "ID3", "ARID1A",
+#'  "FOXO1", "TP53", "FAT4",
+#'  "IGLL5"))
 #'
 sanitize_maf_data = function(mutation_maf_path,
                              mutation_maf_data,
