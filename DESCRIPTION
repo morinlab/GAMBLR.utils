@@ -22,6 +22,7 @@ Imports:
     GAMBLR,
     GAMBLR.data,
     GAMBLR.helpers,
+    GAMBLR.viz,
     GenomicRanges,
     ggplot2,
     ggrepel,
