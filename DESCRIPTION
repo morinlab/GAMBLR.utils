@@ -10,7 +10,7 @@ Description: This package is part of the Genomic Analysis of Mature B-cell
 License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
-Imports: 
+Imports:
     circlize,
     ComplexHeatmap,
     config,
@@ -19,7 +19,6 @@ Imports:
     DBI,
     digest,
     dplyr,
-    GAMBLR,
     GAMBLR.data,
     GAMBLR.helpers,
     GAMBLR.viz,
@@ -44,9 +43,9 @@ Imports:
     tidyr,
     utils
 Remotes:
-    morinLab/GAMBLR,
-    morinLab/GAMBLR.data,
-    morinLab/GAMBLR.helpers
+    morinlab/GAMBLR.data,
+    morinlab/GAMBLR.helpers,
+    morinlab/GAMBLR.viz
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3

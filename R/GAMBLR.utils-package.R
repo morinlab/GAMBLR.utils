@@ -6,6 +6,7 @@
 #' @importFrom GAMBLR.helpers coding_class
 #' @importFrom GAMBLR.helpers region_to_chunks
 #' @importFrom GAMBLR.helpers socketWrite
+#' @importFrom GAMBLR.viz get_gambl_colours
 #' @importFrom GAMBLR.viz theme_Morons
 #' @importFrom graphics segments
 #' @importFrom grDevices col2rgb

@@ -47,7 +47,7 @@ maf_to_custom_track = function(maf_data,
     #add chr
     maf_data[,1] = unlist(lapply(maf_data[,1], function(x){paste0("chr", x)}))
   }
-  lymphgen_cols = get_gambl_colours(colour_column,verbose=verbose)
+  lymphgen_cols = GAMBLR.viz::get_gambl_colours(colour_column,verbose=verbose)
 
   colour_df = data.frame(group = names(lymphgen_cols), colour = lymphgen_cols)
 
