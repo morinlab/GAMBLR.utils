@@ -39,9 +39,9 @@ Path to file (.png).
 Load bam(s) and view the context around a mutation
 }
 \details{
-Load bam(s) and view the context around a mutation. 
-IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
-The simplest scenario is to run this command on a terminal (if using a Mac), 
+Load bam(s) and view the context around a mutation.
+IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
+The simplest scenario is to run this command on a terminal (if using a Mac),
 assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
 
 ```
@@ -60,7 +60,7 @@ Then obtain a socket and run this function as per the example.
 \dontrun{
 socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
 this_mutation = get_coding_ssm(seq_type="capture") \%>\% head(1)
-view_mutation_igv(this_mutation, 
+view_mutation_igv(this_mutation,
                   socket = socket,
                   this_seq_type = "capture",
                   colour_by = "READ_STRAND",

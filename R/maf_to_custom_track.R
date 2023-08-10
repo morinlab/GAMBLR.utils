@@ -6,7 +6,7 @@
 #' Optional parameters available for further customization of the returned file. For more information, refer to the parameter descriptions and function examples.
 #'
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
-#' @param these_samples_metadata Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run [GAMBLR::get_gambl_metadata] for all available samples.
+#' @param these_samples_metadata Optional argument, a metadata table subset to the samples of interest. If not provided, the function will return metadata for all available samples.
 #' @param seq_type The seq type you want back, default is "genome".
 #' @param output_file Name for your new bed file that can be uploaded as a custom track to UCSC.
 #' @param as_bigbed Boolean parameter controlling the format of the returned file. Default is FALSE.
@@ -58,7 +58,7 @@ maf_to_custom_track = function(maf_data,
     print(rgb_df)
   }
   if(missing(these_samples_metadata)){
-    meta = get_gambl_metadata(seq_type_filter = seq_type) %>% dplyr::select(sample_id,all_of(colour_column))
+    meta = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type) %>% dplyr::select(sample_id,all_of(colour_column))
   }else{
     meta = these_samples_metadata %>% dplyr::select(sample_id,all_of(colour_column))
   }

@@ -18,7 +18,7 @@
 #'
 #' small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
 #'
-#' my_metadata = get_gambl_metadata(seq_type_filter = "capture")
+#' my_metadata = GAMBLR.data::gambl_metadata
 #' reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
 #'
 #' complete_maf = supplement_maf(incoming_maf = small_maf,

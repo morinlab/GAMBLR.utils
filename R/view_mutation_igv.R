@@ -2,21 +2,21 @@
 #'
 #' @description Load bam(s) and view the context around a mutation
 #'
-#' @details Load bam(s) and view the context around a mutation. 
-#' IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
-#' The simplest scenario is to run this command on a terminal (if using a Mac), 
+#' @details Load bam(s) and view the context around a mutation.
+#' IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
+#' The simplest scenario is to run this command on a terminal (if using a Mac),
 #' assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
-#' 
+#'
 #' ```
 #' ssh -X gp10
 #' ```
-#' 
+#'
 #' then launch IGV (e.e. from a conda installation):
-#' 
+#'
 #' ```
 #' conda activate igv; igv &
 #' ```
-#' 
+#'
 #' Then obtain a socket and run this function as per the example.
 #'
 #' @param this_mutation Specify the mutation of interest in MAF format.
@@ -37,14 +37,14 @@
 #' \dontrun{
 #' socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
 #' this_mutation = get_coding_ssm(seq_type="capture") %>% head(1)
-#' view_mutation_igv(this_mutation, 
+#' view_mutation_igv(this_mutation,
 #'                   socket = socket,
 #'                   this_seq_type = "capture",
 #'                   colour_by = "READ_STRAND",
 #'                   squish = TRUE,
 #'                   viewaspairs = TRUE)
 #' }
-#' 
+#'
 view_mutation_igv = function(this_mutation,
                              this_seq_type = "genome",
                              igv_port = 60506,
@@ -65,26 +65,26 @@ view_mutation_igv = function(this_mutation,
   if(length(this_sample_id)>1){
     stop("provide a MAF with only one sample_id")
   }
-  
+
   start = pull(this_mutation,Start_Position)
   end = start
   chrom = pull(this_mutation,Chromosome)
   region = paste0(chrom,":",start-50,"-",end+50)
   sock = socket
-  
-    meta = get_gambl_metadata(seq_type_filter=this_seq_type) %>% 
+
+    meta = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type) %>%
       dplyr::filter(sample_id %in% this_sample_id)
-    
+
       genome_build = pull(meta,genome_build)
-    
+
     bam_path_pattern = "/projects/rmorin/projects/gambl-repos/gambl-rmorin/data/{seq_type}_bams/{sample_id}.{genome_build}.bam"
     bams = mutate(meta,bam_path=glue::glue(bam_path_pattern)) %>% pull(bam_path)
     if(!length(bams)){
       message(paste("no bams found for",sample_ids))
       return()
     }
-  
-  
+
+
   if(grepl("19",genome_build)||grepl("37",genome_build)){
     genome_build="hg19"
   }else{
@@ -103,7 +103,7 @@ view_mutation_igv = function(this_mutation,
     currently_loaded_bam <<- bams
   }
   IGVgoto(sock, region)
-  
+
   IGVsort(sock,sort_by)
   if(!missing(colour_by)){
     allowed = c("READ_STRAND","READ_GROUP","PAIR_ORIENTATION")

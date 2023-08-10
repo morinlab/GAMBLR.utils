@@ -39,7 +39,7 @@
 #'                                  "MYC",
 #'                                  "CREBBP",
 #'                                  "GNA13"),
-#'            projection = "hg38", 
+#'            projection = "hg38",
 #'            show_x_labels = FALSE)
 #'
 cnvKompare = function(patient_id,
@@ -56,7 +56,7 @@ cnvKompare = function(patient_id,
                       return_heatmap = TRUE,
                       compare_pairwise = TRUE,
                       show_x_labels = TRUE){
-                        
+
   # initialize output list
   output = list()
 
@@ -70,7 +70,7 @@ cnvKompare = function(patient_id,
 
   # retrieve sample ids if only patient id is specified
   if (missing(these_sample_ids)) {
-    these_sample_ids = get_gambl_metadata()
+    these_sample_ids = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type)
     these_sample_ids = dplyr::filter(these_sample_ids, patient_id == {{ patient_id }})
     these_sample_ids = pull(these_sample_ids, sample_id)
     message(paste0(

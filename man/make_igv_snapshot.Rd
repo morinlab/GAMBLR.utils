@@ -76,8 +76,8 @@ Specify the path to one or more bam files as a character vector to the `bams` pa
 The user can also specify regions of interest with either the `region` parameter (chr:start-end),
 or the user can directly supply the chromosome, start and end coordinates with the `chrom`, `start`, and `end` parameters.
 For more information and examples, refer to the function examples and parameter descriptions.
-IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port. 
-The simplest scenario is to run this command on a terminal (if using a Mac), 
+IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
+The simplest scenario is to run this command on a terminal (if using a Mac),
 assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
 
 ```
@@ -92,7 +92,7 @@ conda activate igv; igv &
 }
 \examples{
 \dontrun{
-this_sv = annotated_sv \%>\% 
+this_sv = annotated_sv \%>\%
  filter(gene=="ETV6")
 
 #you don't need to know the details for the bam file but you can supply it if you want
@@ -107,12 +107,12 @@ make_igv_snapshot(chrom = this_sv$chrom2,
                   this_sample_id = this_sv$tumour_sample_id,
                   out_path = "~/IGV_snapshots/")
 
-this_mutation = get_coding_ssm(seq_type="capture") \%>\% 
+this_mutation = get_coding_ssm(seq_type="capture") \%>\%
  head(1)
 
 make_igv_snapshot(socket = socket,
                   sample_ids = this_mutation$Tumor_Sample_Barcode,
-                  this_seq_type = "capture", 
+                  this_seq_type = "capture",
                   colour_by = "READ_STRAND")
 
 #run on a bunch of variants using apply:
@@ -125,6 +125,6 @@ apply(to_snapshot,1,function(x){
                    details = paste0(x["ref"],"-",x["alt"]),
                    gene = x["Hugo_Symbol"],
                    socket = socket)})
-}   
+}
 
 }

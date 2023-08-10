@@ -77,7 +77,7 @@ sv_to_custom_track = function(sv_bedpe,
     mutate(consensus_coo_dhitsig = names(all_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
 
-  meta = get_gambl_metadata() %>%
+  meta = GAMBLR.helpers::handle_metadata() %>%
     dplyr::select(sample_id, "consensus_coo_dhitsig", pathology) %>%
     mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
 

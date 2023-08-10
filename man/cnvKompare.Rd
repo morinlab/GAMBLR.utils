@@ -72,7 +72,7 @@ cnvKompare(patient_id = "13-26835",
                                  "MYC",
                                  "CREBBP",
                                  "GNA13"),
-           projection = "hg38", 
+           projection = "hg38",
            show_x_labels = FALSE)
 
 }

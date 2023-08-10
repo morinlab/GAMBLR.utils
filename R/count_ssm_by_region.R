@@ -9,7 +9,7 @@
 #' @param chromosome The chromosome you are restricting to (with or without a chr prefix).
 #' @param start Query start coordinate of the range you are restricting to.
 #' @param end Query end coordinate of the range you are restricting to.
-#' @param these_samples_metadata A metadata table subset to the sample IDs of interest. If not provided, the function will call `get_gambl_metadata` and regions will be returned for all samples in the metadata.
+#' @param these_samples_metadata A metadata table subset to the sample IDs of interest. If not provided, the function will return all metadata and regions will be returned for all samples in the metadata.
 #' @param all_mutations_in_these_regions If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of `get_ssm_by_region` on the entire region of interest and passing it to this function
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
 #' @param seq_type The seq_type you want back, default is genome.
@@ -23,7 +23,7 @@
 #'                            return_as = "region")
 #'
 #' #get meta data and subset
-#' my_metadata = get_gambl_metadata()
+#' my_metadata = GAMBLR.data::gambl_metadata
 #' fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
 #'
 #' #count SSMs for the selected sample subset and defined region.
@@ -40,7 +40,7 @@ count_ssm_by_region = function(region,
                                seq_type = "genome"){
 
   if(missing(these_samples_metadata)){
-    these_samples_metadata = get_gambl_metadata(seq_type_filter = seq_type)
+    these_samples_metadata = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type)
   }
   if(!missing(all_mutations_in_these_regions)){
     # function was provided the mutations already so we just need to subset it to the region of interest
