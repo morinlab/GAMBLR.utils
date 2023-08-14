@@ -22,13 +22,13 @@ Specify the initial MAF with `incoming_maf` (to be supplemented with missing sam
 give the function a filtered metadata table (with the sample IDs of interest) to the `these_samples_metadata`.
 }
 \examples{
-small_maf = get_coding_ssm(limit_cohort = "dlbcl_reddy",
-                           seq_type = "capture")
-
-small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
-
 my_metadata = GAMBLR.data::gambl_metadata
 reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
+
+small_maf = GAMBLR.data::sample_dat$maf$grch37 \%>\%
+ dplyr::filter(Tumor_Sample_Barcode \%in\% reddy_meta$Tumor_Sample_Barcode)
+
+small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
 
 complete_maf = supplement_maf(incoming_maf = small_maf,
                               these_samples_metadata = reddy_meta)

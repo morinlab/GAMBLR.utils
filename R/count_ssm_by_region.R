@@ -2,8 +2,6 @@
 #'
 #' @description Count the variants in a region with a variety of filtering options.
 #'
-#' @details This function internally calls [GAMBLR::get_ssm_by_region] thus, the parameters available to this function are arguments that are being passed to the internal call.
-#' For more details on how these parameters can be used, refer to [GAMBLR::get_ssm_by_region].
 #'
 #' @param region Region formatted like chrX:1234-5678 instead of specifying chromosome, start and end separately.
 #' @param chromosome The chromosome you are restricting to (with or without a chr prefix).

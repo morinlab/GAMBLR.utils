@@ -35,10 +35,6 @@ count_ssm_by_region(
 \description{
 Count the variants in a region with a variety of filtering options.
 }
-\details{
-This function internally calls [GAMBLR::get_ssm_by_region] thus, the parameters available to this function are arguments that are being passed to the internal call.
-For more details on how these parameters can be used, refer to [GAMBLR::get_ssm_by_region].
-}
 \examples{
 #define a region.
 my_region = gene_to_region(gene_symbol = "MYC",

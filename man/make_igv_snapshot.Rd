@@ -96,7 +96,7 @@ this_sv = annotated_sv \%>\%
  filter(gene=="ETV6")
 
 #you don't need to know the details for the bam file but you can supply it if you want
-tumour_bam = get_bams(sample = this_sv$tumour_sample_id)
+tumour_bam = GAMBLR.results::get_bams(sample = this_sv$tumour_sample_id)
 
 #run with no arguments to get the socket for a running IGV instance
 socket = make_igv_snapshot()
@@ -107,7 +107,7 @@ make_igv_snapshot(chrom = this_sv$chrom2,
                   this_sample_id = this_sv$tumour_sample_id,
                   out_path = "~/IGV_snapshots/")
 
-this_mutation = get_coding_ssm(seq_type="capture") \%>\%
+this_mutation = GAMBLR.data::sample_data$grch37$maf \%>\%
  head(1)
 
 make_igv_snapshot(socket = socket,

@@ -59,7 +59,8 @@ Then obtain a socket and run this function as per the example.
 \examples{
 \dontrun{
 socket = make_igv_snapshot() #run with no arguments to get the socket for a running IGV instance
-this_mutation = get_coding_ssm(seq_type="capture") \%>\% head(1)
+this_mutation = GAMBLR.data::sample_data$grch37$maf \%>\%
+ head(1)
 view_mutation_igv(this_mutation,
                   socket = socket,
                   this_seq_type = "capture",
