@@ -110,13 +110,8 @@ cnvKompare = function(patient_id,
       `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
       dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else {
-    message("Retreiving the CNV data using GAMBLR ...")
-    these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
-                                               sample_list = these_sample_ids,
-                                               from_flatfile = TRUE,
-                                               projection = projection,
-                                               with_chr_prefix = TRUE,
-                                               this_seq_type = this_seq_type)
+    message("You did not provide path to seg file or segments in data frame.")
+    stop("Please provide the seg data or retreive the CNV data using GAMBLR.results.")
   }
 
   these_samples_seg = these_samples_seg  %>%
