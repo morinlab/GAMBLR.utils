@@ -111,7 +111,8 @@ cnvKompare = function(patient_id,
       dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else {
     message("You did not provide path to seg file or segments in data frame.")
-    stop("Please provide the seg data or retreive the CNV data using GAMBLR.results.")
+    message("You can obtain the seg data by using GAMBLR.results::get_sample_cn_segments.")
+    stop("Please provide the seg data or retreive the CNV data.")
   }
 
   these_samples_seg = these_samples_seg  %>%
