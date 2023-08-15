@@ -19,7 +19,7 @@
 #'
 #' @return Nothing.
 #'
-#' @import tidyr dplyr
+#' @import tidyr dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples

@@ -14,7 +14,7 @@
 #'
 #' @return Nothing.
 #'
-#' @import dplyr tidyr
+#' @import dplyr tidyr GAMBLR.helpers
 #' @export
 #'
 #' @examples

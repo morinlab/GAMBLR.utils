@@ -28,7 +28,7 @@
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble
+#' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble GAMBLR.helpers
 #' @importFrom plyr round_any
 #' @export
 #'

@@ -30,7 +30,7 @@
 #'
 #' @return Path to file (.png).
 #'
-#' @import SRAdb
+#' @import SRAdb GAMBLR.helpers
 #' @export
 #'
 #' @examples

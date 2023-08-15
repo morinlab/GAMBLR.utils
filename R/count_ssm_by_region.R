@@ -12,7 +12,7 @@
 #' @param count_by Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample
 #' @param seq_type The seq_type you want back, default is genome.
 #'
-#' @import dplyr
+#' @import dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
