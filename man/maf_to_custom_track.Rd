@@ -21,7 +21,7 @@ maf_to_custom_track(
 \arguments{
 \item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
-\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will run [GAMBLR::get_gambl_metadata] for all available samples.}
+\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will return metadata for all available samples.}
 
 \item{seq_type}{The seq type you want back, default is "genome".}
 

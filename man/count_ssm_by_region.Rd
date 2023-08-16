@@ -26,7 +26,7 @@ count_ssm_by_region(
 
 \item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of `get_ssm_by_region` on the entire region of interest and passing it to this function}
 
-\item{these_samples_metadata}{A metadata table subset to the sample IDs of interest. If not provided, the function will call `get_gambl_metadata` and regions will be returned for all samples in the metadata.}
+\item{these_samples_metadata}{A metadata table subset to the sample IDs of interest. If not provided, the function will return all metadata and regions will be returned for all samples in the metadata.}
 
 \item{count_by}{Defaults to counting all variants. Specify 'sample_id' if you want to collapse and count only one per sample}
 
@@ -35,17 +35,13 @@ count_ssm_by_region(
 \description{
 Count the variants in a region with a variety of filtering options.
 }
-\details{
-This function internally calls [GAMBLR::get_ssm_by_region] thus, the parameters available to this function are arguments that are being passed to the internal call.
-For more details on how these parameters can be used, refer to [GAMBLR::get_ssm_by_region].
-}
 \examples{
 #define a region.
 my_region = gene_to_region(gene_symbol = "MYC",
                            return_as = "region")
 
 #get meta data and subset
-my_metadata = get_gambl_metadata()
+my_metadata = GAMBLR.data::gambl_metadata
 fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
 
 #count SSMs for the selected sample subset and defined region.

@@ -19,7 +19,7 @@
 #' @export
 #'
 #' @examples
-#' metadata = get_gambl_metadata()
+#' metadata = GAMBLR.data::gambl_metadata
 #' lymphgen = tidy_lymphgen(df = metadata,
 #'                          lymphgen_column_in = "lymphgen_with_cnv",
 #'                          lymphgen_column_out = "lymphgen_with_cnv_tidy",

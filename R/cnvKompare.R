@@ -28,7 +28,7 @@
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble
+#' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble GAMBLR.helpers
 #' @importFrom plyr round_any
 #' @export
 #'
@@ -39,7 +39,7 @@
 #'                                  "MYC",
 #'                                  "CREBBP",
 #'                                  "GNA13"),
-#'            projection = "hg38", 
+#'            projection = "hg38",
 #'            show_x_labels = FALSE)
 #'
 cnvKompare = function(patient_id,
@@ -56,7 +56,7 @@ cnvKompare = function(patient_id,
                       return_heatmap = TRUE,
                       compare_pairwise = TRUE,
                       show_x_labels = TRUE){
-                        
+
   # initialize output list
   output = list()
 
@@ -70,7 +70,7 @@ cnvKompare = function(patient_id,
 
   # retrieve sample ids if only patient id is specified
   if (missing(these_sample_ids)) {
-    these_sample_ids = get_gambl_metadata()
+    these_sample_ids = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type)
     these_sample_ids = dplyr::filter(these_sample_ids, patient_id == {{ patient_id }})
     these_sample_ids = pull(these_sample_ids, sample_id)
     message(paste0(
@@ -110,13 +110,9 @@ cnvKompare = function(patient_id,
       `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
       dplyr::mutate(CN = (2 * 2 ^ log.ratio))
   } else {
-    message("Retreiving the CNV data using GAMBLR ...")
-    these_samples_seg = get_sample_cn_segments(multiple_samples = TRUE,
-                                               sample_list = these_sample_ids,
-                                               from_flatfile = TRUE,
-                                               projection = projection,
-                                               with_chr_prefix = TRUE,
-                                               this_seq_type = this_seq_type)
+    message("You did not provide path to seg file or segments in data frame.")
+    message("You can obtain the seg data by using GAMBLR.results::get_sample_cn_segments.")
+    stop("Please provide the seg data or retreive the CNV data.")
   }
 
   these_samples_seg = these_samples_seg  %>%

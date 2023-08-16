@@ -14,13 +14,13 @@
 #'
 #' @return Nothing.
 #'
-#' @import dplyr tidyr
+#' @import dplyr tidyr GAMBLR.helpers GAMBLR.viz
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' #custom track with annotations
-#' all_sv = get_manta_sv(verbose = FALSE)
+#' all_sv = GAMBLR.data::sample_data$grch37$bedpe
 #' annotated_sv = annotate_sv(sv_data = all_sv)
 #' sv_to_custom_track(annotated_sv,
 #'                    output_file = "GAMBL_sv_custom_track_annotated.bed",
@@ -68,8 +68,8 @@ sv_to_custom_track = function(sv_bedpe,
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
 
-  coo_cols = get_gambl_colours("COO")
-  path_cols = get_gambl_colours("pathology")
+  coo_cols = GAMBLR.viz::get_gambl_colours("COO")
+  path_cols = GAMBLR.viz::get_gambl_colours("pathology")
   all_cols = c(coo_cols, path_cols)
   colour_df = data.frame(coo = names(all_cols), colour = all_cols)
 
@@ -77,7 +77,7 @@ sv_to_custom_track = function(sv_bedpe,
     mutate(consensus_coo_dhitsig = names(all_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
 
-  meta = get_gambl_metadata() %>%
+  meta = GAMBLR.helpers::handle_metadata() %>%
     dplyr::select(sample_id, "consensus_coo_dhitsig", pathology) %>%
     mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
 
