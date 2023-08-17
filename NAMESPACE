@@ -3,6 +3,7 @@
 export(FtestCNV)
 export(adjust_ploidy)
 export(annotate_maf_triplet)
+export(annotate_sv)
 export(calculate_pga)
 export(cleanup_maf)
 export(cnvKompare)
