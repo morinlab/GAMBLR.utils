@@ -41,7 +41,7 @@ A data frame with annotated SVs (gene symbol and entrez ID).
 Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \details{
-Specify a data frame with SVs (preferably the output from \link[GAMBLR.results:get_manta_sv]{GAMBLR.results::get_manta_sv}) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
+Specify a data frame with SVs (preferably the output from \code{GAMBLR.results::get_manta_sv} if the user has GSC-restricted access, or \code{GAMBLR.data::sample_data$grch37$bedpe} or \code{GAMBLR.data::sample_data$hg38$bedpe} otherwise) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
 }
 \examples{
 sv_df = get_manta_sv(verbose = FALSE)
