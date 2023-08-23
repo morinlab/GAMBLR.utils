@@ -38,6 +38,8 @@ complement alleles rows for - strand genes, then it can look for the adjacent ba
 the MAF data frame and provide triple sequences for them.
 }
 \examples{
+\dontrun{
 annotate_maf_triplet(maf, all_SNVs = FALSE, "C", "T")
+}
 
 }

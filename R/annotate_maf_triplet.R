@@ -20,7 +20,9 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' annotate_maf_triplet(maf, all_SNVs = FALSE, "C", "T")
+#' }
 #' 
 #This function gives triple sequence of provided mutated base
 annotate_maf_triplet = function(maf,
