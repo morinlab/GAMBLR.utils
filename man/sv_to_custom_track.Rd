@@ -23,9 +23,9 @@ Make a UCSC-ready custom track file from SV data.
 }
 \details{
 This function takes an incoming SV data frame and outputs a bed file, ready for visualization on the UCSC Genome Browser.
-Specify the output file with `output_file`, indicate if the incoming SVs are annotated with `is_annotated` (default is TRUE).
+Specify the output file with \code{output_file}, indicate if the incoming SVs are annotated with \code{is_annotated} (default is TRUE).
 Lastly, the user can also specify if the incoming SV data frame should be subset to specific mutation types (e.g deletions, duplications, insertions, etc.).
-This is specified with the `sv_name` parameter. Default is to include all SV subtypes.
+This is specified with the \code{sv_name} parameter. Default is to include all SV subtypes.
 }
 \examples{
 \dontrun{

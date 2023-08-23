@@ -27,9 +27,9 @@ A data frame with two extra columns (seq and motif).
 Checks for the presence of mutations at a given AID motif
 }
 \details{
-In positions that reference allele  "C" has been mutated, two nucleotides before and one nucleotide after it 
-will be captured. In positions that reference allele  "G" has been mutated, one nucleotide before and two nucleotides after it 
-will be captured. The other mutations will have "NO" for the sequence. 
+In positions that reference allele  "C" has been mutated, two nucleotides before and one nucleotide after it
+will be captured. In positions that reference allele  "G" has been mutated, one nucleotide before and two nucleotides after it
+will be captured. The other mutations will have "NO" for the sequence.
 Then, the forward orientation and reverse compliment of the motif will be generated and their presence in aquired reference
 allele "C" and reference allele "G" sequence will be checked, respectively. ("NO" for the rows that have different reference
 alleles)

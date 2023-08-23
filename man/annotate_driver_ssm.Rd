@@ -28,7 +28,7 @@ Incoming MAF, subset to putative driver mutations.
 Retrieve data or use the supplied data frame of genes to get/annotate MAF data indicating which rows are putative driver mutations.
 }
 \details{
-Provide a maf-like data frame with `maf_df` as the only required parameter. 
+Provide a maf-like data frame with \code{maf_df} as the only required parameter.
 For information on how to use the additional parameters, refer to the parameter descriptions and function examples.
 }
 \examples{

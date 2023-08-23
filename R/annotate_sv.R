@@ -2,7 +2,7 @@
 #'
 #' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
-#' @details Specify a data frame with SVs (preferably the output from [GAMBLR::get_manta_sv]) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#' @details Specify a data frame with SVs (preferably the output from [GAMBLR.results::get_manta_sv]) to the `sv_df` parameter and get back the same data frame with SV annotations.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.

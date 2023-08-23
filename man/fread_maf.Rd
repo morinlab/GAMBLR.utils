@@ -22,7 +22,7 @@ Read a MAF into R with options for what columns to keep (default all columns wil
 \details{
 This function lets the user specify a path to a MAF file on disk, this function then reads this MAF into R.
 The user has the option to keep specific columns from the incoming MAF file (default is to keep all columns).
-To return all available columns, set `return_cols = TRUE`. For specifying columns of interest, refer to the `select_cols` parameter.
+To return all available columns, set \code{return_cols = TRUE}. For specifying columns of interest, refer to the \code{select_cols} parameter.
 For more information, refer to the parameter descriptions as well as function examples.
 }
 \examples{

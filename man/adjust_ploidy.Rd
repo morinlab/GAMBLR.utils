@@ -23,7 +23,7 @@ adjust_ploidy(
 
 \item{pga}{If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.}
 
-\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\%).}
+\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\\%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.}
 
@@ -33,7 +33,7 @@ adjust_ploidy(
 A data frame in seg-consistent format with ploidy-adjusted log ratios.
 }
 \description{
-`adjust_ploidy` returns a seg file with log.ratios adjusted to the overall sample ploidy.
+\code{adjust_ploidy} returns a seg file with log.ratios adjusted to the overall sample ploidy.
 }
 \details{
 This function adjusts the ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame

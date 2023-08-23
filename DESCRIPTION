@@ -48,3 +48,4 @@ LazyData: true
 RoxygenNote: 7.2.3
 Suggests: 
     GAMBLR.results
+Roxygen: list(markdown = TRUE)

@@ -31,8 +31,8 @@ Subset maf file to only features that would be available in the WEX data.
 }
 \details{
 To subset an incoming MAF data frame to only show features that would be available in WEX data this function was developed.
-Pass the incoming MAF (genome) to the `maf` parameter as the only required parameter to run this function. Other parameters such as `custom_bed`,
-`genome_build`, `padding`, and `chr_prefixed` are also available for greater control of how this function operates.
+Pass the incoming MAF (genome) to the \code{maf} parameter as the only required parameter to run this function. Other parameters such as \code{custom_bed},
+\code{genome_build}, \code{padding}, and \code{chr_prefixed} are also available for greater control of how this function operates.
 Refer to parameter descriptions for more information on how to use the available parameters.
 }
 \examples{

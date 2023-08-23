@@ -27,10 +27,10 @@ bedpe data frame that is compatible with IGN browser.
 Write bedpe format data frame to a file that will work with IGV and UCSC genome browser.
 }
 \details{
-This function takes four parameters; a data frame with SVs, formatted as bedpe with `sv_df`.
-The `path` parameter lets the user control the output folder. The default is "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/".
-`file_name` for specifying the output file name. Results will be written to `results/icgc_dart/misc/`.
-Lastly, the `add_chr_prefix` lets the user control if chromosomes should be prefixed with "chr" or not.
+This function takes four parameters; a data frame with SVs, formatted as bedpe with \code{sv_df}.
+The \code{path} parameter lets the user control the output folder. The default is "/projects/rmorin/projects/gambl-repos/gambl-rmorin/results/icgc_dart/misc/".
+\code{file_name} for specifying the output file name. Results will be written to \verb{results/icgc_dart/misc/}.
+Lastly, the \code{add_chr_prefix} lets the user control if chromosomes should be prefixed with "chr" or not.
 The default is TRUE.
 }
 \examples{

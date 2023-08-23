@@ -72,23 +72,21 @@ Path to file (.png).
 Load bams and generate an IGV screenshot for one or more regions.
 }
 \details{
-Specify the path to one or more bam files as a character vector to the `bams` parameter.
-The user can also specify regions of interest with either the `region` parameter (chr:start-end),
-or the user can directly supply the chromosome, start and end coordinates with the `chrom`, `start`, and `end` parameters.
+Specify the path to one or more bam files as a character vector to the \code{bams} parameter.
+The user can also specify regions of interest with either the \code{region} parameter (chr:start-end),
+or the user can directly supply the chromosome, start and end coordinates with the \code{chrom}, \code{start}, and \code{end} parameters.
 For more information and examples, refer to the function examples and parameter descriptions.
 IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
 The simplest scenario is to run this command on a terminal (if using a Mac),
 assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
 
-```
-ssh -X gp10
-```
+\if{html}{\out{<div class="sourceCode">}}\preformatted{ssh -X gp10
+}\if{html}{\out{</div>}}
 
 then launch IGV (e.e. from a conda installation):
 
-```
-conda activate igv; igv &
-```
+\if{html}{\out{<div class="sourceCode">}}\preformatted{conda activate igv; igv &
+}\if{html}{\out{</div>}}
 }
 \examples{
 \dontrun{

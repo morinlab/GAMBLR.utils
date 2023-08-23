@@ -3,7 +3,7 @@
 #' @description Return genes residing in defined region(s).
 #'
 #' @details This function takes a region as a vector of characters, or a data frame with of regions (e.g output from `gene_to_region(return_as="df")`).
-#' and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to [GAMBLR::gene_to_region]).
+#' and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to [GAMBLR.utils::gene_to_region]).
 #'
 #' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".

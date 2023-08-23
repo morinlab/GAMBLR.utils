@@ -27,10 +27,10 @@ A data frame with a tidied lymphGen column
 Consolidate a column of LymphGen data in the original Subtype.Prediction output format to the GAMBLR tidy format.
 }
 \details{
-This function takes an incoming data frame (`df`) and consolidates a column of LymphGen data.
-Specify the column with the lymphgen data to be processed with `lymphgen_column_in` and
-what column to write the tidied data to with `lymphgen_column_out`.
-In addition, the user can also run this function with `relevel = TRUE` (default is FALSE),
+This function takes an incoming data frame (\code{df}) and consolidates a column of LymphGen data.
+Specify the column with the lymphgen data to be processed with \code{lymphgen_column_in} and
+what column to write the tidied data to with \code{lymphgen_column_out}.
+In addition, the user can also run this function with \code{relevel = TRUE} (default is FALSE),
 to return the output column as a factor with plot friendly levels.
 }
 \examples{
