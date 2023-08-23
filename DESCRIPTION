@@ -25,6 +25,7 @@ Imports:
     glue,
     graphics,
     grDevices,
+    IRanges,
     maftools,
     metaviz,
     plyr,

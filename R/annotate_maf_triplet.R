@@ -15,6 +15,7 @@
 #'
 #' @return A data frame with an extra column for triple sequence
 #'
+#' @rawNamespace import(IRanges, except = c("start", "end", "merge", "shift", "collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce"))
 #' @import Rsamtools dplyr
 #' @export
 #'

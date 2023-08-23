@@ -16,7 +16,7 @@
 #'
 #' @return A data frame with two extra columns (seq and motif).
 #'
-#' @rawNamespace import(IRanges, except = c("merge", "shift", "collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce")) 
+#' @rawNamespace import(IRanges, except = c("start", "end", "merge", "shift", "collapse", "union", "slice", "intersect", "setdiff", "desc", "reduce"))
 #' @rawNamespace import(GenomicRanges, except = c("merge", "shift", "union", "intersect", "setdiff", "reduce"))
 #' @import Rsamtools readr dplyr
 #' @export
