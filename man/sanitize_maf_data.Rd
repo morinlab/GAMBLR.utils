@@ -27,7 +27,7 @@ sanitize_maf_data(
 The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
 }
 \description{
-`sanitize_maf_data` returns an oncomatrix of patient/gene data indicating only data needed to produce an oncoplot.
+\code{sanitize_maf_data} returns an oncomatrix of patient/gene data indicating only data needed to produce an oncoplot.
 }
 \details{
 Write an oncomatrix from a MAF File for further plotting. This is meant to be run by individuals who have access to data sets to

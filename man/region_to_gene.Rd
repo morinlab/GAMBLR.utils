@@ -20,8 +20,8 @@ A data frame with gene(s) that are residing in the specified region(s).
 Return genes residing in defined region(s).
 }
 \details{
-This function takes a region as a vector of characters, or a data frame with of regions (e.g output from `gene_to_region(return_as="df")`).
-and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to [GAMBLR::gene_to_region]).
+This function takes a region as a vector of characters, or a data frame with of regions (e.g output from \code{gene_to_region(return_as="df")}).
+and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to \link{gene_to_region}).
 }
 \examples{
 myc_region = gene_to_region(gene_symbol = "MYC",

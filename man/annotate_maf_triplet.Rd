@@ -33,11 +33,13 @@ A data frame with an extra column for triple sequence
 Give triple sequence of mutated base with its adjacent bases (-1 and +1) based on the STRAND_VEP column of MAF
 }
 \details{
-It gives the reference and alternative alleles and looks for the rows of the data frame based on these values for + strand genes and their 
-complement alleles rows for - strand genes, then it can look for the adjacent bases in that mutation position. Also, it can look for all the SNVs in 
+It gives the reference and alternative alleles and looks for the rows of the data frame based on these values for + strand genes and their
+complement alleles rows for - strand genes, then it can look for the adjacent bases in that mutation position. Also, it can look for all the SNVs in
 the MAF data frame and provide triple sequences for them.
 }
 \examples{
+\dontrun{
 annotate_maf_triplet(maf, all_SNVs = FALSE, "C", "T")
+}
 
 }

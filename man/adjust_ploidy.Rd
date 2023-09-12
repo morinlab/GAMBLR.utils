@@ -23,7 +23,7 @@ adjust_ploidy(
 
 \item{pga}{If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.}
 
-\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\%).}
+\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\\%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.}
 
@@ -33,7 +33,7 @@ adjust_ploidy(
 A data frame in seg-consistent format with ploidy-adjusted log ratios.
 }
 \description{
-`adjust_ploidy` returns a seg file with log.ratios adjusted to the overall sample ploidy.
+\code{adjust_ploidy} returns a seg file with log.ratios adjusted to the overall sample ploidy.
 }
 \details{
 This function adjusts the ploidy of the sample using the percent of genome altered (PGA). The PGA is calculated internally, but can also be optionally provided as data frame
@@ -42,15 +42,13 @@ multi-sample seg file. The telomeres are always excluded from calculation, and s
 The chromosome prefix is handled internally per projection and does not need to be consistent.
 }
 \examples{
-sample_seg = GAMBLR.data::sample_data$grch37$seg \%>\%
- filter(ID = "02-13135T")
-sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
+all_sample_seg = GAMBLR.data::sample_data$grch37$seg
+all_sample_seg = dplyr::rename(all_sample_seg, "sample" = "ID")
 
+sample_seg = dplyr::filter(all_sample_seg, sample == "02-13135T")
 adjust_ploidy(this_seg = sample_seg)
 
-multi_sample_seg = GAMBLR.data::sample_data$grch37$seg \%>\%
- filter(ID  \%in\% c("02-13135T", "SU-DHL-4"))
-multi_sample_seg = dplyr::rename(multi_sample_seg, "sample" = "ID")
+multi_sample_seg = dplyr::filter(all_sample_seg, sample  \%in\% c("02-13135T", "SU-DHL-4"))
 adjust_ploidy(this_seg = multi_sample_seg)
 
 }

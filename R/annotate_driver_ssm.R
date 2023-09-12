@@ -16,9 +16,23 @@
 #' @export
 #'
 #' @examples
-#' driver_ssm = annotate_driver_ssm(maf_df = grande_maf,
-#'                                  lymphoma_type = "DLBCL",
-#'                                  noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365"))
+#' # Get MAF-format data frame 
+#' my_maf <- GAMBLR.data::sample_data$grch37$maf
+#' 
+#' # If you have GSC-restricted access, you can get your MAF-format data frame
+#' # by using `GAMBLR.results`
+#' my_meta <- GAMBLR.results::get_gambl_metadata()
+#' my_maf <- GAMBLR.results::get_ssm_by_samples(
+#'   these_samples_metadata = my_meta,
+#'   projection = "grch37"
+#' )
+#' 
+#' # Annotate driver SSM
+#' driver_ssm_b = annotate_driver_ssm(
+#'   maf_df = my_maf,
+#'   lymphoma_type = "DLBCL",
+#'   noncoding_regions=c("NFKBIZ"="chr3:101578206-101578365")
+#' )
 #'
 annotate_driver_ssm = function(maf_df,
                                lymphoma_type,
