@@ -18,7 +18,7 @@ Nothing.
 Annotates recurrent CNVs from a data frame with CNV data.
 }
 \details{
-This function takes a data frame with CNVs (`seq_df`) and annotates recurrent CNVs.
+This function takes a data frame with CNVs (\code{seq_df}) and annotates recurrent CNVs.
 }
 \examples{
 \dontrun{

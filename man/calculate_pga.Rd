@@ -30,7 +30,7 @@ calculate_pga(
 data frame
 }
 \description{
-`calculate_pga` returns a data.frame with estimated proportion of genome altered for each sample.
+\code{calculate_pga} returns a data.frame with estimated proportion of genome altered for each sample.
 }
 \details{
 This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of

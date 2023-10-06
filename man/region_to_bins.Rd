@@ -22,8 +22,8 @@ Data frame describing the bins various ways.
 Split a contiguous genomic region on a chromosome into non-overlapping bins
 }
 \details{
-This function takes genomic coordinates with the `chromosome`, `start`, and `end` parameters.
-Lastly, the user can also specify the bin size with `bin_size`. Default is 20000
+This function takes genomic coordinates with the \code{chromosome}, \code{start}, and \code{end} parameters.
+Lastly, the user can also specify the bin size with \code{bin_size}. Default is 20000
 }
 \examples{
 chr8q_bins = region_to_bins(chromosome = "8",

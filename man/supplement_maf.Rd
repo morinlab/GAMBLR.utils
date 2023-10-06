@@ -18,8 +18,8 @@ maf_df with complemented Tumor_Sample_Barcode and other columns ready to be used
 Complement maf with missing samples.
 }
 \details{
-Specify the initial MAF with `incoming_maf` (to be supplemented with missing samples) and
-give the function a filtered metadata table (with the sample IDs of interest) to the `these_samples_metadata`.
+Specify the initial MAF with \code{incoming_maf} (to be supplemented with missing samples) and
+give the function a filtered metadata table (with the sample IDs of interest) to the \code{these_samples_metadata}.
 }
 \examples{
 my_metadata = GAMBLR.data::gambl_metadata

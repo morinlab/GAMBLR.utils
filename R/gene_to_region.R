@@ -5,7 +5,7 @@
 #' @details This function takes one or multiple gene names, either as hugo symbols or Ensembl IDs
 #' and returns the coordinates for the selected genes in multiple formats (`return_as`).
 #' The possible return formats are; bed, data frame and in "region" format (chr:start-end).
-#' For returning genes residing in specific regions, see [GAMBLR::region_to_gene].
+#' For returning genes residing in specific regions, see [GAMBLR.utils::region_to_gene].
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
 #' @param ensembl_id A vector of one or more Ensembl IDs.

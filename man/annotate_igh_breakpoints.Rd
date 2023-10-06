@@ -22,7 +22,16 @@ Returns a modified bedpe with additional columns.
 The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions).
 }
 \examples{
-manta_sv = get_manta_sv(verbose = FALSE)
+# Get Manta SVs
+manta_sv = GAMBLR.data::sample_data$grch37$bedpe
+
+# If you have GSC-restricted access, you can retrieve Manta SVs using GAMBLR.results
+my_meta = GAMBLR.results::get_gambl_metadata()
+my_samples = my_meta$sample_id
+manta_sv = GAMBLR.results::get_manta_sv(these_samples_metadata = my_meta,
+                                        these_sample_ids = my_samples, verbose = FALSE)
+
+# Annotate IGH breakpoints
 all_annotated = annotate_sv(sv_data = manta_sv)
 ig_annotated = annotate_igh_breakpoints(all_annotated)
 

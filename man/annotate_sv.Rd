@@ -19,8 +19,8 @@ annotate_sv(
 \item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
 Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.
- CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
-  1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched}
+CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
+1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched}
 
 \item{partner_bed}{Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene}
 
@@ -41,7 +41,7 @@ A data frame with annotated SVs (gene symbol and entrez ID).
 Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \details{
-Specify a data frame with SVs (preferably the output from [GAMBLR::get_manta_sv]) to the `sv_df` parameter and get back the same data frame with SV annotations.
+Specify a data frame with SVs (preferably the output from \code{GAMBLR.results::get_manta_sv} if the user has GSC-restricted access, or \code{GAMBLR.data::sample_data$grch37$bedpe} or \code{GAMBLR.data::sample_data$hg38$bedpe} otherwise) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
 }
 \examples{
 sv_df = get_manta_sv(verbose = FALSE)

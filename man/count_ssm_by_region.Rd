@@ -24,7 +24,7 @@ count_ssm_by_region(
 
 \item{end}{Query end coordinate of the range you are restricting to.}
 
-\item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of `get_ssm_by_region` on the entire region of interest and passing it to this function}
+\item{all_mutations_in_these_regions}{If you are calling this function many times (e.g. bins spanning a larger region), to save a ton of time you are strongly encouraged to provide the output of \code{get_ssm_by_region} on the entire region of interest and passing it to this function}
 
 \item{these_samples_metadata}{A metadata table subset to the sample IDs of interest. If not provided, the function will return all metadata and regions will be returned for all samples in the metadata.}
 
