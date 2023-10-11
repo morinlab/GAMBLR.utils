@@ -3,6 +3,15 @@
 #' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
 #' @details Specify a data frame with SVs (preferably the output from `GAMBLR.results::get_manta_sv` if the user has GSC-restricted access, or `GAMBLR.data::sample_data$grch37$bedpe` or `GAMBLR.data::sample_data$hg38$bedpe` otherwise) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#' 
+#' Before printing the SV-annotated data frame, the function uses the `priority_to_be_oncogene` 
+#' parameter to filter rows. If there is any pair of rows where (1) the values of their columns &mdash; 
+#' other than "gene", "partner" and "fusion" &mdash; are the same, (2) the "gene" of a row is the 
+#' "partner" of the other and vice versa, and (3) at least one of the genes is listed in 
+#' `priority_to_be_oncogene`, the function keeps only that row where the "gene" column contains the 
+#' gene with the highest priority to be oncogene (see how priority is given in the description of 
+#' this parameter). If neither of the rows contains a gene listed in `priority_to_be_oncogene` in 
+#' their "gene" column, both rows are kept and a warning message followed by the row values is printed.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
@@ -15,7 +24,11 @@
 #' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
 #' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37.
-#'
+#' @param priority_to_be_oncogene Vector of gene names (default is `c("MYC", "BCL6")`) used to filter 
+#' rows based on genes that have the highest priority to be considered oncogenes. Genes to the left 
+#' (*i.e.* first elements of this vector) have higher priority; non-listed genes have the lowest priority. 
+#' See **Details** section for more information.
+#' 
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
@@ -36,7 +49,8 @@ annotate_sv = function(sv_data,
                        collapse_redundant = FALSE,
                        return_as = "bedpe",
                        blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 187728888,187728892, 187728893,188305164),
-                       genome_build = "grch37"){
+                       genome_build = "grch37",
+                       priority_to_be_oncogene = c("MYC", "BCL6")){
   
   # remove duplicate rows in sv_data, if any
   sv_data <- unique(sv_data)
@@ -128,11 +142,6 @@ annotate_sv = function(sv_data,
   dup_marker <- all.annotated$all_cols_marker [ duplicated(all.annotated$all_cols_marker) ] %>% 
     unique
   
-  # if both genes are oncogenes and partners, remove row according to gene prioritization of being oncogene.
-  # `priority_to_be_oncogene` contains the genes with high priority to be oncogene. genes to the left have higher priority. all non-listed genes have the lowest priority.
-  # if both genes have the lowest priority of being oncogene, no rows are removed, but reported.
-  priority_to_be_oncogene <- c("MYC", "BCL6")
-  
   # add column that stores row numbers, it will be used later to rearrange the rows
   all.annotated <- mutate(all.annotated, row_num = row_number())
   
@@ -146,7 +155,9 @@ annotate_sv = function(sv_data,
   # check whether duplications are in pairs
   stopifnot( "There are duplicate rows that are not in pairs." = all( lapply(all.annotated$duplicate, nrow) == 2 ) )
   
-  # remove duplicate rows
+  # if both genes are oncogenes and partners, remove row according to gene prioritization of being oncogene.
+  # `priority_to_be_oncogene` contains the genes with high priority to be oncogene. genes to the left have higher priority. all non-listed genes have the lowest priority.
+  # if both genes have the lowest priority of being oncogene, no rows are removed, but reported.
   all.annotated$duplicate <- lapply(all.annotated$duplicate, function(dup_pair){
     for(gene_i in priority_to_be_oncogene){
       is_priority_gene <- dup_pair$gene == gene_i
