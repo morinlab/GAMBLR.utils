@@ -2,20 +2,37 @@
 #'
 #' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
-#' @details Specify a data frame with SVs (preferably the output from `GAMBLR.results::get_manta_sv` if the user has GSC-restricted access, or `GAMBLR.data::sample_data$grch37$bedpe` or `GAMBLR.data::sample_data$hg38$bedpe` otherwise) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#' @details Specify a data frame with SVs (preferably the output from `GAMBLR.results::get_manta_sv` 
+#' if the user has GSC-restricted access, or `GAMBLR.data::sample_data$grch37$bedpe` or 
+#' `GAMBLR.data::sample_data$hg38$bedpe` otherwise) to the `sv_df` parameter and get back the same 
+#' data frame with SV annotations. Alternatively, you can also provide your own data frame to the 
+#' `sv_data` argument, which should contain the following columns: CHROM_A, START_A, END_A, CHROM_B, 
+#' START_B, END_B, NAME, SOMATIC_SCORE, STRAND_A, STRAND_B, TYPE, FILTER, VAF_tumour, VAF_normal, 
+#' DP_tumour, DP_normal, tumour_sample_id, normal_sample_id, pair_status.
+#' 
+#' Before printing the SV-annotated data frame, the function uses the `priority_to_be_oncogene` 
+#' parameter to filter rows. If there is any pair of rows where (1) the values of their columns &mdash; 
+#' other than "gene", "partner" and "fusion" &mdash; are the same, (2) the "gene" of a row is the 
+#' "partner" of the other and vice versa, and (3) at least one of the genes is listed in 
+#' `priority_to_be_oncogene`, the function keeps only that row where the "gene" column contains the 
+#' gene with the highest priority to be oncogene (see how priority is given in the description of 
+#' this parameter). If neither of the rows contains a gene listed in `priority_to_be_oncogene` in 
+#' their "gene" column, both rows are kept and a warning message followed by the row values is printed.
 #'
-#' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
+#' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame (see format in **Details** section).
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
 #' Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.
-#'  CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
-#'   1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched
 #' @param partner_bed Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene
 #' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix. Default is FALSE.
 #' @param collapse_redundant Remove reciprocal events and only return one per event. Default is FALSE.
 #' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
 #' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37.
-#'
+#' @param priority_to_be_oncogene Vector of gene names (default is `c("MYC", "BCL6")`) used to filter 
+#' rows based on genes that have the highest priority to be considered oncogenes. Genes to the left 
+#' (*i.e.* first elements of this vector) have higher priority; non-listed genes have the lowest priority. 
+#' See **Details** section for more information.
+#' 
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
@@ -36,7 +53,11 @@ annotate_sv = function(sv_data,
                        collapse_redundant = FALSE,
                        return_as = "bedpe",
                        blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 187728888,187728892, 187728893,188305164),
-                       genome_build = "grch37"){
+                       genome_build = "grch37",
+                       priority_to_be_oncogene = c("MYC", "BCL6")){
+  
+  # remove duplicate rows in sv_data, if any
+  sv_data <- unique(sv_data)
   
   bedpe1 = sv_data %>%
     dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", ends_with("SCORE"), "STRAND_A")
@@ -109,6 +130,87 @@ annotate_sv = function(sv_data,
   
   all.annotated = dplyr::filter(all.annotated, !start1 %in% blacklist)
   all.annotated = dplyr::filter(all.annotated, !start2 %in% blacklist)
+  
+  
+  ### filter out any duplicate row in `all.annotated`
+  
+  # remove duplicated rows (considering all columns; may happen when, e.g., both are oncogenes)
+  all.annotated = unique(all.annotated)
+  
+  # give a unique marker to each non-duplicate row (don't consider gene, partner and fusion columns)
+  all.annotated <- select(all.annotated, !c(entrez, gene, partner, fusion)) %>% 
+    tidyr::unite(all_cols_marker, everything(), remove = TRUE) %>% 
+    cbind(all.annotated, .)
+  
+  # get duplicate row markers
+  dup_marker <- all.annotated$all_cols_marker [ duplicated(all.annotated$all_cols_marker) ] %>% 
+    unique
+  
+  # add column that stores row numbers, it will be used later to rearrange the rows
+  all.annotated <- mutate(all.annotated, row_num = row_number())
+  
+  # from all rows, separate those with any duplicate marker
+  all.annotated <- split(all.annotated, all.annotated$all_cols_marker %in% dup_marker) %>% 
+    setNames( ifelse( names(.) == "TRUE", "duplicate", "not_duplicate" ) )
+  
+  # separate duplicate rows by markers
+  all.annotated$duplicate <- split(all.annotated$duplicate, dup_marker)
+  
+  # check whether duplications are in pairs
+  stopifnot( "There are duplicate rows that are not in pairs." = all( lapply(all.annotated$duplicate, nrow) == 2 ) )
+  
+  # if both genes are oncogenes and partners, remove row according to gene prioritization of being oncogene.
+  # `priority_to_be_oncogene` contains the genes with high priority to be oncogene. genes to the left have higher priority. all non-listed genes have the lowest priority.
+  # if both genes have the lowest priority of being oncogene, no rows are removed, but reported.
+  all.annotated$duplicate <- lapply(all.annotated$duplicate, function(dup_pair){
+    for(gene_i in priority_to_be_oncogene){
+      is_priority_gene <- dup_pair$gene == gene_i
+      if(any(is_priority_gene))
+        break
+    }
+    switch(
+      as.character( sum(is_priority_gene) ),
+      "0" = {
+        # both genes have the lowest priority to be oncogene
+        # if they are partner of each other, report this error
+        if( all( !is.na(dup_pair$partner) ) ){
+          message("Warning: There are two rows with the same values, but inverted ones for the `gene` and `partner` columns (i.e. both genes as oncogene and partner of each other). However, neither of them is listed as a gene with high priority to be oncogene (included in the `priority_to_be_oncogene` object). See these rows below:")
+          select(dup_pair, -all_cols_marker) %>% 
+            print
+          message("Despite that, both rows were kept.\n")
+        }
+        dup_pair
+      },
+      "1" = {
+        # one gene with a higher priority
+        # if both genes are partners of each other, remove the row with the lower priority gene as oncogene
+        if( all( !is.na(dup_pair$partner) ) ){
+          filter(dup_pair, is_priority_gene)
+        }else{
+          dup_pair
+        }
+      },
+      {
+        message("Error: `as.character(sum(is_priority_gene))` when `gene_i` is the data frame")
+        select(dup_pair, -all_cols_marker) %>% 
+          print
+        k <- as.character(sum(is_priority_gene)) %>% 
+          gettextf("\r is \"%s\", but it should be either \"0\" or \"1\"." , .)
+        stop(k)
+      }
+    )
+  }) %>% 
+    bind_rows
+  
+  # merge the not_duplicate and duplicate data frames
+  all.annotated <- bind_rows(all.annotated)
+  
+  # rearrange rows
+  all.annotated <- arrange(all.annotated, row_num)
+  
+  # remove temporary columns
+  all.annotated = select(all.annotated, -all_cols_marker, -row_num)
+  
   
   if(return_as == "bedpe"){
     all.annotated$name = "."

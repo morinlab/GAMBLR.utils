@@ -12,15 +12,14 @@ annotate_sv(
   return_as = "bedpe",
   blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840,
     65217851, 187728889, 187728888, 187728892, 187728893, 188305164),
-  genome_build = "grch37"
+  genome_build = "grch37",
+  priority_to_be_oncogene = c("MYC", "BCL6")
 )
 }
 \arguments{
-\item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
+\item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame (see format in \strong{Details} section).
 Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
-Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.
-CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
-1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched}
+Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.}
 
 \item{partner_bed}{Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene}
 
@@ -33,6 +32,11 @@ CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A 
 \item{blacklist}{A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.}
 
 \item{genome_build}{Reference genome build parameter, default is grch37.}
+
+\item{priority_to_be_oncogene}{Vector of gene names (default is \code{c("MYC", "BCL6")}) used to filter
+rows based on genes that have the highest priority to be considered oncogenes. Genes to the left
+(\emph{i.e.} first elements of this vector) have higher priority; non-listed genes have the lowest priority.
+See \strong{Details} section for more information.}
 }
 \value{
 A data frame with annotated SVs (gene symbol and entrez ID).
@@ -41,7 +45,22 @@ A data frame with annotated SVs (gene symbol and entrez ID).
 Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \details{
-Specify a data frame with SVs (preferably the output from \code{GAMBLR.results::get_manta_sv} if the user has GSC-restricted access, or \code{GAMBLR.data::sample_data$grch37$bedpe} or \code{GAMBLR.data::sample_data$hg38$bedpe} otherwise) to the \code{sv_df} parameter and get back the same data frame with SV annotations.
+Specify a data frame with SVs (preferably the output from \code{GAMBLR.results::get_manta_sv}
+if the user has GSC-restricted access, or \code{GAMBLR.data::sample_data$grch37$bedpe} or
+\code{GAMBLR.data::sample_data$hg38$bedpe} otherwise) to the \code{sv_df} parameter and get back the same
+data frame with SV annotations. Alternatively, you can also provide your own data frame to the
+\code{sv_data} argument, which should contain the following columns: CHROM_A, START_A, END_A, CHROM_B,
+START_B, END_B, NAME, SOMATIC_SCORE, STRAND_A, STRAND_B, TYPE, FILTER, VAF_tumour, VAF_normal,
+DP_tumour, DP_normal, tumour_sample_id, normal_sample_id, pair_status.
+
+Before printing the SV-annotated data frame, the function uses the \code{priority_to_be_oncogene}
+parameter to filter rows. If there is any pair of rows where (1) the values of their columns —
+other than "gene", "partner" and "fusion" — are the same, (2) the "gene" of a row is the
+"partner" of the other and vice versa, and (3) at least one of the genes is listed in
+\code{priority_to_be_oncogene}, the function keeps only that row where the "gene" column contains the
+gene with the highest priority to be oncogene (see how priority is given in the description of
+this parameter). If neither of the rows contains a gene listed in \code{priority_to_be_oncogene} in
+their "gene" column, both rows are kept and a warning message followed by the row values is printed.
 }
 \examples{
 sv_df = get_manta_sv(verbose = FALSE)
