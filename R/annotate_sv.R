@@ -2,7 +2,13 @@
 #'
 #' @description Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 #'
-#' @details Specify a data frame with SVs (preferably the output from `GAMBLR.results::get_manta_sv` if the user has GSC-restricted access, or `GAMBLR.data::sample_data$grch37$bedpe` or `GAMBLR.data::sample_data$hg38$bedpe` otherwise) to the `sv_df` parameter and get back the same data frame with SV annotations.
+#' @details Specify a data frame with SVs (preferably the output from `GAMBLR.results::get_manta_sv` 
+#' if the user has GSC-restricted access, or `GAMBLR.data::sample_data$grch37$bedpe` or 
+#' `GAMBLR.data::sample_data$hg38$bedpe` otherwise) to the `sv_df` parameter and get back the same 
+#' data frame with SV annotations. Alternatively, you can also provide your own data frame to the 
+#' `sv_data` argument, which should contain the following columns: CHROM_A, START_A, END_A, CHROM_B, 
+#' START_B, END_B, NAME, SOMATIC_SCORE, STRAND_A, STRAND_B, TYPE, FILTER, VAF_tumour, VAF_normal, 
+#' DP_tumour, DP_normal, tumour_sample_id, normal_sample_id, pair_status.
 #' 
 #' Before printing the SV-annotated data frame, the function uses the `priority_to_be_oncogene` 
 #' parameter to filter rows. If there is any pair of rows where (1) the values of their columns &mdash; 
@@ -13,11 +19,9 @@
 #' this parameter). If neither of the rows contains a gene listed in `priority_to_be_oncogene` in 
 #' their "gene" column, both rows are kept and a warning message followed by the row values is printed.
 #'
-#' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame in the format show below.
+#' @param sv_data A data frame of SVs. This should be the output of get_manta_sv. If you aren't using the database backend you can supply your own data frame (see format in **Details** section).
 #' Most of this data is directly from the bedpe files that are obtained by converting the Manta outputs from VCF.
 #' Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id are absolutely required.
-#'  CHROM_A  START_A    END_A CHROM_B  START_B    END_B NAME SOMATIC_SCORE STRAND_A STRAND_B TYPE FILTER VAF_tumour VAF_normal DP_tumour DP_normal tumour_sample_id normal_sample_id pair_status
-#'   1  1556541  1556547       1  1556664  1556670    .            40        -        -  BND   PASS      0.145          0        55        73  00-14595_tumorA  00-14595_normal     matched
 #' @param partner_bed Optional bed-format data frame to use for annotating oncogene partners (e.g. enhancers). required columns are: chrom,start,end,gene
 #' @param with_chr_prefix Optionally request that chromosome names are returned with a chr prefix. Default is FALSE.
 #' @param collapse_redundant Remove reciprocal events and only return one per event. Default is FALSE.
