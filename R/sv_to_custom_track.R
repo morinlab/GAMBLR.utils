@@ -14,7 +14,7 @@
 #'
 #' @return Nothing.
 #'
-#' @import dplyr tidyr GAMBLR.helpers GAMBLR.viz
+#' @import dplyr tidyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -68,8 +68,8 @@ sv_to_custom_track = function(sv_bedpe,
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
 
-  coo_cols = GAMBLR.viz::get_gambl_colours("COO")
-  path_cols = GAMBLR.viz::get_gambl_colours("pathology")
+  coo_cols = GAMBLR.helpers::get_gambl_colours("COO")
+  path_cols = GAMBLR.helpers::get_gambl_colours("pathology")
   all_cols = c(coo_cols, path_cols)
   colour_df = data.frame(coo = names(all_cols), colour = all_cols)
 
