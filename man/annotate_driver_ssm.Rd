@@ -32,13 +32,11 @@ Provide a maf-like data frame with \code{maf_df} as the only required parameter.
 For information on how to use the additional parameters, refer to the parameter descriptions and function examples.
 }
 \examples{
-# Get MAF-format data frame 
-my_maf <- GAMBLR.data::sample_data$grch37$maf
+library(GAMBLR.data)
 
-# If you have GSC-restricted access, you can get your MAF-format data frame
-# by using `GAMBLR.results`
-my_meta <- GAMBLR.results::get_gambl_metadata()
-my_maf <- GAMBLR.results::get_ssm_by_samples(
+# Get MAF-format data frame 
+my_meta <- get_gambl_metadata()
+my_maf <- get_ssm_by_samples(
   these_samples_metadata = my_meta,
   projection = "grch37"
 )
