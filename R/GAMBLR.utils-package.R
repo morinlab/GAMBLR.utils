@@ -4,7 +4,6 @@
 ## usethis namespace: start
 #' @importFrom GAMBLR.helpers check_config_value
 #' @importFrom GAMBLR.helpers coding_class
-#' @importFrom GAMBLR.helpers region_to_chunks
 #' @importFrom GAMBLR.helpers socketWrite
 #' @importFrom graphics segments
 #' @importFrom grDevices col2rgb
