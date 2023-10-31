@@ -36,8 +36,10 @@ Pass the incoming MAF (genome) to the \code{maf} parameter as the only required 
 Refer to parameter descriptions for more information on how to use the available parameters.
 }
 \examples{
+library(GAMBLR.data)
+
 #get all ssm in the MYC aSHM region
-myc_ashm_maf = GAMBLR.results::get_ssm_by_region(region = "8:128748352-128749427")
+myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
 
 #get mutations with 100 bp padding (default)
 maf = genome_to_exome(maf = myc_ashm_maf)
