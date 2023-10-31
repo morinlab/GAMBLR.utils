@@ -63,6 +63,8 @@ this parameter). If neither of the rows contains a gene listed in \code{priority
 their "gene" column, both rows are kept and a warning message followed by the row values is printed.
 }
 \examples{
+library(GAMBLR.data)
+
 sv_df = get_manta_sv(verbose = FALSE)
 annotated_entrez = annotate_sv(sv_data = sv_df,
                                with_chr_prefix = FALSE,
