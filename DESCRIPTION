@@ -22,8 +22,6 @@ Imports:
     ggplot2,
     ggrepel,
     glue,
-    graphics,
-    grDevices,
     IRanges,
     maftools,
     metaviz,
@@ -32,11 +30,9 @@ Imports:
     readr,
     Rsamtools,
     SRAdb,
-    stats,
     stringr,
     tibble,
-    tidyr,
-    utils
+    tidyr
 Remotes:
     morinlab/GAMBLR.data,
     morinlab/GAMBLR.helpers,
