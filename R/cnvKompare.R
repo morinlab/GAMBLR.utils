@@ -258,7 +258,7 @@ cnvKompare = function(patient_id,
       segment.color = "transparent",
       max.overlaps = max_overlap
     ) +
-    theme_Morons() +
+    GAMBLR.helpers::theme_Morons() +
     theme(legend.position = "none",
           axis.title.x = element_blank())
 
