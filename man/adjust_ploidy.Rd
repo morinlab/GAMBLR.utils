@@ -23,7 +23,7 @@ adjust_ploidy(
 
 \item{pga}{If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.}
 
-\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\\%).}
+\item{pga_cutoff}{Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5 \%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.}
 
