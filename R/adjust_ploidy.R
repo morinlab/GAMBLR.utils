@@ -11,7 +11,7 @@
 #' @param seg_path Optionally, specify the path to a local seg file.
 #' @param projection Argument specifying the projection of seg file, which will determine chr prefix and genome size. Default is grch37, but hg38 is also accepted.
 #' @param pga If PGA is calculated through other sources, the data frame with columns sample_id and PGA can be provided in this argument.
-#' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5\%).
+#' @param pga_cutoff Minimum PGA for the sample to adjust ploidy. Default is 0.05 (5 %).
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
 #' @param return_seg Boolean argument specifying whether to return a data frame in seg-consistent format, or a raw data frame with all step-by-step transformations. Default is TRUE.
 #'
@@ -24,7 +24,7 @@
 #' @examples
 #' all_sample_seg = GAMBLR.data::sample_data$grch37$seg
 #' all_sample_seg = dplyr::rename(all_sample_seg, "sample" = "ID")
-#' 
+#'
 #' sample_seg = dplyr::filter(all_sample_seg, sample == "02-13135T")
 #' adjust_ploidy(this_seg = sample_seg)
 #'

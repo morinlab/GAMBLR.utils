@@ -40,7 +40,7 @@ cnvKompare(
 
 \item{max_overlap}{For a time-series plot, how many maximum overlapping points are allowed?}
 
-\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90\\%).}
+\item{min_concordance}{Integer value from 0 to 100 to indicate the minimum required similarity between cytobands to be considered concordant. The default is 90 (90 \%).}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is FALSE.}
 
