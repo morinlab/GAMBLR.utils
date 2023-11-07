@@ -15,14 +15,13 @@
 #' @export
 #'
 #' @examples
-#' # Get Manta SVs
-#' manta_sv = GAMBLR.data::sample_data$grch37$bedpe
+#' library(GAMBLR.data)
 #' 
-#' # If you have GSC-restricted access, you can retrieve Manta SVs using GAMBLR.results
-#' my_meta = GAMBLR.results::get_gambl_metadata()
+#' # Get Manta SVs
+#' my_meta = get_gambl_metadata()
 #' my_samples = my_meta$sample_id
-#' manta_sv = GAMBLR.results::get_manta_sv(these_samples_metadata = my_meta,
-#'                                         these_sample_ids = my_samples, verbose = FALSE)
+#' manta_sv = get_manta_sv(these_samples_metadata = my_meta,
+#'                         these_sample_ids = my_samples, verbose = FALSE)
 #' 
 #' # Annotate IGH breakpoints
 #' all_annotated = annotate_sv(sv_data = manta_sv)
