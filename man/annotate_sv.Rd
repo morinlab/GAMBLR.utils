@@ -11,9 +11,9 @@ annotate_sv(
   collapse_redundant = FALSE,
   return_as = "bedpe",
   blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840,
-    65217851, 187728889, 187728888, 187728892, 187728893, 188305164, 72551424L,
-    72551425L, 72551554L, 72551555L, 72551558L, 72551559L, 72551562L, 189255425L,
-    189255426L, 189255461L, 189255462L),
+    65217851, 187728889, 187728888, 187728892, 187728893, 188305164, 72551424, 72551425,
+    72551554, 72551555, 72551558, 72551559, 72551562, 189255425, 189255426, 189255461,
+    189255462),
   genome_build = "grch37",
   priority_to_be_oncogene = c("MYC", "BCL6")
 )
@@ -65,8 +65,6 @@ this parameter). If neither of the rows contains a gene listed in \code{priority
 their "gene" column, both rows are kept and a warning message followed by the row values is printed.
 }
 \examples{
-library(GAMBLR.data)
-
 sv_df = get_manta_sv(verbose = FALSE)
 annotated_entrez = annotate_sv(sv_data = sv_df,
                                with_chr_prefix = FALSE,
