@@ -37,15 +37,9 @@ Count the variants in a region with a variety of filtering options.
 }
 \examples{
 #define a region.
-my_region = gene_to_region(gene_symbol = "MYC",
-                           return_as = "region")
-
-#get meta data and subset
-my_metadata = GAMBLR.data::gambl_metadata
-fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
+my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
 
 #count SSMs for the selected sample subset and defined region.
-fl_ssm_counts_myc = count_ssm_by_region(region = my_region,
-                                       these_samples_metadata = fl_metadata)
+count_ssm_by_region(region = my_region)
 
 }
