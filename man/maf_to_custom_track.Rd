@@ -52,8 +52,8 @@ This function takes an incoming MAF and converts it to a UCSC Genome Browser rea
 Optional parameters available for further customization of the returned file. For more information, refer to the parameter descriptions and function examples.
 }
 \examples{
-\dontrun{
-maf_to_custom_track(my_maf_data, "/home/rmorin/private/some_mutations.bed")
-}
+library(GAMBLR.data)
+my_maf <- get_coding_ssm()
+maf_to_custom_track(maf_data = my_maf, output_file = "../mutations.bed")
 
 }
