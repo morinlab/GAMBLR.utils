@@ -21,21 +21,21 @@
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#' 
-#' sample_seg = GAMBLR.data::sample_data$grch37$seg %>%
-#'  filter(ID == "02-13135T")
+#' # for a single sample
+#' sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
+#'                            ID == "02-13135T")
 #' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
-#'
+#' 
 #' calculate_pga(this_seg = sample_seg)
-#'
+#' 
 #' calculate_pga(this_seg = sample_seg,
 #'               exclude_sex = FALSE)
-#'
-#' multi_sample_seg = GAMBLR.data::sample_data$grch37$seg %>%
-#'  filter(ID  %in% c("02-13135T", "SU-DHL-4"))
+#' 
+#' # for multiple samples
+#' multi_sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
+#'                                  ID  %in% c("02-13135T", "SU-DHL-4"))
 #' multi_sample_seg = dplyr::rename(multi_sample_seg, "sample" = "ID")
-#'
+#' 
 #' calculate_pga(this_seg = multi_sample_seg)
 #'
 calculate_pga = function(this_seg,
