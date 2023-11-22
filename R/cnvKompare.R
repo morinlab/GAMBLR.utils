@@ -33,14 +33,13 @@
 #' @export
 #'
 #' @examples
-#' cnvKompare(patient_id = "13-26835",
-#'            genes_of_interest = c("EZH2",
-#'                                  "TP53",
-#'                                  "MYC",
-#'                                  "CREBBP",
-#'                                  "GNA13"),
-#'            projection = "hg38",
-#'            show_x_labels = FALSE)
+#' #get segs for comparison
+#' my_segs = get_sample_cn_segments(these_sample_ids = c("02-13135T", "04-28140T"))
+#'
+#' my_list = cnvKompare(this_seg = my_segs, 
+#'                      these_sample_ids = c("02-13135T", "04-28140T"),
+#'                      genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP","GNA13"),
+#'                      show_x_labels = FALSE)
 #'
 cnvKompare = function(patient_id,
                       these_sample_ids,
@@ -102,17 +101,21 @@ cnvKompare = function(patient_id,
 
   # get the multi-sample seg file
   if (!missing(seg_path)) {
-    these_samples_seg = suppressMessages(read_tsv(seg_path)) %>%
-      `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
-      dplyr::mutate(CN = (2 * 2 ^ log.ratio))
+    message(paste0("Reading seg file from: ", seg_path))
+    these_samples_seg = suppressMessages(read_tsv(seg_path))
   } else if (!missing(this_seg)) {
-    these_samples_seg = this_seg %>%
-      `names<-`(c(ID, chrom, start, end, LOH_flag, log.ratio)) %>%
-      dplyr::mutate(CN = (2 * 2 ^ log.ratio))
+    message("Using supplied seg file")
+    these_samples_seg = this_seg
   } else {
-    message("You did not provide path to seg file or segments in data frame.")
-    message("You can obtain the seg data by using GAMBLR.results::get_sample_cn_segments.")
-    stop("Please provide the seg data or retreive the CNV data.")
+    message("Retreiving the CNV data using GAMBLR ...")
+    these_samples_seg = get_sample_cn_segments(these_sample_ids = these_sample_ids, 
+                                               projection = projection, 
+                                               this_seq_type = this_seq_type)
+  }
+  
+  #add the CN column, if not already there
+  if(!("CN" %in% colnames(these_samples_seg))){
+    these_samples_seg = dplyr::mutate(these_samples_seg, CN = (2 * 2 ^ log.ratio)) 
   }
 
   these_samples_seg = these_samples_seg  %>%
