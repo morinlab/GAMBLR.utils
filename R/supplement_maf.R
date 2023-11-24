@@ -16,8 +16,8 @@
 #' my_metadata = GAMBLR.data::gambl_metadata
 #' reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
 #'
-#' small_maf = GAMBLR.data::sample_dat$maf$grch37 %>%
-#'  dplyr::filter(Tumor_Sample_Barcode %in% reddy_meta$Tumor_Sample_Barcode)
+#' small_maf = dplyr::filter(GAMBLR.data::sample_data$grch37$maf,
+#'  Tumor_Sample_Barcode %in% reddy_meta$Tumor_Sample_Barcode)
 #'
 #' small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
 #'
