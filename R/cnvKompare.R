@@ -33,6 +33,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #get segs for comparison
 #' my_segs = get_sample_cn_segments(these_sample_ids = c("02-13135T", "04-28140T"))
 #'
