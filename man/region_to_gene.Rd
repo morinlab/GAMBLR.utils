@@ -4,32 +4,58 @@
 \alias{region_to_gene}
 \title{Region To Gene.}
 \usage{
-region_to_gene(region, gene_format = "hugo", genome_build = "grch37")
+region_to_gene(
+  region,
+  gene_format = "hugo",
+  genome_build = "grch37",
+  verbose = TRUE,
+  return_empty = FALSE
+)
 }
 \arguments{
 \item{region}{Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.}
 
 \item{gene_format}{Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".}
 
-\item{genome_build}{Reference genome build.}
+\item{genome_build}{Reference genome build. Default is grch37.}
+
+\item{verbose}{Set to TRUE for noisier output to the console. Useful or debugging purposes. Default is FALSE.}
+
+\item{return_empty}{Set to TRUE to force returning an empty data frame when no genes are found within the specified region for the selected projection.
+This only applies when the function is given a region as a vector of characters. See function documentation for more information. Default is FALSE.}
 }
 \value{
-A data frame with gene(s) that are residing in the specified region(s).
+A data frame with columns detailing the gene/region.
 }
 \description{
 Return genes residing in defined region(s).
 }
 \details{
-This function takes a region as a vector of characters, or a data frame with of regions (e.g output from \code{gene_to_region(return_as="df")}).
+This function takes a region as a vector of characters, or a data frame with of regions (e.g output from \code{gene_to_region(return_as = "df")}).
 and returns the genes residing withing the specified region. For the other way around (i.e gene to regions, refer to \link{gene_to_region}).
+If the user provides a region as a vector of characters there is the option to set \code{return_empty = TRUE}.
+This forces the function to return an empty data frame when there are no genes found within the specified region for the selected projection.
+Note, if the user provides a data frame with regions, any regions that no genes are found for will be excluded automatically in the the returned object.
 }
 \examples{
-myc_region = gene_to_region(gene_symbol = "MYC",
-                            genome_build = "grch37",
-                            return_as = "df")
+#get a region, used for input in Example 1
+genes_of_interest = gene_to_region(gene_symbol = c("MYC", "BCL2"),
+                                   genome_build = "grch37",
+                                   return_as = "df")
 
-region = region_to_gene(region = myc_region,
-                        gene_format = "hugo",
-                        genome_build = "grch37")
+#Example 1 - Use a data frame with 1 region:
+in_my_region = region_to_gene(region = genes_of_interest)
+                        
+#Example 2 - Use a region specified as a vector of characters:
+in_my_region = region_to_gene(region = "chr8:127735433-127742951", 
+                              genome_build = "hg38", 
+                              gene_format = "ensembl", 
+                              verbose = TRUE)
+                              
+#Example 3 - Use a region with no genes in it, and return the empty data frame anyway:
+in_my_region = region_to_gene(region = "chr14:105862865-105863058",
+                              genome_build = "hg38", 
+                              verbose = TRUE, 
+                              return_empty = TRUE)
 
 }

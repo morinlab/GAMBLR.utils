@@ -17,16 +17,10 @@
 #'
 #' @examples
 #' #define a region.
-#' my_region = gene_to_region(gene_symbol = "MYC",
-#'                            return_as = "region")
-#'
-#' #get meta data and subset
-#' my_metadata = GAMBLR.data::gambl_metadata
-#' fl_metadata = dplyr::filter(my_metadata, pathology == "FL")
+#' my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
 #'
 #' #count SSMs for the selected sample subset and defined region.
-#' fl_ssm_counts_myc = count_ssm_by_region(region = my_region,
-#'                                        these_samples_metadata = fl_metadata)
+#' count_ssm_by_region(region = my_region)
 #'
 count_ssm_by_region = function(region,
                                chromosome,
@@ -40,16 +34,24 @@ count_ssm_by_region = function(region,
   if(missing(these_samples_metadata)){
     these_samples_metadata = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type)
   }
+  
   if(!missing(all_mutations_in_these_regions)){
     # function was provided the mutations already so we just need to subset it to the region of interest
-
-    region_muts = dplyr::filter(all_mutations_in_these_regions,Start_Position >= start, Start_Position < end)
+    region_muts = dplyr::filter(all_mutations_in_these_regions,
+                                Start_Position >= start, 
+                                Start_Position < end)
   }else if(missing(region)){
-    region_muts = GAMBLR.helpers::handle_ssm_by_region(chromosome=chromosome,qstart=start,qend=end,streamlined = TRUE)
+    region_muts = get_ssm_by_region(chromosome = chromosome,
+                                    qstart = start,
+                                    qend = end,
+                                    streamlined = TRUE)
   }else{
-    region_muts = GAMBLR.helpers::handle_ssm_by_region(region=region,streamlined = TRUE)
+    region_muts = get_ssm_by_region(region = region, 
+                                    streamlined = TRUE)
   }
+  
   keep_muts = dplyr::filter(region_muts,Tumor_Sample_Barcode %in% these_samples_metadata$Tumor_Sample_Barcode)
+  
   if(missing(count_by)){
     #count everything even if some mutations are from the same patient
     return(nrow(keep_muts))
