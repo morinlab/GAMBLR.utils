@@ -22,12 +22,12 @@ Specify the initial MAF with \code{incoming_maf} (to be supplemented with missin
 give the function a filtered metadata table (with the sample IDs of interest) to the \code{these_samples_metadata}.
 }
 \examples{
-my_metadata = GAMBLR.data::gambl_metadata
-reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
+library(GAMBLR.data)
 
-small_maf = dplyr::filter(GAMBLR.data::sample_data$grch37$maf,
- Tumor_Sample_Barcode \%in\% reddy_meta$Tumor_Sample_Barcode)
+reddy_meta = get_gambl_metadata()
+reddy_meta = dplyr::filter(reddy_meta, cohort=="dlbcl_reddy")
 
+small_maf = get_ssm_by_samples(these_samples_metadata = reddy_meta)
 small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
 
 complete_maf = supplement_maf(incoming_maf = small_maf,
