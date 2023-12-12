@@ -13,14 +13,14 @@
 #' @export
 #'
 #' @examples
-#' my_metadata = GAMBLR.data::gambl_metadata
-#' reddy_meta = dplyr::filter(my_metadata, cohort=="dlbcl_reddy")
-#'
-#' small_maf = GAMBLR.data::sample_dat$maf$grch37 %>%
-#'  dplyr::filter(Tumor_Sample_Barcode %in% reddy_meta$Tumor_Sample_Barcode)
-#'
+#' library(GAMBLR.data)
+#' 
+#' reddy_meta = get_gambl_metadata()
+#' reddy_meta = dplyr::filter(reddy_meta, cohort=="dlbcl_reddy")
+#' 
+#' small_maf = get_ssm_by_samples(these_samples_metadata = reddy_meta)
 #' small_maf = dplyr::filter(small_maf, Hugo_Symbol == "MYC")
-#'
+#' 
 #' complete_maf = supplement_maf(incoming_maf = small_maf,
 #'                               these_samples_metadata = reddy_meta)
 #'

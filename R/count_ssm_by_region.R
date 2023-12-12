@@ -16,6 +16,8 @@
 #' @export
 #'
 #' @examples
+#' library(GAMBLR.data)
+#' 
 #' #define a region.
 #' my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
 #'

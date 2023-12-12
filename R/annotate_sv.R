@@ -59,7 +59,7 @@ annotate_sv = function(sv_data,
                        priority_to_be_oncogene = c("MYC", "BCL6")){
   
   # remove duplicate rows in sv_data, if any
-  sv_data <- unique(sv_data)
+  sv_data = unique(sv_data)
   
   bedpe1 = sv_data %>%
     dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", ends_with("SCORE"), "STRAND_A")
@@ -140,75 +140,80 @@ annotate_sv = function(sv_data,
   all.annotated = unique(all.annotated)
   
   # give a unique marker to each non-duplicate row (don't consider gene, partner and fusion columns)
-  all.annotated <- select(all.annotated, !c(entrez, gene, partner, fusion)) %>% 
+  all.annotated = select(all.annotated, !c(entrez, gene, partner, fusion)) %>% 
     tidyr::unite(all_cols_marker, everything(), remove = TRUE) %>% 
     cbind(all.annotated, .)
   
   # get duplicate row markers
-  dup_marker <- all.annotated$all_cols_marker [ duplicated(all.annotated$all_cols_marker) ] %>% 
+  dup_marker = all.annotated$all_cols_marker [ duplicated(all.annotated$all_cols_marker) ] %>% 
     unique
   
   # add column that stores row numbers, it will be used later to rearrange the rows
-  all.annotated <- mutate(all.annotated, row_num = row_number())
+  all.annotated = mutate(all.annotated, row_num = row_number())
   
   # from all rows, separate those with any duplicate marker
-  all.annotated <- split(all.annotated, all.annotated$all_cols_marker %in% dup_marker) %>% 
-    setNames( ifelse( names(.) == "TRUE", "duplicate", "not_duplicate" ) )
+  all.annotated = (all.annotated$all_cols_marker %in% dup_marker) %>% 
+    ifelse("duplicate", "not_duplicate") %>% 
+    factor(levels = c("duplicate", "not_duplicate")) %>% 
+    split(all.annotated, .)
   
-  # separate duplicate rows by markers
-  all.annotated$duplicate <- split(all.annotated$duplicate, dup_marker)
-  
-  # check whether duplications are in pairs
-  stopifnot( "There are duplicate rows that are not in pairs." = all( lapply(all.annotated$duplicate, nrow) == 2 ) )
-  
-  # if both genes are oncogenes and partners, remove row according to gene prioritization of being oncogene.
-  # `priority_to_be_oncogene` contains the genes with high priority to be oncogene. genes to the left have higher priority. all non-listed genes have the lowest priority.
-  # if both genes have the lowest priority of being oncogene, no rows are removed, but reported.
-  all.annotated$duplicate <- lapply(all.annotated$duplicate, function(dup_pair){
-    for(gene_i in priority_to_be_oncogene){
-      is_priority_gene <- dup_pair$gene == gene_i
-      if(any(is_priority_gene))
-        break
-    }
-    switch(
-      as.character( sum(is_priority_gene) ),
-      "0" = {
-        # both genes have the lowest priority to be oncogene
-        # if they are partner of each other, report this error
-        if( all( !is.na(dup_pair$partner) ) ){
-          message("Warning: There are two rows with the same values, but inverted ones for the `gene` and `partner` columns (i.e. both genes as oncogene and partner of each other). However, neither of them is listed as a gene with high priority to be oncogene (included in the `priority_to_be_oncogene` object). See these rows below:")
+  # fix duplicated rows (rows with the same marker)
+  if( nrow(all.annotated$duplicate) > 0 ){
+    # separate duplicate rows by markers
+    all.annotated$duplicate = split(all.annotated$duplicate, dup_marker)
+    
+    # check whether duplications are in pairs
+    stopifnot( "There are duplicate rows that are not in pairs." = all( lapply(all.annotated$duplicate, nrow) == 2 ) )
+    
+    # if both genes are oncogenes and partners, remove row according to gene prioritization of being oncogene.
+    # `priority_to_be_oncogene` contains the genes with high priority to be oncogene. genes to the left have higher priority. all non-listed genes have the lowest priority.
+    # if both genes have the lowest priority of being oncogene, no rows are removed, but reported.
+    all.annotated$duplicate = lapply(all.annotated$duplicate, function(dup_pair){
+      for(gene_i in priority_to_be_oncogene){
+        is_priority_gene = dup_pair$gene == gene_i
+        if(any(is_priority_gene))
+          break
+      }
+      switch(
+        as.character( sum(is_priority_gene) ),
+        "0" = {
+          # both genes have the lowest priority to be oncogene
+          # if they are partner of each other, report this error
+          if( all( !is.na(dup_pair$partner) ) ){
+            message("Warning: There are two rows with the same values, but inverted ones for the `gene` and `partner` columns (i.e. both genes as oncogene and partner of each other). However, neither of them is listed as a gene with high priority to be oncogene (included in the `priority_to_be_oncogene` object). See these rows below:")
+            select(dup_pair, -all_cols_marker) %>% 
+              print
+            message("Despite that, both rows were kept.\n")
+          }
+          dup_pair
+        },
+        "1" = {
+          # one gene with a higher priority
+          # if both genes are partners of each other, remove the row with the lower priority gene as oncogene
+          if( all( !is.na(dup_pair$partner) ) ){
+            filter(dup_pair, is_priority_gene)
+          }else{
+            dup_pair
+          }
+        },
+        {
+          message("Error: `as.character(sum(is_priority_gene))` when `gene_i` is the data frame")
           select(dup_pair, -all_cols_marker) %>% 
             print
-          message("Despite that, both rows were kept.\n")
+          k = as.character(sum(is_priority_gene)) %>% 
+            gettextf("\r is \"%s\", but it should be either \"0\" or \"1\"." , .)
+          stop(k)
         }
-        dup_pair
-      },
-      "1" = {
-        # one gene with a higher priority
-        # if both genes are partners of each other, remove the row with the lower priority gene as oncogene
-        if( all( !is.na(dup_pair$partner) ) ){
-          filter(dup_pair, is_priority_gene)
-        }else{
-          dup_pair
-        }
-      },
-      {
-        message("Error: `as.character(sum(is_priority_gene))` when `gene_i` is the data frame")
-        select(dup_pair, -all_cols_marker) %>% 
-          print
-        k <- as.character(sum(is_priority_gene)) %>% 
-          gettextf("\r is \"%s\", but it should be either \"0\" or \"1\"." , .)
-        stop(k)
-      }
-    )
-  }) %>% 
-    bind_rows
+      )
+    }) %>% 
+      bind_rows
+  }
   
   # merge the not_duplicate and duplicate data frames
-  all.annotated <- bind_rows(all.annotated)
+  all.annotated = bind_rows(all.annotated)
   
   # rearrange rows
-  all.annotated <- arrange(all.annotated, row_num)
+  all.annotated = arrange(all.annotated, row_num)
   
   # remove temporary columns
   all.annotated = select(all.annotated, -all_cols_marker, -row_num)
@@ -244,10 +249,11 @@ annotate_sv = function(sv_data,
       all.annotated = dplyr::distinct(all.annotated, tumour_sample_id, fusion, .keep_all = TRUE)
     }
   }
+  
   if(with_chr_prefix){
-    
     #add the prefix if necessary
-    if(!grepl("chr", all.annotated$chrom1)){
+    k = !grepl("chr", all.annotated$chrom1)
+    if( all(k) ){
       all.annotated = all.annotated %>%
         dplyr::mutate(chrom1 = paste0("chr", chrom1))
       
@@ -255,5 +261,6 @@ annotate_sv = function(sv_data,
         dplyr::mutate(chrom2 = paste0("chr", chrom2))
     }
   }
+  
   return(all.annotated)
 }
