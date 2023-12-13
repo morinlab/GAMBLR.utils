@@ -8,9 +8,10 @@ annotate_intrachromosomal_sv(
   sv_data,
   return_as = "bedpe",
   projection = "grch37",
-  types = c("DEL", "DUP", "INS", "INV"),
+  types = c("DEL", "DUP", "INS", "INV", NA),
   max_size = 1e+05,
-  keep_genes = "all"
+  keep_genes = "all",
+  verbose = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ The required columns are columns for both chromosomes, coordinates and strand pl
 \item{max_size}{An integer specifying the maximum distance between start of first breakpoint and end of second breakpoint. The default is 100000 (100000 bp).}
 
 \item{keep_genes}{Optional argument allowing ot only return svs annotated to the list of genes provided in this argument. The default is "all" (return all svs annotated to all genes).}
+
+\item{verbose}{Optionally control whether to print any status info to console. Useful for debugging. Default is FALSE (no messages).}
 }
 \value{
 A data frame with annotated SVs (gene symbol and entrez ID).

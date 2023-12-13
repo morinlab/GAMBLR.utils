@@ -11,6 +11,7 @@
 #' @param types A vector of sv types to be annotated. The default is set to "DEL", "DUP", "INS", and "INV".
 #' @param max_size An integer specifying the maximum distance between start of first breakpoint and end of second breakpoint. The default is 100000 (100000 bp).
 #' @param keep_genes Optional argument allowing ot only return svs annotated to the list of genes provided in this argument. The default is "all" (return all svs annotated to all genes).
+#' @param verbose Optionally control whether to print any status info to console. Useful for debugging. Default is FALSE (no messages).
 #'
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
@@ -30,9 +31,10 @@ annotate_intrachromosomal_sv = function(
     sv_data,
     return_as = "bedpe",
     projection = "grch37",
-    types = c("DEL", "DUP", "INS", "INV"),
+    types = c("DEL", "DUP", "INS", "INV", NA),
     max_size = 100000,
-    keep_genes = "all"
+    keep_genes = "all",
+    verbose = FALSE
 ){
     # Ensure input is supplied
     if(missing(sv_data)) {
@@ -43,18 +45,39 @@ annotate_intrachromosomal_sv = function(
 
     #get the genes in each region
     intra_sv <- sv_data %>%
+        dplyr::mutate(
+            type = gsub("Manta|:.*", "", manta_name)
+        ) %>%
         dplyr::mutate(size = END_B - START_A) %>%
         dplyr::filter(
             CHROM_A == CHROM_B,
             type %in% types,
             size <= max_size
         )
+    
+    if(nrow(intra_sv) == 0){
+        stop(
+            paste(
+                "There are no intrachromosomal SVs in the provided data",
+                "that satisfy specified type and max_size arguments."
+            )
+        )
+    }
 
-    get_affected_genes = function(region,projection){
-        genes <- region_to_gene(
+    get_affected_genes = function(region, projection){
+        if(verbose) {
+            genes <- region_to_gene(
                 region = region,
                 projection = projection
             )
+        } else {
+            genes <- suppressMessages(
+                region_to_gene(
+                    region = region,
+                    projection = projection
+                )
+            )
+        }
 
         if("all" %in% keep_genes){
             genes <- genes %>%
@@ -78,19 +101,26 @@ annotate_intrachromosomal_sv = function(
             "-",
             intra_sv[i,"END_B"]
         )
-        print(region)
+        if(verbose) {
+            print(region)
+        }
         g <- tryCatch(
             {
                 get_affected_genes(region = region, projection = projection)
             },
                 error = function(cond) {
-                    message("Here's the original error message:")
-                    message(cond)
+                    if(verbose) {
+                        message("Here's the original error message:")
+                        message(cond)
+                    }
                     # Choose a return value in case of error
                     return(NA)
                 }
             )
         intra_sv[i, "genes"] <- g
+        if(verbose) {
+            print(g)
+        }
     }
     #TODO: implement return_as feature for eventual planned cBioPortal functionality
     return(intra_sv)
