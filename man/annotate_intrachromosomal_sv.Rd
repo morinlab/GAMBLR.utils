@@ -41,9 +41,6 @@ Specify a data frame with SVs (preferably the output from get_manta_sv() to the 
 }
 \examples{
 sv_df = get_manta_sv(verbose = FALSE)
-annotated_entrez = annotate_sv(sv_data = sv_df,
-                               with_chr_prefix = FALSE,
-                               return_as = "bedpe_entrez",
-                               projection = "grch37")
+annotated = annotate_intrachromosomal_sv(sv_data = sv_df)
 
 }
