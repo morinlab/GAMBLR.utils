@@ -9,7 +9,7 @@
 #'
 #' @param gene_symbol A vector of one or more gene symbols.
 #' @param ensembl_id A vector of one or more Ensembl IDs.
-#' @param genome_build Reference genome build. Possible values are "grch37" (default) or "hg38".
+#' @param projection Reference genome build. Possible values are "grch37" (default) or "hg38".
 #' @param return_as Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".
 #' @param sort_regions A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.
 #'
@@ -20,23 +20,23 @@
 #'
 #' @examples
 #' bcl2_region = gene_to_region(gene_symbol = "BCL2",
-#'                              genome_build = "grch37")
+#'                              projection = "grch37")
 #'
 #' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
-#'                              genome_build = "grch37")
+#'                              projection = "grch37")
 #'
 gene_to_region = function(gene_symbol,
                           ensembl_id,
-                          genome_build = "grch37",
+                          projection = "grch37",
                           return_as = "region",
                           sort_regions = TRUE){
   
-  stopifnot('`genome_build` parameter must be "grch37" or "hg38"' = genome_build %in% c("grch37", "hg38"))
+  stopifnot('`projection` parameter must be "grch37" or "hg38"' = projection %in% c("grch37", "hg38"))
   stopifnot('`return_as` parameter must be "region", "bed" or "df"' = return_as %in% c("region", "bed", "df"))
   stopifnot('One and only one of the `gene_symbol` and `ensembl_id` parameters must be given to this function' = sum(missing(gene_symbol), missing(ensembl_id)) == 1)
   
   #set mart based on selected genome projection
-  if(genome_build == "grch37"){
+  if(projection == "grch37"){
     gene_coordinates = GAMBLR.data::grch37_gene_coordinates
     chr_select = paste0(c(c(1:22),"X","Y"))
   }else{
@@ -66,7 +66,7 @@ gene_to_region = function(gene_symbol,
     dplyr::filter(chromosome %in% chr_select)
   
   if(sort_regions){
-    if(genome_build == "grch37"){
+    if(projection == "grch37"){
       chrm_num = region$chromosome
     }else{
       chrm_num = sub("chr", "", region$chromosome)

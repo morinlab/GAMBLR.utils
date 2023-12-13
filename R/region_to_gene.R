@@ -10,7 +10,7 @@
 #'
 #' @param region Regions to intersect genes with, this can be either a data frame with regions sorted in the following columns; chromosome, start, end. Or it can be a character vector in "region" format, i.e chromosome:start-end.
 #' @param gene_format Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".
-#' @param genome_build Reference genome build. Default is grch37.
+#' @param projection Reference genome build. Default is grch37.
 #' @param verbose Set to TRUE for noisier output to the console. Useful or debugging purposes. Default is FALSE.
 #' @param return_empty Set to TRUE to force returning an empty data frame when no genes are found within the specified region for the selected projection. 
 #' This only applies when the function is given a region as a vector of characters. See function documentation for more information. Default is FALSE.
@@ -24,7 +24,7 @@
 #' @examples
 #' #get a region, used for input in Example 1
 #' genes_of_interest = gene_to_region(gene_symbol = c("MYC", "BCL2"),
-#'                                    genome_build = "grch37",
+#'                                    projection = "grch37",
 #'                                    return_as = "df")
 #' 
 #' #Example 1 - Use a data frame with 1 region:
@@ -32,26 +32,26 @@
 #'                         
 #' #Example 2 - Use a region specified as a vector of characters:
 #' in_my_region = region_to_gene(region = "chr8:127735433-127742951", 
-#'                               genome_build = "hg38", 
+#'                               projection = "hg38", 
 #'                               gene_format = "ensembl", 
 #'                               verbose = TRUE)
 #'                               
 #' #Example 3 - Use a region with no genes in it, and return the empty data frame anyway:
 #' in_my_region = region_to_gene(region = "chr14:105862865-105863058",
-#'                               genome_build = "hg38", 
+#'                               projection = "hg38", 
 #'                               verbose = TRUE, 
 #'                               return_empty = TRUE)
 #'
 region_to_gene = function(region,
                           gene_format = "hugo",
-                          genome_build = "grch37",
+                          projection = "grch37",
                           verbose = TRUE,
                           return_empty = FALSE){
 
   #set mart based on selected genome projection
-  if(genome_build == "grch37"){
+  if(projection == "grch37"){
     gene_list = GAMBLR.data::grch37_gene_coordinates
-  }else if(genome_build == "hg38"){
+  }else if(projection == "hg38"){
     gene_list = GAMBLR.data::hg38_gene_coordinates
   }
 
