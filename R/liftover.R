@@ -3,15 +3,17 @@
 #' @description Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
 #'
 #' @details The user can specify a path to the bedpe file that needs to be lifted with `bedpe_file`,
-#' or, the suer can specify the bedpe data in a data frame with `bedpe_df`.
-#' The other required parameter is `target_build`, this parameter decides the final projection of the lifted bedpe file.
+#' or, the user can specify the bedpe data in a data frame with `bedpe_df`.
+#' The other required parameter is `target_build`, this parameter decides the final projection of the lifted data.
 #'
-#' @param bedpe_file Either specify the path to a bedpe file.
-#' @param bedpe_df Or specify the bedpe data in a data frame.
+
+#' @param data_df Input data to be lifted to another projection in the format of data frame.
+#' @param mode Specify the type of data to be converted. Available options are "bedpe" (default), "maf", and "bed".
 #' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).
-#' @param col_names If not provided, the column names will be imposed.
-#' @param col_types Specify column types if column names are also defined with `col_names`.
-#' @param standard_bed Boolean parameter for defining the type of bed file that is provided with `bedpe_file`. Deafult is FALSE.
+#' @param bedpe_file Optionally, specify the path to a bedpe file if it is not already loaded to the environment. Only used in the bedpe mode.
+#' @param col_names If not provided, the column names will be imposed. Only used in the bedpe mode.
+#' @param col_types Specify column types if column names are also defined with `col_names`. Only used in the bedpe mode.
+#' @param standard_bed Boolean parameter for defining the type of bed file that is provided with `bedpe_file`. Deafult is FALSE. Only used in the bedpe mode.
 #' @param verbose Set to TRUE for verbose output. Default is FALSE.
 #'
 #' @return Data frame containing original bedpe data with new coordinates.
@@ -22,14 +24,31 @@
 #' @export
 #'
 #' @examples
-#' hg19_sv = get_manta_sv(verbose = FALSE)
-#' hg19_sv = head(hg19_sv, 100)
+#' bed <- grch37_ashm_regions
 #'
-#' hg38_sv = liftover(
-#'      bedpe_df = hg19_sv,
-#'      target_build = "hg38"
+#' test <- liftover(
+#'     data_df = bed,
+#'     mode = "bed",
+#'     target_build = "hg38"
 #' )
 #'
+#' maf <- get_coding_ssm()
+#'
+#' test <- liftover(
+#'     data_df = maf,
+#'     mode = "maf",
+#'     target_build = "hg38"
+#' )
+#'
+#' bedpe <- get_manta_sv()
+#'
+#' test <- liftover(
+#'     data_df = bedpe,
+#'     mode = "bedpe",
+#'     target_build = "hg38"
+#' )
+#'
+
 liftover = function(
         data_df,
         mode = "bedpe",
@@ -262,7 +281,7 @@ liftover = function(
         return(lifted)
     } else {
         stop(
-            "Other modes are not supported yet."
+            "The specified mode is not supported yet."
         )
     }
 }

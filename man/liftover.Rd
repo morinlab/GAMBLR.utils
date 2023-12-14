@@ -16,19 +16,21 @@ liftover(
 )
 }
 \arguments{
+\item{data_df}{Input data to be lifted to another projection in the format of data frame.}
+
+\item{mode}{Specify the type of data to be converted. Available options are "bedpe" (default), "maf", and "bed".}
+
 \item{target_build}{Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).}
 
-\item{bedpe_file}{Either specify the path to a bedpe file.}
+\item{bedpe_file}{Optionally, specify the path to a bedpe file if it is not already loaded to the environment. Only used in the bedpe mode.}
 
-\item{col_names}{If not provided, the column names will be imposed.}
+\item{col_names}{If not provided, the column names will be imposed. Only used in the bedpe mode.}
 
-\item{col_types}{Specify column types if column names are also defined with \code{col_names}.}
+\item{col_types}{Specify column types if column names are also defined with \code{col_names}. Only used in the bedpe mode.}
 
-\item{standard_bed}{Boolean parameter for defining the type of bed file that is provided with \code{bedpe_file}. Deafult is FALSE.}
+\item{standard_bed}{Boolean parameter for defining the type of bed file that is provided with \code{bedpe_file}. Deafult is FALSE. Only used in the bedpe mode.}
 
 \item{verbose}{Set to TRUE for verbose output. Default is FALSE.}
-
-\item{bedpe_df}{Or specify the bedpe data in a data frame.}
 }
 \value{
 Data frame containing original bedpe data with new coordinates.
@@ -38,16 +40,32 @@ Use liftOver to convert a bedpe file between the two main genome builds (grch37/
 }
 \details{
 The user can specify a path to the bedpe file that needs to be lifted with \code{bedpe_file},
-or, the suer can specify the bedpe data in a data frame with \code{bedpe_df}.
-The other required parameter is \code{target_build}, this parameter decides the final projection of the lifted bedpe file.
+or, the user can specify the bedpe data in a data frame with \code{bedpe_df}.
+The other required parameter is \code{target_build}, this parameter decides the final projection of the lifted data.
 }
 \examples{
-hg19_sv = get_manta_sv(verbose = FALSE)
-hg19_sv = head(hg19_sv, 100)
+bed <- grch37_ashm_regions
 
-hg38_sv = liftover(
-     bedpe_df = hg19_sv,
-     target_build = "hg38"
+test <- liftover(
+    data_df = bed,
+    mode = "bed",
+    target_build = "hg38"
+)
+
+maf <- get_coding_ssm()
+
+test <- liftover(
+    data_df = maf,
+    mode = "maf",
+    target_build = "hg38"
+)
+
+bedpe <- get_manta_sv()
+
+test <- liftover(
+    data_df = bedpe,
+    mode = "bedpe",
+    target_build = "hg38"
 )
 
 }
