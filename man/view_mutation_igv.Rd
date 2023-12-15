@@ -42,15 +42,11 @@ Load bam(s) and view the context around a mutation
 Load bam(s) and view the context around a mutation.
 IMPORTANT: you must be running IGV on the host that is running R and you need to have it listening on a port.
 The simplest scenario is to run this command on a terminal (if using a Mac),
-assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host
+assuming you are using R on gphost10 and you have a ssh config that routes gp10 to that host\preformatted{ssh -X gp10
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{ssh -X gp10
-}\if{html}{\out{</div>}}
-
-then launch IGV (e.e. from a conda installation):
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{conda activate igv; igv &
-}\if{html}{\out{</div>}}
+then launch IGV (e.e. from a conda installation):\preformatted{conda activate igv; igv &
+}
 
 Then obtain a socket and run this function as per the example.
 }

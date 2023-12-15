@@ -7,7 +7,7 @@
 region_to_gene(
   region,
   gene_format = "hugo",
-  genome_build = "grch37",
+  projection = "grch37",
   verbose = TRUE,
   return_empty = FALSE
 )
@@ -17,7 +17,7 @@ region_to_gene(
 
 \item{gene_format}{Parameter for specifying the format of returned genes, default is "hugo", other acceptable inputs are "ensembl".}
 
-\item{genome_build}{Reference genome build. Default is grch37.}
+\item{projection}{Reference genome build. Default is grch37.}
 
 \item{verbose}{Set to TRUE for noisier output to the console. Useful or debugging purposes. Default is FALSE.}
 
@@ -40,7 +40,7 @@ Note, if the user provides a data frame with regions, any regions that no genes 
 \examples{
 #get a region, used for input in Example 1
 genes_of_interest = gene_to_region(gene_symbol = c("MYC", "BCL2"),
-                                   genome_build = "grch37",
+                                   projection = "grch37",
                                    return_as = "df")
 
 #Example 1 - Use a data frame with 1 region:
@@ -48,13 +48,13 @@ in_my_region = region_to_gene(region = genes_of_interest)
                         
 #Example 2 - Use a region specified as a vector of characters:
 in_my_region = region_to_gene(region = "chr8:127735433-127742951", 
-                              genome_build = "hg38", 
+                              projection = "hg38", 
                               gene_format = "ensembl", 
                               verbose = TRUE)
                               
 #Example 3 - Use a region with no genes in it, and return the empty data frame anyway:
 in_my_region = region_to_gene(region = "chr14:105862865-105863058",
-                              genome_build = "hg38", 
+                              projection = "hg38", 
                               verbose = TRUE, 
                               return_empty = TRUE)
 

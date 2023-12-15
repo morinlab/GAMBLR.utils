@@ -7,7 +7,7 @@
 gene_to_region(
   gene_symbol,
   ensembl_id,
-  genome_build = "grch37",
+  projection = "grch37",
   return_as = "region",
   sort_regions = TRUE
 )
@@ -17,7 +17,7 @@ gene_to_region(
 
 \item{ensembl_id}{A vector of one or more Ensembl IDs.}
 
-\item{genome_build}{Reference genome build. Possible values are "grch37" (default) or "hg38".}
+\item{projection}{Reference genome build. Possible values are "grch37" (default) or "hg38".}
 
 \item{return_as}{Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".}
 
@@ -37,9 +37,9 @@ For returning genes residing in specific regions, see \link{region_to_gene}.
 }
 \examples{
 bcl2_region = gene_to_region(gene_symbol = "BCL2",
-                             genome_build = "grch37")
+                             projection = "grch37")
 
 bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
-                             genome_build = "grch37")
+                             projection = "grch37")
 
 }
