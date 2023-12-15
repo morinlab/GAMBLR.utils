@@ -16,7 +16,7 @@ annotate_intrachromosomal_sv(
 }
 \arguments{
 \item{sv_data}{A data frame of SVs. This should be the output of get_manta_sv.
-The required columns are columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id.}
+The required columns are columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE, tumour_sample_id, and manta_name (can be NAs for output from other tools).}
 
 \item{return_as}{Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).}
 

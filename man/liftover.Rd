@@ -2,7 +2,7 @@
 % Please edit documentation in R/liftover.R
 \name{liftover}
 \alias{liftover}
-\title{Liftover Bedpe.}
+\title{Liftover.}
 \usage{
 liftover(
   data_df,
@@ -36,12 +36,17 @@ liftover(
 Data frame containing original bedpe data with new coordinates.
 }
 \description{
-Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
+Use liftOver to convert a coordinate-based file between the two main genome builds (grch37/hg38).
 }
 \details{
-The user can specify a path to the bedpe file that needs to be lifted with \code{bedpe_file},
-or, the user can specify the bedpe data in a data frame with \code{bedpe_df}.
+The user can specify the data to be converted to another genome build in a data frame with \code{data_df}.
+For the bedpe data, the user can optionally also specify a path to the bedpe file that needs to be lifted with \code{bedpe_file}
+(remained here for backwards compatibility).
+
 The other required parameter is \code{target_build}, this parameter decides the final projection of the lifted data.
+
+The data type can be specified with the \code{mode} argument, which accepts one of the bedpe (default, maf, or bed files).
+Other formats are not supported yet.
 }
 \examples{
 bed <- grch37_ashm_regions
@@ -52,7 +57,9 @@ test <- liftover(
     target_build = "hg38"
 )
 
-maf <- get_coding_ssm()
+maf <- get_coding_ssm(
+     these_sample_ids = "DOHH-2"
+)
 
 test <- liftover(
     data_df = maf,
@@ -60,7 +67,9 @@ test <- liftover(
     target_build = "hg38"
 )
 
-bedpe <- get_manta_sv()
+bedpe <- get_manta_sv(
+     these_sample_ids = "DOHH-2"
+)
 
 test <- liftover(
     data_df = bedpe,

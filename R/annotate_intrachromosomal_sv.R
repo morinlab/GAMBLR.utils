@@ -5,7 +5,7 @@
 #' @details Specify a data frame with SVs (preferably the output from get_manta_sv() to the `sv_data` parameter and get back the same data frame with SV annotations.
 #'
 #' @param sv_data A data frame of SVs. This should be the output of get_manta_sv.
-#' The required columns are columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE and tumour_sample_id.
+#' The required columns are columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE, tumour_sample_id, and manta_name (can be NAs for output from other tools).
 #' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
 #' @param projection Reference genome build parameter. Can be one of grch37 or hg38. The default is grch37.
 #' @param types A vector of sv types to be annotated. The default is set to "DEL", "DUP", "INS", and "INV".

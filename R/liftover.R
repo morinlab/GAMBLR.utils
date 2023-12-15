@@ -1,10 +1,15 @@
-#' @title Liftover Bedpe.
+#' @title Liftover.
 #'
-#' @description Use liftOver to convert a bedpe file between the two main genome builds (grch37/hg38).
+#' @description Use liftOver to convert a coordinate-based file between the two main genome builds (grch37/hg38).
 #'
-#' @details The user can specify a path to the bedpe file that needs to be lifted with `bedpe_file`,
-#' or, the user can specify the bedpe data in a data frame with `bedpe_df`.
+#' @details The user can specify the data to be converted to another genome build in a data frame with `data_df`.
+#' For the bedpe data, the user can optionally also specify a path to the bedpe file that needs to be lifted with `bedpe_file`
+#' (remained here for backwards compatibility).
+#' 
 #' The other required parameter is `target_build`, this parameter decides the final projection of the lifted data.
+#' 
+#' The data type can be specified with the `mode` argument, which accepts one of the bedpe (default, maf, or bed files).
+#' Other formats are not supported yet.
 #'
 
 #' @param data_df Input data to be lifted to another projection in the format of data frame.
@@ -32,7 +37,9 @@
 #'     target_build = "hg38"
 #' )
 #'
-#' maf <- get_coding_ssm()
+#' maf <- get_coding_ssm(
+#'      these_sample_ids = "DOHH-2"
+#' )
 #'
 #' test <- liftover(
 #'     data_df = maf,
@@ -40,7 +47,9 @@
 #'     target_build = "hg38"
 #' )
 #'
-#' bedpe <- get_manta_sv()
+#' bedpe <- get_manta_sv(
+#'      these_sample_ids = "DOHH-2"
+#' )
 #'
 #' test <- liftover(
 #'     data_df = bedpe,
