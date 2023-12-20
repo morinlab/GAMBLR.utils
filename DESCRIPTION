@@ -29,6 +29,8 @@ Imports:
     purrr,
     readr,
     Rsamtools,
+    rtracklayer,
+    S4Vectors,
     SRAdb,
     stringr,
     tibble,
