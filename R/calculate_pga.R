@@ -176,6 +176,13 @@ calculate_pga = function(this_seg,
    affected_regions = affected_regions %>%
     rename("sample_id" = "sample")
    colnames(affected_regions)[2:ncol(affected_regions)] <- paste0("chr",colnames(affected_regions)[2:ncol(affected_regions)],"_pga")
+   affected_regions <- affected_regions %>%
+    rename_at(
+        vars(
+            matches("^chrchr")
+        ),
+        ~ gsub("^chr", "", .)
+    )
   } else {
    affected_regions <- affected_regions %>%
         group_by(sample) %>%
