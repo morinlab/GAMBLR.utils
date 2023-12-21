@@ -14,6 +14,7 @@
 #' @param cutoff The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be a positive float of log.ratio for both deletions and amplifications.
 #' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
 #' @param exclude_centromeres Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.
+#' @param per_chromosome Boolean argument definint whether the PGA should be calculated per total genome size (default) or per each individual chromosome.
 #'
 #' @return data frame
 #'
@@ -21,22 +22,19 @@
 #' @export
 #'
 #' @examples
-#' # for a single sample
-#' sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
-#'                            ID == "02-13135T")
-#' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
+#' seg <- get_sample_cn_segments(
+#'     these_sample_ids = c(
+#'         "14-36022T",
+#'         "DOHH-2"
+#'     )
+#' )
+#' seg <- dplyr::rename(seg, "sample" = "ID")
 #'
-#' calculate_pga(this_seg = sample_seg)
-#'
-#' calculate_pga(this_seg = sample_seg,
-#'               exclude_sex = FALSE)
-#'
-#' # for multiple samples
-#' multi_sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
-#'                                  ID  %in% c("02-13135T", "SU-DHL-4"))
-#' multi_sample_seg = dplyr::rename(multi_sample_seg, "sample" = "ID")
-#'
-#' calculate_pga(this_seg = multi_sample_seg)
+#' total_pga <- calculate_pga(this_seg = seg)
+#' per_chromosome_pga <- calculate_pga(
+#'      this_seg = seg,
+#'      per_chromosome = TRUE
+#' )
 #'
 calculate_pga = function(this_seg,
                          seg_path,
