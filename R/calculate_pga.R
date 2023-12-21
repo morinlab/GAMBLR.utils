@@ -1,20 +1,35 @@
 #' @title Calculate proportion of genome altered by CNV.
 #'
-#' @description `calculate_pga` returns a data.frame with estimated proportion of genome altered for each sample.
+#' @description `calculate_pga` returns a data.frame with estimated proportion
+#'      of genome altered for each sample.
 #'
-#' @details This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
-#' sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be a seg file.
-#' The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
-#' sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg files. The telomeres are always
-#' excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
+#' @details This function calculates the percent of genome altered (PGA) by CNV.
+#' It takes into account the total length of sample's CNV and relates it to the
+#' total genome length to return the proportion affected by CNV. In addition,
+#' there is an option to calculate PGA per each chromosome individually by
+#' setting the argument "per_chromosome" to TRUE.
+#' The input is expected to be a seg file. The path to a local SEG file can also
+#' be provided. If The custom seg file is provided, the minimum required columns
+#' are sample, chrom, start, end, and log.ratio.
+#' The function can work with either individual or multi-sample seg files.
+#' The telomeres are always excluded from calculation, and centromeres/sex
+#' chromosomes can be optionally included or excluded.
 #'
 #' @param this_seg Input data frame of seg file.
 #' @param seg_path Optionally, specify the path to a local seg file.
-#' @param projection Argument specifying the projection of seg file, which will determine chr prefix, chromosome coordinates, and genome size. Default is grch37, but hg38 is also accepted.
-#' @param cutoff The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be a positive float of log.ratio for both deletions and amplifications.
-#' @param exclude_sex Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.
-#' @param exclude_centromeres Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.
-#' @param per_chromosome Boolean argument definint whether the PGA should be calculated per total genome size (default) or per each individual chromosome.
+#' @param projection Argument specifying the projection of seg file, which will
+#'      determine chr prefix, chromosome coordinates, and genome size. Default
+#'      is grch37, but hg38 is also accepted.
+#' @param cutoff The minimum log.ratio for the segment to be considered as CNV.
+#'      Default is 0.56, which is 1 copy. This value is expected to be a
+#'      positive float of log.ratio for both deletions and amplifications.
+#' @param exclude_sex Boolean argument specifying whether to exclude sex
+#'      chromosomes from calculation. Default is TRUE.
+#' @param exclude_centromeres Boolean argument specifying whether to exclude
+#'      centromeres from calculation. Default is TRUE.
+#' @param per_chromosome Boolean argument definint whether the PGA should be
+#'      calculated per total genome size (default) or per each individual
+#'      chromosome.
 #'
 #' @return data frame
 #'
