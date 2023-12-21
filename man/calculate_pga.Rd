@@ -10,7 +10,8 @@ calculate_pga(
   projection = "grch37",
   cutoff = 0.56,
   exclude_sex = TRUE,
-  exclude_centromeres = TRUE
+  exclude_centromeres = TRUE,
+  per_chromosome = FALSE
 )
 }
 \arguments{
@@ -18,43 +19,57 @@ calculate_pga(
 
 \item{seg_path}{Optionally, specify the path to a local seg file.}
 
-\item{projection}{Argument specifying the projection of seg file, which will determine chr prefix, chromosome coordinates, and genome size. Default is grch37, but hg38 is also accepted.}
+\item{projection}{Argument specifying the projection of seg file, which will
+determine chr prefix, chromosome coordinates, and genome size. Default
+is grch37, but hg38 is also accepted.}
 
-\item{cutoff}{The minimum log.ratio for the segment to be considered as CNV. Default is 0.56, which is 1 copy. This value is expected to be a positive float of log.ratio for both deletions and amplifications.}
+\item{cutoff}{The minimum log.ratio for the segment to be considered as CNV.
+Default is 0.56, which is 1 copy. This value is expected to be a
+positive float of log.ratio for both deletions and amplifications.}
 
-\item{exclude_sex}{Boolean argument specifying whether to exclude sex chromosomes from calculation. Default is TRUE.}
+\item{exclude_sex}{Boolean argument specifying whether to exclude sex
+chromosomes from calculation. Default is TRUE.}
 
-\item{exclude_centromeres}{Boolean argument specifying whether to exclude centromeres from calculation. Default is TRUE.}
+\item{exclude_centromeres}{Boolean argument specifying whether to exclude
+centromeres from calculation. Default is TRUE.}
+
+\item{per_chromosome}{Boolean argument definint whether the PGA should be
+calculated per total genome size (default) or per each individual
+chromosome.}
 }
 \value{
 data frame
 }
 \description{
-\code{calculate_pga} returns a data.frame with estimated proportion of genome altered for each sample.
+\code{calculate_pga} returns a data.frame with estimated proportion
+of genome altered for each sample.
 }
 \details{
-This function calculates the percent of genome altered (PGA) by CNV. It takes into account the total length of
-sample's CNV and relates it to the total genome length to return the proportion affected by CNV. The input is expected to be a seg file.
-The path to a local SEG file can be provided instead. If The custom seg file is provided, the minimum required columns are
-sample, chrom, start, end, and log.ratio. The function can work with either individual or multi-sample seg files. The telomeres are always
-excluded from calculation, and centromeres/sex chromosomes can be optionally included or excluded.
+This function calculates the percent of genome altered (PGA) by CNV.
+It takes into account the total length of sample's CNV and relates it to the
+total genome length to return the proportion affected by CNV. In addition,
+there is an option to calculate PGA per each chromosome individually by
+setting the argument "per_chromosome" to TRUE.
+The input is expected to be a seg file. The path to a local SEG file can also
+be provided. If The custom seg file is provided, the minimum required columns
+are sample, chrom, start, end, and log.ratio.
+The function can work with either individual or multi-sample seg files.
+The telomeres are always excluded from calculation, and centromeres/sex
+chromosomes can be optionally included or excluded.
 }
 \examples{
-# for a single sample
-sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
-                           ID == "02-13135T")
-sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
+seg <- get_sample_cn_segments(
+    these_sample_ids = c(
+        "14-36022T",
+        "DOHH-2"
+    )
+)
+seg <- dplyr::rename(seg, "sample" = "ID")
 
-calculate_pga(this_seg = sample_seg)
-
-calculate_pga(this_seg = sample_seg,
-              exclude_sex = FALSE)
-
-# for multiple samples
-multi_sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
-                                 ID  \%in\% c("02-13135T", "SU-DHL-4"))
-multi_sample_seg = dplyr::rename(multi_sample_seg, "sample" = "ID")
-
-calculate_pga(this_seg = multi_sample_seg)
+total_pga <- calculate_pga(this_seg = seg)
+per_chromosome_pga <- calculate_pga(
+     this_seg = seg,
+     per_chromosome = TRUE
+)
 
 }
