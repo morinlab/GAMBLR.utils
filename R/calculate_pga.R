@@ -25,17 +25,17 @@
 #' sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
 #'                            ID == "02-13135T")
 #' sample_seg = dplyr::rename(sample_seg, "sample" = "ID")
-#' 
+#'
 #' calculate_pga(this_seg = sample_seg)
-#' 
+#'
 #' calculate_pga(this_seg = sample_seg,
 #'               exclude_sex = FALSE)
-#' 
+#'
 #' # for multiple samples
 #' multi_sample_seg = dplyr::filter(GAMBLR.data::sample_data$grch37$seg,
 #'                                  ID  %in% c("02-13135T", "SU-DHL-4"))
 #' multi_sample_seg = dplyr::rename(multi_sample_seg, "sample" = "ID")
-#' 
+#'
 #' calculate_pga(this_seg = multi_sample_seg)
 #'
 calculate_pga = function(this_seg,
@@ -43,7 +43,8 @@ calculate_pga = function(this_seg,
                          projection = "grch37",
                          cutoff = 0.56,
                          exclude_sex = TRUE,
-                         exclude_centromeres = TRUE) {
+                         exclude_centromeres = TRUE,
+                         per_chromosome = FALSE) {
   # check for required argument
   if (missing(this_seg) & missing (seg_path)) {
     stop("Please provide the data frame of seg file or path to the local seg.")
@@ -84,9 +85,17 @@ calculate_pga = function(this_seg,
 
   # prepare for the overlaps
   chr_coordinates = chr_coordinates  %>%
-    rename("arm_start" = "start",
+    dplyr::rename("arm_start" = "start",
            "arm_end" = "end",
-           "chrom" = "chromosome")
+           "chrom" = "chromosome") %>%
+    dplyr::mutate(
+      chr_len = arm_start + arm_end
+    )
+
+
+  # This is for calculation in per-chr mode
+  all_chr <- chr_coordinates %>%
+    distinct(chrom)
 
   # work out the seg file
   if (!missing(seg_path)) {
@@ -130,23 +139,47 @@ calculate_pga = function(this_seg,
 
   # calculate total length of CNV
   affected_regions = this_seg %>%
-    dplyr::mutate(size = end - start) %>%
-    group_by(sample) %>%
-    summarise(total = sum(size))
+    dplyr::mutate(size = end - start)
 
-  affected_regions$PGA = affected_regions$total / genome_size
+  if(per_chromosome){
+   affected_regions <- affected_regions %>%
+    group_by(sample, chrom) %>%
+    summarise(total = sum(size),
+              chrom_len = unique(chr_len))
+   affected_regions$PGA.chr = affected_regions$total/affected_regions$chrom_len
+     # add chr with 0
+   affected_regions = affected_regions %>%
+    dplyr::select(!all_of(c("total", "chrom_len"))) %>%
+    dplyr::mutate(PGA.chr = round(PGA.chr, 3)) %>%
+    pivot_wider(names_from = chrom, values_from = PGA.chr)
 
-  # now add any samples that can have 0 PGA
-  affected_regions = base::merge(sample_set,
+      # now add any samples that can have 0 PGA
+   affected_regions = base::merge(sample_set,
+                                 affected_regions,
+                                 all.x = TRUE)
+
+   affected_regions[is.na(affected_regions)] <- 0
+
+   affected_regions = affected_regions %>%
+    rename("sample_id" = "sample")
+   colnames(affected_regions)[2:ncol(affected_regions)] <- paste0("chr",colnames(affected_regions)[2:ncol(affected_regions)],"_pga")
+  } else {
+   affected_regions <- affected_regions %>%
+        group_by(sample) %>%
+        summarise(total = sum(size))
+   affected_regions$PGA = affected_regions$total/genome_size
+   # now add any samples that can have 0 PGA
+   affected_regions = base::merge(sample_set,
                                  affected_regions,
                                  all.x = TRUE) %>%
     replace_na(list(PGA = 0))
 
-  affected_regions = affected_regions %>%
+   affected_regions = affected_regions %>%
     select(-total) %>%
     `names<-`(c("sample_id", "PGA")) %>%
     as.data.frame() %>%
     dplyr::mutate(PGA = round(PGA, 3))
+  }
 
   return(affected_regions)
 
