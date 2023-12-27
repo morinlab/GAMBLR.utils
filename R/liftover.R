@@ -11,7 +11,6 @@
 #' The data type can be specified with the `mode` argument, which accepts one of the bedpe (default, maf, or bed files).
 #' Other formats are not supported yet.
 #'
-
 #' @param data_df Input data to be lifted to another projection in the format of data frame.
 #' @param mode Specify the type of data to be converted. Available options are "bedpe" (default), "maf", and "bed".
 #' @param target_build Specify which build the data should be lifted to (must be one of hg19, grch37, hg38, grch38).
@@ -23,9 +22,10 @@
 #'
 #' @return Data frame containing original bedpe data with new coordinates.
 #'
-#' @rawNamespace import(S4Vectors, except = c("merge", "second", "first", "union", "intersect", "setdiff", "setequal", "rename", "expand"))
+#' @rawNamespace import(S4Vectors, except = c("merge", "second", "first", "union", "intersect", "setdiff", "setequal", "rename", "expand", "head", "tail", "end", "start"))
 #' @rawNamespace import(GenomicRanges, except = c("start", "end", "merge", "shift", "union", "intersect", "setdiff", "reduce", "trim"))
-#' @import dplyr tidyr readr rtracklayer GAMBLR.data
+#' @rawNamespace import(rtracklayer, except = c("start", "end"))
+#' @import dplyr tidyr readr GAMBLR.data
 #' @export
 #'
 #' @examples
