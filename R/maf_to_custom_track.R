@@ -16,6 +16,8 @@
 #' @param track_description Track description. Default is "mutations from GAMBL"
 #' @param verbose Default is FALSE.
 #' @param padding_size Optional parameter specifying the padding size in the returned file, default is 0.
+#' @param browser_base_path A string that contains the path to the root directory of your local LLMPP repository.
+#' @param ucsc_tools_path A string that contains the path to the directory where you downloaded the UCSC-tool `bedToBigBed`.
 #'
 #' @return Nothing.
 #'
@@ -37,7 +39,11 @@ maf_to_custom_track = function(maf_data,
                                track_name = "GAMBL mutations",
                                track_description = "mutations from GAMBL",
                                verbose = FALSE,
-                               padding_size = 0){
+                               padding_size = 0,
+                               browser_base_path = "/Users/rmorin/git/LLMPP",
+                               ucsc_tools_path = "/Users/rmorin/miniconda3/envs/ucsc/bin"){
+  
+  
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
@@ -110,19 +116,24 @@ maf_to_custom_track = function(maf_data,
 
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
-      autosql_file = "/Users/rmorin/git/LLMPP/resources/reference/ucsc/bigLollyExample3.as"
+      autosql_file = file.path(browser_base_path, "resources/reference/ucsc/bigLollyExample3.as")
 
-      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
-      bigbed_conversion = paste0(bigbedtobed," -as=",autosql_file," -type=bed9+1 ",temp_bed," /Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes ",output_file)
+      bigbedtobed = file.path(ucsc_tools_path, "bedToBigBed")
+      bigbed_conversion = paste(bigbedtobed, "-as=", autosql_file, "-type=bed9+1", temp_bed,
+                                file.path(browser_base_path, "resources/reference/ucsc/hg19.chrom.sizes"),
+                                output_file)
       print(bigbed_conversion)
       system(bigbed_conversion)
     }else{
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
-      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
-      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
+      bigbedtobed = file.path(ucsc_tools_path, "bedToBigBed")
+      bigbed_conversion = paste(bigbedtobed, "-type=bed9", temp_bed, 
+                                file.path(browser_base_path, "resources/reference/ucsc/hg19.chrom.sizes"),
+                                output_file)
 
       system(bigbed_conversion)
+      unlink(temp_bed)
     }
   }else{
     header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')

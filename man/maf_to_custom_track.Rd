@@ -15,7 +15,9 @@ maf_to_custom_track(
   track_name = "GAMBL mutations",
   track_description = "mutations from GAMBL",
   verbose = FALSE,
-  padding_size = 0
+  padding_size = 0,
+  browser_base_path = "/Users/rmorin/git/LLMPP",
+  ucsc_tools_path = "/Users/rmorin/miniconda3/envs/ucsc/bin"
 )
 }
 \arguments{
@@ -40,6 +42,10 @@ maf_to_custom_track(
 \item{verbose}{Default is FALSE.}
 
 \item{padding_size}{Optional parameter specifying the padding size in the returned file, default is 0.}
+
+\item{browser_base_path}{A string that contains the path to the root directory of your local LLMPP repository.}
+
+\item{ucsc_tools_path}{A string that contains the path to the directory where you downloaded the UCSC-tool \code{bedToBigBed}.}
 }
 \value{
 Nothing.
