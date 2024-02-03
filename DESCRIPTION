@@ -2,7 +2,7 @@ Type: Package
 Package: GAMBLR.utils
 Title: Collection of functions that consist of the core functionality of
     GAMBLR
-Version: 0.1.0
+Version: 1.1.1
 Authors@R:
     person("Vladimir", "Souza", , "vsouza@bcgsc.ca", role = c("aut", "cre"))
 Description: This package is part of the Genomic Analysis of Mature B-cell
