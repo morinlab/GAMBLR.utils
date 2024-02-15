@@ -15,7 +15,8 @@ maf_to_custom_track(
   track_name = "GAMBL mutations",
   track_description = "mutations from GAMBL",
   verbose = FALSE,
-  padding_size = 0
+  padding_size = 0,
+  projection = "grch37"
 )
 }
 \arguments{
@@ -40,6 +41,9 @@ maf_to_custom_track(
 \item{verbose}{Default is FALSE.}
 
 \item{padding_size}{Optional parameter specifying the padding size in the returned file, default is 0.}
+
+\item{projection}{Specify which genome build to use. Possible values are "grch37" (default) or "hg38". This parameter has
+effect only when \code{as_bigbed} or \code{as_biglolly} is TRUE.}
 }
 \value{
 Nothing.
@@ -53,7 +57,8 @@ Optional parameters available for further customization of the returned file. Fo
 }
 \examples{
 library(GAMBLR.data)
-my_maf <- get_coding_ssm()
+region_myc <- dplyr::filter(grch37_lymphoma_genes_bed, hgnc_symbol == "MYC")
+my_maf <- get_ssm_by_regions(regions_bed = region_myc, streamlined = FALSE)
 maf_to_custom_track(maf_data = my_maf, output_file = "../mutations.bed")
 
 }
