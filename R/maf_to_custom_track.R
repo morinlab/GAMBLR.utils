@@ -16,6 +16,8 @@
 #' @param track_description Track description. Default is "mutations from GAMBL"
 #' @param verbose Default is FALSE.
 #' @param padding_size Optional parameter specifying the padding size in the returned file, default is 0.
+#' @param projection Specify which genome build to use. Possible values are "grch37" (default) or "hg38". This parameter has 
+#'   effect only when `as_bigbed` or `as_biglolly` is TRUE.
 #'
 #' @return Nothing.
 #'
@@ -24,7 +26,8 @@
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' my_maf <- get_coding_ssm()
+#' region_myc <- dplyr::filter(grch37_lymphoma_genes_bed, hgnc_symbol == "MYC")
+#' my_maf <- get_ssm_by_regions(regions_bed = region_myc, streamlined = FALSE)
 #' maf_to_custom_track(maf_data = my_maf, output_file = "../mutations.bed")
 #'
 maf_to_custom_track = function(maf_data,
@@ -37,7 +40,8 @@ maf_to_custom_track = function(maf_data,
                                track_name = "GAMBL mutations",
                                track_description = "mutations from GAMBL",
                                verbose = FALSE,
-                               padding_size = 0){
+                               padding_size = 0,
+                               projection = "grch37"){
 
   #reduce to a bed-like format
   maf_data = dplyr::select(maf_data, Chromosome, Start_Position, End_Position, Tumor_Sample_Barcode)
@@ -88,7 +92,7 @@ maf_to_custom_track = function(maf_data,
 
     if(grepl(pattern = ".bb$",x = output_file)){
       #temp file will be .bed
-      temp_bed = gsub(".bb$",".bed",output_file)
+      temp_bed = tempfile(pattern = "bed_")
 
     }else{
       stop("please provide an output file name ending in .bb to create a bigBed file")
@@ -96,6 +100,27 @@ maf_to_custom_track = function(maf_data,
 
     maf_coloured = mutate(maf_coloured,sample_id="redacted") %>%
       arrange(chrom,start)
+    
+    # get bedToBigBed path from config file (config.yml from GAMBLR.results)
+    bedtobigbed <- GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
+    
+    # create temp file chrom.sizes
+    if(projection == "grch37"){
+      chr_arms <- GAMBLR.data::chromosome_arms_grch37 %>% 
+        mutate(chromosome = paste0("chr", chromosome))
+    }else if(projection == "hg38"){
+      chr_arms <- GAMBLR.data::chromosome_arms_hg38
+    }else{
+      stop("projection parameter must be \"grch37\" or \"hg38\".")
+    }
+    chr_sizes <- chr_arms %>%
+      dplyr::filter(arm == "q") %>%
+      dplyr::select(chromosome, end) %>%
+      rename(size = "end")
+    temp_chr_sizes <- tempfile(pattern = "chrom.sizes_")
+    write.table(chr_sizes, file = temp_chr_sizes, quote = FALSE, row.names = FALSE, 
+                col.names = FALSE, sep = "\t")
+
     if(as_biglolly){
       #currently the same code is run either way but this may change so I've separated this until we settle on format
       #TO DO: collapse based on hot spot definition and update column 4 (score) based on recurrence
@@ -112,18 +137,18 @@ maf_to_custom_track = function(maf_data,
       #conversion:
       autosql_file = "/Users/rmorin/git/LLMPP/resources/reference/ucsc/bigLollyExample3.as"
 
-      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
-      bigbed_conversion = paste0(bigbedtobed," -as=",autosql_file," -type=bed9+1 ",temp_bed," /Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes ",output_file)
+      bigbed_conversion = paste(bedtobigbed, "-as=", autosql_file, "-tab -type=bed9+1", temp_bed,
+                                temp_chr_sizes, output_file)
       print(bigbed_conversion)
       system(bigbed_conversion)
     }else{
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
-      bigbedtobed = "/Users/rmorin/miniconda3/envs/ucsc/bin/bedToBigBed"
-      bigbed_conversion = paste(bigbedtobed,"-type=bed9",temp_bed,"/Users/rmorin/git/LLMPP/resources/reference/ucsc/hg19.chrom.sizes",output_file)
-
+      bigbed_conversion = paste(bedtobigbed, "-tab -type=bed9", temp_bed, temp_chr_sizes, output_file)
+      
       system(bigbed_conversion)
     }
+    unlink(c(temp_bed, temp_chr_sizes))
   }else{
     header_ucsc = paste0('track name="',track_name,'" description="', track_description, '" visibility=2 itemRgb="On"\n')
     cat(header_ucsc,file = output_file)
