@@ -4,13 +4,9 @@
 #' 
 #' @details 
 #'
-#' @param maf_data A MAF data frame.
 #' @param regions_bed A BED-format table with the regions you want to retrive SSMs 
 #'   from. The columns 1, 2 and 3 must be chromosome names, start positions and 
 #'   end positions, respectively. 
-#' @param regions_description Possible values are NULL (default), "ashm", "coding", 
-#' "all. Ignored if regions_bed is provided.
-#' @param all_ashm_only A Boolean value. If TRUE, `regions_bed = GAMBLR.data::grch37_ashm_regions`.
 #' @param these_sample_ids A vector of sample_id that you want results for.
 #' @param these_samples_metadata A metadata table (with sample IDs in a column) to 
 #'   subset the samples of interest.
@@ -43,10 +39,7 @@
 #'
 #' @examples
 #' 
-build_browser_hub <- function(maf_data, 
-                              regions_bed,
-                              regions_description = "ashm",
-                              all_ashm_only = TRUE,
+build_browser_hub <- function(regions_bed,
                               these_sample_ids = NULL,
                               these_samples_metadata = NULL,
                               this_seq_type = "genome",
@@ -71,13 +64,6 @@ build_browser_hub <- function(maf_data,
                                    these_sample_ids = these_sample_ids,
                                    verbose = FALSE,
                                    this_seq_type = this_seq_type)
-  
-  # get mutation regions
-  if(!missing(regions_bed)){
-    ######## any column to select?
-  }else{
-    stop("see what to do with regions_description or all_ashm_only")
-  }
   
   # save regions_bed to a bb file
   temp_bed <- tempfile(pattern = "regionsBed_", fileext = ".bed")
@@ -107,25 +93,12 @@ build_browser_hub <- function(maf_data,
   unlink(temp_bed)
   unlink(temp_chr_sizes)
   
-  # get maf
-  if(missing(maf_data)){
-    # get maf data from the specified regions and metadata/samples
-    maf_data <- get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = this_seq_type,
-                                   these_samples_metadata = these_samples_metadata, 
-                                   projection = projection, streamlined = FALSE, 
-                                   basic_columns = TRUE) %>% 
-      suppressMessages
-    
-  }else{
-    # subset provided maf to samples in these_samples_metadata
-    k <- maf_data$Tumor_Sample_Barcode %in% these_samples_metadata$sample_id
-    if( !all(k) ){
-      k <- gettextf("Because you provided a maf_data together with these_samples_metadata and/or these_sample_ids, %i rows of your MAF was filtered out.",
-                    sum(!k))
-      warning(k)
-      maf_data <- dplyr::filter(maf_data, k)
-    }
-  }
+  # get maf data from the specified regions and metadata/samples
+  maf_data <- get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = this_seq_type,
+                                 these_samples_metadata = these_samples_metadata, 
+                                 projection = projection, streamlined = FALSE, 
+                                 basic_columns = TRUE) %>% 
+    suppressMessages
   
   # split maf table according to splitColumnName
   if(!is.null(splitColumnName)){
