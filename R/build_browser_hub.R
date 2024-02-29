@@ -121,7 +121,7 @@ build_browser_hub <- function(maf_data,
     k <- maf_data$Tumor_Sample_Barcode %in% these_samples_metadata$sample_id
     if( !all(k) ){
       k <- gettextf("Because you provided a maf_data together with these_samples_metadata and/or these_sample_ids, %i rows of your MAF was filtered out.",
-               sum(!k))
+                    sum(!k))
       warning(k)
       maf_data <- dplyr::filter(maf_data, k)
     }
