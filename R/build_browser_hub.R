@@ -99,32 +99,39 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                                    this_seq_type = this_seq_type)
   
   # save regions_bed to a bb file
-  temp_bed <- tempfile(pattern = "regionsBed_", fileext = ".bed")
   regions_bed <- dplyr::select(regions_bed, 1,2,3) %>% 
     arrange( .[[1]], .[[2]] )
-  write.table(regions_bed, temp_bed, quote = FALSE, sep = "\t", row.names = FALSE, 
-              col.names = FALSE)
-  if(projection == "grch37"){
-    chr_arms <- GAMBLR.data::chromosome_arms_grch37 %>% 
-      mutate(chromosome = paste0("chr", chromosome))
-  }else if(projection == "hg38"){
-    chr_arms <- GAMBLR.data::chromosome_arms_hg38
+  if(as_bigbed){
+    temp_bed <- tempfile(pattern = "regionsBed_", fileext = ".bed")
+    write.table(regions_bed, temp_bed, quote = FALSE, sep = "\t", row.names = FALSE, 
+                col.names = FALSE)
+    if(projection == "grch37"){
+      chr_arms <- GAMBLR.data::chromosome_arms_grch37 %>% 
+        mutate(chromosome = paste0("chr", chromosome))
+    }else if(projection == "hg38"){
+      chr_arms <- GAMBLR.data::chromosome_arms_hg38
+    }else{
+      stop("projection parameter must be \"grch37\" or \"hg38\".")
+    }
+    chr_sizes <- chr_arms %>%
+      dplyr::filter(arm == "q") %>%
+      dplyr::select(chromosome, end) %>%
+      rename(size = "end")
+    temp_chr_sizes <- tempfile(pattern = "chrom.sizes_")
+    write.table(chr_sizes, temp_chr_sizes, quote = FALSE, sep = "\t", row.names = FALSE, 
+                col.names = FALSE)
+    bedtobigbed <- GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
+    regions_bed_file = file.path(track_dir, "regions.bb")
+    bigbed_conversion = gettextf("%s %s %s %s", bedtobigbed, temp_bed, temp_chr_sizes, 
+                                 regions_bed_file)
+    system(bigbed_conversion)
+    unlink(temp_bed)
+    unlink(temp_chr_sizes)
   }else{
-    stop("projection parameter must be \"grch37\" or \"hg38\".")
+    regions_bed_file = file.path(track_dir, "regions.bed")
+    write.table(regions_bed, regions_bed_file, quote = FALSE, sep = "\t", row.names = FALSE, 
+                col.names = FALSE)
   }
-  chr_sizes <- chr_arms %>%
-    dplyr::filter(arm == "q") %>%
-    dplyr::select(chromosome, end) %>%
-    rename(size = "end")
-  temp_chr_sizes <- tempfile(pattern = "chrom.sizes_")
-  write.table(chr_sizes, temp_chr_sizes, quote = FALSE, sep = "\t", row.names = FALSE, 
-              col.names = FALSE)
-  bedtobigbed <- GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
-  bigbed_conversion = file.path(track_dir, "regions.bb") %>% 
-    gettextf("%s %s %s %s", bedtobigbed, temp_bed, temp_chr_sizes, .)
-  system(bigbed_conversion)
-  unlink(temp_bed)
-  unlink(temp_chr_sizes)
   
   # get maf data from the specified regions and metadata/samples
   maf_data <- get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = this_seq_type,
@@ -163,11 +170,14 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   }, maf_data, track_names_file, these_samples_metadata) %>% 
     invisible
   
-  # create hub.txt file
-  hub_file <- file.path(hub_dir_full_path, "hub.txt")
   
+  ### create hub.txt file
+  
+  # open file
+  hub_file <- file.path(hub_dir_full_path, "hub.txt")
   sink(hub_file)
   
+  # write header
   cat( paste0("hub ", hub_name, "\n") )
   cat( paste0("shortLabel ", shortLabel, "\n") )
   cat( paste0("longLabel ", longLabel, "\n") )
@@ -176,18 +186,31 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   cat( "\n" )
   cat( paste0("genome ", replace(projection, projection == "grch37", "hg19"), "\n") )
   
+  # write info of the track which stores regions from where ssms are retrieved
+  cat( "\n" )
+  cat( paste0("track ", hub_name, "_regions\n") )
+  cat( paste0("shortLabel ", hub_name, " regions\n") )
+  cat( paste0("longLabel Regions where mutations were taken to hub ", hub_name, "\n") )
+  cat( paste0("visibility ", visibility, "\n") )
+  cat( paste0("priority 1\n") )
+  cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
+  file.path(bigDataUrl_base, hub_dir, projection, basename(regions_bed_file)) %>% 
+    { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
+  
+  # write info of the tracks that store ssms split by splitColumnName
   for(i in seq_along(track_names)){
     cat( "\n" )
     cat( paste0("track ", hub_name, "_", track_names[i], "\n") )
     cat( paste0("shortLabel ", hub_name, " ", track_names[i], "\n") )
     cat( paste0("longLabel ", hub_name, " ", track_names[i], "\n") )
     cat( paste0("visibility ", visibility, "\n") )
-    cat( paste0("priority ", i, "\n") )
+    cat( paste0("priority ", i+1, "\n") )
     cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
     cat( "itemRgb on\n" )
     file.path(bigDataUrl_base, hub_dir, projection, track_names_file[i]) %>% 
       { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
   }
   
+  # close file
   sink()
 }
