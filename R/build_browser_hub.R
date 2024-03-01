@@ -2,19 +2,34 @@
 #' 
 #' @description 
 #' 
-#' @details 
+#' @details The `bigDataUrl` field of a track in the hub.txt file is defined in 
+#' the following way:
+#' 
+#' ```
+#' file.path(bigDataUrl_base, hub_dir, projection, 
+#'           paste0(track_names_file[i], "?raw=true\n"))
+#' ```
 #'
-#' @param regions_bed A BED-format table with the regions you want to retrive SSMs 
+#' where `track_names_file[i]` is a value in the metadata column specified by 
+#' `splitColumnName`, followed by the file extension .bed or .bb.
+#'
+#' @param regions_bed A BED-format table with the regions you want to retrieve SSMs 
 #'   from. The columns 1, 2 and 3 must be chromosome names, start positions and 
-#'   end positions, respectively. 
+#'   end positions, respectively. The default is the `GAMBLR.data::grch37_ashm_regions`
+#'   object which contains public-available SSMs from aSHM regions, but any other 
+#'   regions can be provided.
 #' @param these_sample_ids A vector of sample_id that you want results for.
 #' @param these_samples_metadata A metadata table (with sample IDs in a column) to 
 #'   subset the samples of interest.
 #' @param this_seq_type The seq type you want results for. Possible values are "genome"
 #'   (default), "capture", or "mrna".
 #' @param projection The projection genome build. One of "grch37" (default) or "hg38".
-#' @param hub_dir Path to the directory where you want to build your track hub. 
-#'   If this directory does not exist, it will be created. 
+#' @param local_web_host_dir Path to the directory where is your local copy of the
+#'   web host to use. For example, if the hub should be hosted on GitHub, `local_web_host_dir` 
+#'   should be the path to your local copy of the repository directory. Default
+#'   is NULL.
+#' @param hub_dir Path to the directory (inside a web host) where you want to build 
+#'   your track hub. If this directory does not exist, it will be created. 
 #' @param as_bigbed A Boolean value. If TRUE (default), custom tracks are saved as
 #'   bigBed (.bb) files. BED files otherwise.
 #' @param splitColumnName An single string to indicate which metadata column is used 
@@ -31,20 +46,26 @@
 #'   the hub.txt file. Default is `rdmorin@sfu.ca`.
 #' @param visibility A string that controls the track visibility mode. Possible 
 #'   values are "pack", "dense", "full", or "squish" (default).
-#' @param bigDataUrl_dir The web location directory of the track's data file. The 
-#'   default is `file.path("https://github.com/morinlab/LLMPP/blob/main/hubs", hub_name)`.
+#' @param bigDataUrl_base A string with the base path of the web location of the 
+#'   tracks' data files (`bigDataUrl` fields from the hub.txt file). For example, 
+#'   if the hub should be hosted on GitHub, `bigDataUrl_base` should be something 
+#'   like "https://github.com/morinlab/LLMPP/blob/main" (the default). See how the 
+#'   track's paths from the bigDataUrl fields are set in the **Details** section.
 #'
 #' @return Nothing.
+#' 
+#' @import dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
 #' 
-build_browser_hub <- function(regions_bed,
+build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                               these_sample_ids = NULL,
                               these_samples_metadata = NULL,
                               this_seq_type = "genome",
                               projection = "grch37",
-                              hub_dir = "./my_hub",
+                              local_web_host_dir = NULL,
+                              hub_dir = "my_hub",
                               as_bigbed = TRUE,
                               splitColumnName = "pathology",
                               hub_name = basename(hub_dir),
@@ -52,11 +73,23 @@ build_browser_hub <- function(regions_bed,
                               longLabel = basename(hub_dir),
                               email = "rdmorin@sfu.ca",
                               visibility = "squish",
-                              bigDataUrl_dir = file.path("https://github.com/morinlab/LLMPP/blob/main/hubs", hub_name)){
+                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
+  
+  # if dir paths contain a forward slash at the end, remove it. 
+  bigDataUrl_base = sub("/$", "", bigDataUrl_base)
+  local_web_host_dir = sub("/$", "", local_web_host_dir)
+  hub_dir = sub("/$", "", hub_dir)
+  
+  # full path to hub dir
+  if(is.null(local_web_host_dir)){
+    hub_dir_full_path = hub_dir
+  }else{
+    hub_dir_full_path = file.path(local_web_host_dir, hub_dir)
+  }
   
   # create output directory and sub-directories
-  dir.create(hub_dir, showWarnings = FALSE)
-  track_dir <- file.path(hub_dir, projection)
+  dir.create(hub_dir_full_path, showWarnings = FALSE)
+  track_dir <- file.path(hub_dir_full_path, projection)
   dir.create(track_dir, showWarnings = FALSE)
   
   # get metadata with the dedicated helper function
@@ -67,7 +100,7 @@ build_browser_hub <- function(regions_bed,
   
   # save regions_bed to a bb file
   temp_bed <- tempfile(pattern = "regionsBed_", fileext = ".bed")
-  regions_bed <- select(regions_bed, 1,2,3) %>% 
+  regions_bed <- dplyr::select(regions_bed, 1,2,3) %>% 
     arrange( .[[1]], .[[2]] )
   write.table(regions_bed, temp_bed, quote = FALSE, sep = "\t", row.names = FALSE, 
               col.names = FALSE)
@@ -102,10 +135,10 @@ build_browser_hub <- function(regions_bed,
   
   # split maf table according to splitColumnName
   if(!is.null(splitColumnName)){
-    maf_data <- select(these_samples_metadata, sample_id, all_of(splitColumnName)) %>% 
+    maf_data <- dplyr::select(these_samples_metadata, sample_id, all_of(splitColumnName)) %>% 
       distinct(sample_id, .keep_all = TRUE) %>% 
       left_join(maf_data, ., join_by(Tumor_Sample_Barcode == sample_id))
-    maf_data <- select(maf_data, -all_of(splitColumnName)) %>% 
+    maf_data <- dplyr::select(maf_data, -all_of(splitColumnName)) %>% 
       split(maf_data[[splitColumnName]])
     track_names = names(maf_data)
     these_samples_metadata = split(these_samples_metadata, these_samples_metadata[[splitColumnName]]) %>% 
@@ -131,7 +164,7 @@ build_browser_hub <- function(regions_bed,
     invisible
   
   # create hub.txt file
-  hub_file <- file.path(hub_dir, "hub.txt")
+  hub_file <- file.path(hub_dir_full_path, "hub.txt")
   
   sink(hub_file)
   
@@ -152,11 +185,9 @@ build_browser_hub <- function(regions_bed,
     cat( paste0("priority ", i, "\n") )
     cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
     cat( "itemRgb on\n" )
-    sub("/$", "", bigDataUrl_dir) %>% 
-      file.path(track_names_file[i]) %>% 
+    file.path(bigDataUrl_base, hub_dir, projection, track_names_file[i]) %>% 
       { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
   }
   
   sink()
 }
-
