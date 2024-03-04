@@ -1,6 +1,12 @@
 #' @title Build UCSC browser track hub
 #' 
-#' @description 
+#' @description Create a directory that contains the track hub files. They are: 
+#' a hub.txt file (marked with `useOneFile on`), and a subdirectory (named as the 
+#' projection used) with the custom tracks to be visualized in UCSC browser. The 
+#' custom track `regions` contains the regions from where SSMs were retrieved. All 
+#' other custom tracks contain SSMs from samples separated by the `splitColumnName` 
+#' parameter, where each file is named according to the value in `splitColumnName` 
+#' that it refers to. 
 #' 
 #' @details The `bigDataUrl` field of a track in the hub.txt file is defined in 
 #' the following way:
@@ -36,12 +42,12 @@
 #'   to split the data into custom track files. Default is "pathology".
 #' @param hub_name A string with the hub name (without spaces) to fill in the `hub` 
 #'   field of the hub.txt file. Defoult is `basename(hub_dir)`.
-#' @param shortLabel A string with the short hub label (maximum of 17 characters; 
-#'   spaces are allowed) to fill in the `shortLabel` field of the hub.txt file. 
-#'   Defoult is `basename(hub_dir)`.
-#' @param longLabel A string with the long hub label (maximum of 80 characters; 
-#'   spaces are allowed) to fill in the `longLabel` field of the hub.txt file. 
-#'   Defoult is `basename(hub_dir)`.
+#' @param shortLabel A string with the short hub label (maximum of 17 characters 
+#'   recommended; spaces are allowed) to fill in the `shortLabel` field of the 
+#'   hub.txt file. Defoult is `basename(hub_dir)`.
+#' @param longLabel A string with the long hub label (maximum of 80 characters 
+#'   recommended; spaces are allowed) to fill in the `longLabel` field of the 
+#'   hub.txt file. Defoult is `basename(hub_dir)`.
 #' @param email A string with the contact email to fill in the `email` field of 
 #'   the hub.txt file. Default is `rdmorin@sfu.ca`.
 #' @param visibility A string that controls the track visibility mode. Possible 
@@ -58,22 +64,42 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' # create a track hub in LLMPP GitHub repo
 #' 
-build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
-                              these_sample_ids = NULL,
-                              these_samples_metadata = NULL,
-                              this_seq_type = "genome",
-                              projection = "grch37",
-                              local_web_host_dir = NULL,
-                              hub_dir = "my_hub",
-                              as_bigbed = TRUE,
-                              splitColumnName = "pathology",
-                              hub_name = basename(hub_dir),
-                              shortLabel = basename(hub_dir),
-                              longLabel = basename(hub_dir),
-                              email = "rdmorin@sfu.ca",
-                              visibility = "squish",
-                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
+#' library(GAMBLR.data)
+#' 
+#' local_web_host_dir = "~/repos/LLMPP"
+#' hub_dir = "hubs/ashm_test"
+#' 
+#' my_meta = filter(sample_data$meta, pathology %in% c("BL", "DLBCL", "FL"))
+#' 
+#' build_browser_hub(
+#'   these_samples_metadata = my_meta,
+#'   this_seq_type = "genome",
+#'   projection = "grch37",
+#'   local_web_host_dir = local_web_host_dir,
+#'   hub_dir = hub_dir,
+#'   splitColumnName = "pathology",
+#'   longLabel = "Public aSHM mutations separated by pathologies"
+#' )
+#' }
+#' 
+build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
+                             these_sample_ids = NULL,
+                             these_samples_metadata = NULL,
+                             this_seq_type = "genome",
+                             projection = "grch37",
+                             local_web_host_dir = NULL,
+                             hub_dir = "my_hub",
+                             as_bigbed = TRUE,
+                             splitColumnName = "pathology",
+                             hub_name = basename(hub_dir),
+                             shortLabel = basename(hub_dir),
+                             longLabel = basename(hub_dir),
+                             email = "rdmorin@sfu.ca",
+                             visibility = "squish",
+                             bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
   
   # check some provided parameter 
   stopifnot("`this_seq_type` must be one of \"genome\", \"capture\" or \"mrna\"." = 
@@ -105,30 +131,30 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   
   # create output directory and sub-directories
   dir.create(hub_dir_full_path, showWarnings = FALSE)
-  track_dir <- file.path(hub_dir_full_path, projection)
+  track_dir = file.path(hub_dir_full_path, projection)
   dir.create(track_dir, showWarnings = FALSE)
   
   # save regions_bed to a bb file
-  regions_bed <- dplyr::select(regions_bed, 1,2,3) %>% 
+  regions_bed = dplyr::select(regions_bed, 1,2,3) %>% 
     arrange( .[[1]], .[[2]] )
   if(as_bigbed){
-    temp_bed <- tempfile(pattern = "regionsBed_", fileext = ".bed")
+    temp_bed = tempfile(pattern = "regionsBed_", fileext = ".bed")
     write.table(regions_bed, temp_bed, quote = FALSE, sep = "\t", row.names = FALSE, 
                 col.names = FALSE)
     if(projection == "grch37"){
-      chr_arms <- GAMBLR.data::chromosome_arms_grch37 %>% 
+      chr_arms = GAMBLR.data::chromosome_arms_grch37 %>% 
         mutate(chromosome = paste0("chr", chromosome))
     }else{ # so projection is hg38
-      chr_arms <- GAMBLR.data::chromosome_arms_hg38
+      chr_arms = GAMBLR.data::chromosome_arms_hg38
     }
-    chr_sizes <- chr_arms %>%
+    chr_sizes = chr_arms %>%
       dplyr::filter(arm == "q") %>%
       dplyr::select(chromosome, end) %>%
       rename(size = "end")
-    temp_chr_sizes <- tempfile(pattern = "chrom.sizes_")
+    temp_chr_sizes = tempfile(pattern = "chrom.sizes_")
     write.table(chr_sizes, temp_chr_sizes, quote = FALSE, sep = "\t", row.names = FALSE, 
                 col.names = FALSE)
-    bedtobigbed <- GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
+    bedtobigbed = GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
     regions_bed_file = file.path(track_dir, "regions.bb")
     bigbed_conversion = gettextf("%s %s %s %s", bedtobigbed, temp_bed, temp_chr_sizes, 
                                  regions_bed_file)
@@ -142,30 +168,30 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   }
   
   # get maf data from the specified regions and metadata/samples
-  maf_data <- get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = this_seq_type,
-                                 these_samples_metadata = these_samples_metadata, 
-                                 projection = projection, streamlined = FALSE, 
-                                 basic_columns = TRUE) %>% 
+  maf_data = get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = this_seq_type,
+                                these_samples_metadata = these_samples_metadata, 
+                                projection = projection, streamlined = FALSE, 
+                                basic_columns = TRUE) %>% 
     suppressMessages
   
   # split maf table according to splitColumnName
   if(!is.null(splitColumnName)){
-    maf_data <- dplyr::select(these_samples_metadata, sample_id, all_of(splitColumnName)) %>% 
+    maf_data = dplyr::select(these_samples_metadata, sample_id, all_of(splitColumnName)) %>% 
       distinct(sample_id, .keep_all = TRUE) %>% 
       left_join(maf_data, ., join_by(Tumor_Sample_Barcode == sample_id))
-    maf_data <- dplyr::select(maf_data, -all_of(splitColumnName)) %>% 
+    maf_data = dplyr::select(maf_data, -all_of(splitColumnName)) %>% 
       split(maf_data[[splitColumnName]])
     track_names = names(maf_data)
     these_samples_metadata = split(these_samples_metadata, these_samples_metadata[[splitColumnName]]) %>% 
       "["(track_names)
   }else{
-    maf <- list(maf)
+    maf = list(maf)
     track_names = "all"
-    these_samples_metadata <- list(these_samples_metadata)
+    these_samples_metadata = list(these_samples_metadata)
   }
   
   # convert and save track files
-  track_names_file <- paste0(track_names, ifelse(as_bigbed, ".bb", ".bed"))
+  track_names_file = paste0(track_names, ifelse(as_bigbed, ".bb", ".bed"))
   mapply(function(maf_i, track_names_file_i, meta_i){
     maf_to_custom_track(
       maf_i,
@@ -182,7 +208,7 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   ### create hub.txt file
   
   # open file
-  hub_file <- file.path(hub_dir_full_path, "hub.txt")
+  hub_file = file.path(hub_dir_full_path, "hub.txt")
   sink(hub_file)
   
   # write header
