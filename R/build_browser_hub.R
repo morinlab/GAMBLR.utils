@@ -75,6 +75,22 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                               visibility = "squish",
                               bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
   
+  # check some provided parameter 
+  stopifnot("`this_seq_type` must be one of \"genome\", \"capture\" or \"mrna\"." = 
+              this_seq_type %in% c("genome", "capture", "mrna"))
+  stopifnot("`projection` must be one of \"grch37\" or \"hg38\"." = 
+              projection %in% c("grch37", "hg38"))
+  stopifnot("`visibility` must be one of \"pack\", \"dense\", \"full\", or \"squish\"." = 
+              visibility %in% c("pack", "dense", "full", "squish"))
+  
+  # get metadata with the dedicated helper function
+  these_samples_metadata = id_ease(these_samples_metadata = these_samples_metadata,
+                                   these_sample_ids = these_sample_ids,
+                                   verbose = FALSE,
+                                   this_seq_type = this_seq_type)
+  stopifnot("`splitColumnName` must be a column name contained in the metadata." = 
+              splitColumnName %in% names(these_samples_metadata))
+  
   # if dir paths contain a forward slash at the end, remove it. 
   bigDataUrl_base = sub("/$", "", bigDataUrl_base)
   local_web_host_dir = sub("/$", "", local_web_host_dir)
@@ -92,12 +108,6 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   track_dir <- file.path(hub_dir_full_path, projection)
   dir.create(track_dir, showWarnings = FALSE)
   
-  # get metadata with the dedicated helper function
-  these_samples_metadata = id_ease(these_samples_metadata = these_samples_metadata,
-                                   these_sample_ids = these_sample_ids,
-                                   verbose = FALSE,
-                                   this_seq_type = this_seq_type)
-  
   # save regions_bed to a bb file
   regions_bed <- dplyr::select(regions_bed, 1,2,3) %>% 
     arrange( .[[1]], .[[2]] )
@@ -108,10 +118,8 @@ build_browser_hub <- function(regions_bed = GAMBLR.data::grch37_ashm_regions,
     if(projection == "grch37"){
       chr_arms <- GAMBLR.data::chromosome_arms_grch37 %>% 
         mutate(chromosome = paste0("chr", chromosome))
-    }else if(projection == "hg38"){
+    }else{ # so projection is hg38
       chr_arms <- GAMBLR.data::chromosome_arms_hg38
-    }else{
-      stop("projection parameter must be \"grch37\" or \"hg38\".")
     }
     chr_sizes <- chr_arms %>%
       dplyr::filter(arm == "q") %>%
