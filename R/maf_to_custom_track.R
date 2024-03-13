@@ -7,7 +7,7 @@
 #'
 #' @param maf_data Either a maf loaded from disk or from the database using a get_ssm function.
 #' @param these_samples_metadata Optional argument, a metadata table subset to the samples of interest. If not provided, the function will return metadata for all available samples.
-#' @param seq_type The seq type you want back, default is "genome".
+#' @param this_seq_type The seq type you want back, default is "genome".
 #' @param output_file Name for your new bed file that can be uploaded as a custom track to UCSC.
 #' @param as_bigbed Boolean parameter controlling the format of the returned file. Default is FALSE.
 #' @param colour_column Set the colouring properties of the returned bed file. Per default, this function will assign colour based on "lymphgen".
@@ -32,7 +32,7 @@
 #'
 maf_to_custom_track = function(maf_data,
                                these_samples_metadata,
-                               seq_type = "genome",
+                               this_seq_type = "genome",
                                output_file,
                                as_bigbed = FALSE,
                                colour_column = "lymphgen",
@@ -62,7 +62,7 @@ maf_to_custom_track = function(maf_data,
     print(rgb_df)
   }
   if(missing(these_samples_metadata)){
-    meta = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type) %>% dplyr::select(sample_id,all_of(colour_column))
+    meta = GAMBLR.helpers::handle_metadata(this_seq_type = this_seq_type) %>% dplyr::select(sample_id,all_of(colour_column))
   }else{
     meta = these_samples_metadata %>% dplyr::select(sample_id,all_of(colour_column))
   }

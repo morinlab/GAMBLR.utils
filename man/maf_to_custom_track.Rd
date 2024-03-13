@@ -7,7 +7,7 @@
 maf_to_custom_track(
   maf_data,
   these_samples_metadata,
-  seq_type = "genome",
+  this_seq_type = "genome",
   output_file,
   as_bigbed = FALSE,
   colour_column = "lymphgen",
@@ -24,7 +24,7 @@ maf_to_custom_track(
 
 \item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will return metadata for all available samples.}
 
-\item{seq_type}{The seq type you want back, default is "genome".}
+\item{this_seq_type}{The seq type you want back, default is "genome".}
 
 \item{output_file}{Name for your new bed file that can be uploaded as a custom track to UCSC.}
 
