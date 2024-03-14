@@ -8,7 +8,7 @@ build_browser_hub(
   regions_bed = GAMBLR.data::grch37_ashm_regions,
   these_sample_ids = NULL,
   these_samples_metadata = NULL,
-  this_seq_type = "genome",
+  these_seq_types = c("genome", "capture"),
   projection = "grch37",
   local_web_host_dir = NULL,
   hub_dir = "my_hub",
@@ -34,8 +34,11 @@ regions can be provided.}
 \item{these_samples_metadata}{A metadata table (with sample IDs in a column) to
 subset the samples of interest.}
 
-\item{this_seq_type}{The seq type you want results for. Possible values are "genome"
-(default), "capture", or "mrna".}
+\item{these_seq_types}{A vector of one or more seq types you want results for.
+Possible values are "genome", "capture", or "mrna". If more than
+one seq type is provided, for each value in \code{splitColumnName}, the function
+creates a separate track for each provided seq type. The default is
+\code{c("genome", "capture")}. See the \strong{Details} section for more information.}
 
 \item{projection}{The projection genome build. One of "grch37" (default) or "hg38".}
 
@@ -90,6 +93,10 @@ parameter, where each file is named according to the value in \code{splitColumnN
 that it refers to.
 }
 \details{
+\code{build_browser_hub} will create a custom track file for each combination of
+\code{these_seq_types} and \code{splitColumnName} (if mutations could be found). Custom
+track files are named as \verb{<a_seq_type_value>_<a_splitColumnName_value>.bb/bed}.
+
 The \code{bigDataUrl} field of a track in the hub.txt file is defined in
 the following way:
 
@@ -113,7 +120,7 @@ my_meta = get_gambl_metadata() \%>\%
 
 build_browser_hub(
   these_samples_metadata = my_meta,
-  this_seq_type = "genome",
+  these_seq_types = c("genome", "capture"),
   projection = "grch37",
   local_web_host_dir = local_web_host_dir,
   hub_dir = hub_dir,

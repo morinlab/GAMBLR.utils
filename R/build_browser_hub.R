@@ -8,7 +8,11 @@
 #' parameter, where each file is named according to the value in `splitColumnName` 
 #' that it refers to. 
 #' 
-#' @details The `bigDataUrl` field of a track in the hub.txt file is defined in 
+#' @details `build_browser_hub` will create a custom track file for each combination of 
+#' `these_seq_types` and `splitColumnName` (if mutations could be found). Custom 
+#' track files are named as `<a_seq_type_value>_<a_splitColumnName_value>.bb/bed`. 
+#' 
+#' The `bigDataUrl` field of a track in the hub.txt file is defined in 
 #' the following way:
 #' 
 #' ```
@@ -26,8 +30,11 @@
 #' @param these_sample_ids A vector of sample IDs that you want results for.
 #' @param these_samples_metadata A metadata table (with sample IDs in a column) to 
 #'   subset the samples of interest.
-#' @param this_seq_type The seq type you want results for. Possible values are "genome"
-#'   (default), "capture", or "mrna".
+#' @param these_seq_types A vector of one or more seq types you want results for. 
+#'   Possible values are "genome", "capture", or "mrna". If more than 
+#'   one seq type is provided, for each value in `splitColumnName`, the function 
+#'   creates a separate track for each provided seq type. The default is 
+#'   `c("genome", "capture")`. See the **Details** section for more information.
 #' @param projection The projection genome build. One of "grch37" (default) or "hg38".
 #' @param local_web_host_dir Path to the directory where is your local copy of the
 #'   web host to be used. For example, if the hub should be hosted on GitHub, 
@@ -77,7 +84,7 @@
 #' 
 #' build_browser_hub(
 #'   these_samples_metadata = my_meta,
-#'   this_seq_type = "genome",
+#'   these_seq_types = c("genome", "capture"),
 #'   projection = "grch37",
 #'   local_web_host_dir = local_web_host_dir,
 #'   hub_dir = hub_dir,
@@ -89,7 +96,7 @@
 build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                              these_sample_ids = NULL,
                              these_samples_metadata = NULL,
-                             this_seq_type = "genome",
+                             these_seq_types = c("genome", "capture"),
                              projection = "grch37",
                              local_web_host_dir = NULL,
                              hub_dir = "my_hub",
@@ -103,20 +110,24 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
   
   # check some provided parameter 
-  stopifnot("`this_seq_type` must be one of \"genome\", \"capture\" or \"mrna\"." = 
-              this_seq_type %in% c("genome", "capture", "mrna"))
+  stopifnot("`these_seq_types` must be one or more of \"genome\", \"capture\" or \"mrna\"." = 
+              all(these_seq_types %in% c("genome", "capture", "mrna")))
   stopifnot("`projection` must be one of \"grch37\" or \"hg38\"." = 
               projection %in% c("grch37", "hg38"))
   stopifnot("`visibility` must be one of \"pack\", \"dense\", \"full\", or \"squish\"." = 
               visibility %in% c("pack", "dense", "full", "squish"))
   
-  # get metadata with the dedicated helper function
-  these_samples_metadata = id_ease(these_samples_metadata = these_samples_metadata,
-                                   these_sample_ids = these_sample_ids,
-                                   verbose = FALSE,
-                                   this_seq_type = this_seq_type)
+  # get metadata with the dedicated helper function (for each seq type)
+  these_seq_types = setNames(these_seq_types, these_seq_types)
+  these_samples_metadata = lapply(these_seq_types, function(these_seq_types_i){
+    id_ease(these_samples_metadata = these_samples_metadata,
+            these_sample_ids = these_sample_ids,
+            verbose = FALSE,
+            this_seq_type = these_seq_types_i)
+  }) %>% 
+    suppressMessages
   stopifnot("`splitColumnName` must be a column name contained in the metadata." = 
-              splitColumnName %in% names(these_samples_metadata))
+              splitColumnName %in% names(these_samples_metadata[[1]]))
   
   # if dir paths contain a forward slash at the end, remove it. 
   bigDataUrl_base = sub("/$", "", bigDataUrl_base)
@@ -168,41 +179,50 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                 col.names = FALSE)
   }
   
-  # get maf data from the specified regions and metadata/samples
-  maf_data = get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = this_seq_type,
-                                these_samples_metadata = these_samples_metadata, 
-                                projection = projection, streamlined = FALSE, 
-                                basic_columns = TRUE) %>% 
-    suppressMessages
+  # get maf data from the specified regions and metadata/samples (for each seq type)
+  maf_data = mapply(function(these_seq_types_i, these_samples_metadata_i){
+    get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = these_seq_types_i,
+                       these_samples_metadata = these_samples_metadata_i, 
+                       projection = projection, streamlined = FALSE, 
+                       basic_columns = TRUE) %>% 
+      suppressMessages
+  }, these_seq_types, these_samples_metadata, SIMPLIFY = FALSE)
   
   # split maf table according to splitColumnName
   if(!is.null(splitColumnName)){
-    maf_data = dplyr::select(these_samples_metadata, sample_id, all_of(splitColumnName)) %>% 
-      distinct(sample_id, .keep_all = TRUE) %>% 
-      left_join(maf_data, ., join_by(Tumor_Sample_Barcode == sample_id))
-    maf_data = dplyr::select(maf_data, -all_of(splitColumnName)) %>% 
-      split(maf_data[[splitColumnName]])
-    track_names = names(maf_data)
-    these_samples_metadata = split(these_samples_metadata, these_samples_metadata[[splitColumnName]]) %>% 
-      "["(track_names)
+    maf_data = mapply(function(maf_data_i, these_samples_metadata_i){
+      maf_data_i = dplyr::select(these_samples_metadata_i, sample_id, all_of(splitColumnName)) %>% 
+        distinct(sample_id, .keep_all = TRUE) %>% 
+        left_join(maf_data_i, ., join_by(Tumor_Sample_Barcode == sample_id))
+      dplyr::select(maf_data_i, -all_of(splitColumnName)) %>% 
+        split(maf_data_i[[splitColumnName]])
+    }, maf_data, these_samples_metadata)
+    track_names = lapply(maf_data, names)
+    these_samples_metadata = mapply(function(these_samples_metadata_i, track_names_i){
+      split(these_samples_metadata_i, these_samples_metadata_i[[splitColumnName]]) %>% 
+        "["(track_names_i)
+    }, these_samples_metadata, track_names)
   }else{
-    maf = list(maf)
-    track_names = "all"
-    these_samples_metadata = list(these_samples_metadata)
+    maf_data = lapply(maf_data, list)
+    track_names = lapply(these_seq_types, function(x) list("all"))
+    these_samples_metadata = lapply(these_samples_metadata, list)
   }
+  track_names = mapply(paste, these_seq_types, track_names, sep = "_")
   
   # convert and save track files
-  track_names_file = paste0(track_names, ifelse(as_bigbed, ".bb", ".bed"))
-  mapply(function(maf_i, track_names_file_i, meta_i){
-    maf_to_custom_track(
-      maf_i,
-      meta_i,
-      seq_type = this_seq_type,
-      output_file = file.path(track_dir, track_names_file_i),
-      as_bigbed = as_bigbed,
-      projection = projection
-    )
-  }, maf_data, track_names_file, these_samples_metadata) %>% 
+  track_file_names = lapply(track_names, paste0, ifelse(as_bigbed, ".bb", ".bed"))
+  mapply(
+    function(maf_i, meta_i, these_seq_types_i, track_names_file_i){
+      mapply(maf_to_custom_track, 
+             maf_data = maf_i,
+             these_samples_metadata = meta_i,
+             this_seq_type = these_seq_types_i,
+             output_file = file.path(track_dir, track_names_file_i),
+             as_bigbed = as_bigbed,
+             projection = projection)
+    },
+    maf_data, these_samples_metadata, these_seq_types, track_file_names
+  ) %>% 
     invisible
   
   
@@ -235,6 +255,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
     { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
   
   # write info of the tracks that store ssms split by splitColumnName
+  track_names = unlist(track_names)
+  track_file_names = unlist(track_file_names)
   for(i in seq_along(track_names)){
     cat( "\n" )
     cat( paste0("track ", hub_name, "_", track_names[i], "\n") )
