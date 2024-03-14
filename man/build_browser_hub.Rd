@@ -29,7 +29,7 @@ end positions, respectively. The default is the \code{GAMBLR.data::grch37_ashm_r
 object which contains public-available SSMs from aSHM regions, but any other
 regions can be provided.}
 
-\item{these_sample_ids}{A vector of sample_id that you want results for.}
+\item{these_sample_ids}{A vector of sample IDs that you want results for.}
 
 \item{these_samples_metadata}{A metadata table (with sample IDs in a column) to
 subset the samples of interest.}
@@ -40,9 +40,9 @@ subset the samples of interest.}
 \item{projection}{The projection genome build. One of "grch37" (default) or "hg38".}
 
 \item{local_web_host_dir}{Path to the directory where is your local copy of the
-web host to use. For example, if the hub should be hosted on GitHub, \code{local_web_host_dir}
-should be the path to your local copy of the repository directory. Default
-is NULL.}
+web host to be used. For example, if the hub should be hosted on GitHub,
+\code{local_web_host_dir} should be the path to your local copy of the repository
+directory. Default is NULL.}
 
 \item{hub_dir}{Path to the directory (inside a web host) where you want to build
 your track hub. If this directory does not exist, it will be created.}
@@ -51,18 +51,18 @@ your track hub. If this directory does not exist, it will be created.}
 bigBed (.bb) files. BED files otherwise.}
 
 \item{splitColumnName}{An single string to indicate which metadata column is used
-to split the data into custom track files. Default is "pathology".}
+to split the MAF data into custom track files. Default is "pathology".}
 
 \item{hub_name}{A string with the hub name (without spaces) to fill in the \code{hub}
-field of the hub.txt file. Defoult is \code{basename(hub_dir)}.}
+field of the hub.txt file. Default is \code{basename(hub_dir)}.}
 
 \item{shortLabel}{A string with the short hub label (maximum of 17 characters
 recommended; spaces are allowed) to fill in the \code{shortLabel} field of the
-hub.txt file. Defoult is \code{basename(hub_dir)}.}
+hub.txt file. Default is \code{basename(hub_dir)}.}
 
 \item{longLabel}{A string with the long hub label (maximum of 80 characters
 recommended; spaces are allowed) to fill in the \code{longLabel} field of the
-hub.txt file. Defoult is \code{basename(hub_dir)}.}
+hub.txt file. Default is \code{basename(hub_dir)}.}
 
 \item{email}{A string with the contact email to fill in the \code{email} field of
 the hub.txt file. Default is \code{rdmorin@sfu.ca}.}
@@ -82,7 +82,7 @@ Nothing.
 \description{
 Create a directory that contains the track hub files. They are:
 a hub.txt file (marked with \verb{useOneFile on}), and a subdirectory (named as the
-projection used) with the custom tracks to be visualized in UCSC browser. The
+projection in use) with the custom tracks to be visualized in UCSC browser. The
 custom track \code{regions} contains the regions from where SSMs were retrieved. All
 other custom tracks contain SSMs from samples separated by the \code{splitColumnName}
 parameter, where each file is named according to the value in \code{splitColumnName}
@@ -93,11 +93,10 @@ The \code{bigDataUrl} field of a track in the hub.txt file is defined in
 the following way:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{file.path(bigDataUrl_base, hub_dir, projection, 
-          paste0(track_names_file[i], "?raw=true\\n"))
+          paste0(track_file_names[i], "?raw=true\\n"))
 }\if{html}{\out{</div>}}
 
-where \code{track_names_file[i]} is a value in the metadata column specified by
-\code{splitColumnName}, followed by the file extension .bed or .bb.
+where \code{track_file_names[i]} is the custom track file name.
 }
 \examples{
 \dontrun{
@@ -108,7 +107,8 @@ library(GAMBLR.data)
 local_web_host_dir = "~/repos/LLMPP"
 hub_dir = "hubs/ashm_test"
 
-my_meta = filter(sample_data$meta, pathology \%in\% c("BL", "DLBCL", "FL"))
+my_meta = get_gambl_metadata() \%>\% 
+  filter(pathology \%in\% c("BL", "DLBCL", "FL"))
 
 build_browser_hub(
   these_samples_metadata = my_meta,

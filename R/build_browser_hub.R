@@ -2,7 +2,7 @@
 #' 
 #' @description Create a directory that contains the track hub files. They are: 
 #' a hub.txt file (marked with `useOneFile on`), and a subdirectory (named as the 
-#' projection used) with the custom tracks to be visualized in UCSC browser. The 
+#' projection in use) with the custom tracks to be visualized in UCSC browser. The 
 #' custom track `regions` contains the regions from where SSMs were retrieved. All 
 #' other custom tracks contain SSMs from samples separated by the `splitColumnName` 
 #' parameter, where each file is named according to the value in `splitColumnName` 
@@ -13,41 +13,40 @@
 #' 
 #' ```
 #' file.path(bigDataUrl_base, hub_dir, projection, 
-#'           paste0(track_names_file[i], "?raw=true\n"))
+#'           paste0(track_file_names[i], "?raw=true\n"))
 #' ```
 #'
-#' where `track_names_file[i]` is a value in the metadata column specified by 
-#' `splitColumnName`, followed by the file extension .bed or .bb.
+#' where `track_file_names[i]` is the custom track file name.
 #'
 #' @param regions_bed A BED-format table with the regions you want to retrieve SSMs 
 #'   from. The columns 1, 2 and 3 must be chromosome names, start positions and 
 #'   end positions, respectively. The default is the `GAMBLR.data::grch37_ashm_regions`
 #'   object which contains public-available SSMs from aSHM regions, but any other 
 #'   regions can be provided.
-#' @param these_sample_ids A vector of sample_id that you want results for.
+#' @param these_sample_ids A vector of sample IDs that you want results for.
 #' @param these_samples_metadata A metadata table (with sample IDs in a column) to 
 #'   subset the samples of interest.
 #' @param this_seq_type The seq type you want results for. Possible values are "genome"
 #'   (default), "capture", or "mrna".
 #' @param projection The projection genome build. One of "grch37" (default) or "hg38".
 #' @param local_web_host_dir Path to the directory where is your local copy of the
-#'   web host to use. For example, if the hub should be hosted on GitHub, `local_web_host_dir` 
-#'   should be the path to your local copy of the repository directory. Default
-#'   is NULL.
+#'   web host to be used. For example, if the hub should be hosted on GitHub, 
+#'   `local_web_host_dir` should be the path to your local copy of the repository 
+#'   directory. Default is NULL.
 #' @param hub_dir Path to the directory (inside a web host) where you want to build 
 #'   your track hub. If this directory does not exist, it will be created. 
 #' @param as_bigbed A Boolean value. If TRUE (default), custom tracks are saved as
 #'   bigBed (.bb) files. BED files otherwise.
 #' @param splitColumnName An single string to indicate which metadata column is used 
-#'   to split the data into custom track files. Default is "pathology".
+#'   to split the MAF data into custom track files. Default is "pathology".
 #' @param hub_name A string with the hub name (without spaces) to fill in the `hub` 
-#'   field of the hub.txt file. Defoult is `basename(hub_dir)`.
+#'   field of the hub.txt file. Default is `basename(hub_dir)`.
 #' @param shortLabel A string with the short hub label (maximum of 17 characters 
 #'   recommended; spaces are allowed) to fill in the `shortLabel` field of the 
-#'   hub.txt file. Defoult is `basename(hub_dir)`.
+#'   hub.txt file. Default is `basename(hub_dir)`.
 #' @param longLabel A string with the long hub label (maximum of 80 characters 
 #'   recommended; spaces are allowed) to fill in the `longLabel` field of the 
-#'   hub.txt file. Defoult is `basename(hub_dir)`.
+#'   hub.txt file. Default is `basename(hub_dir)`.
 #' @param email A string with the contact email to fill in the `email` field of 
 #'   the hub.txt file. Default is `rdmorin@sfu.ca`.
 #' @param visibility A string that controls the track visibility mode. Possible 
@@ -72,7 +71,8 @@
 #' local_web_host_dir = "~/repos/LLMPP"
 #' hub_dir = "hubs/ashm_test"
 #' 
-#' my_meta = filter(sample_data$meta, pathology %in% c("BL", "DLBCL", "FL"))
+#' my_meta = get_gambl_metadata() %>% 
+#'   filter(pathology %in% c("BL", "DLBCL", "FL"))
 #' 
 #' build_browser_hub(
 #'   these_samples_metadata = my_meta,
@@ -134,7 +134,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   track_dir = file.path(hub_dir_full_path, projection)
   dir.create(track_dir, showWarnings = FALSE)
   
-  # save regions_bed to a bb file
+  # save regions_bed to a bed/bb file
   regions_bed = dplyr::select(regions_bed, 1,2,3) %>% 
     arrange( .[[1]], .[[2]] )
   if(as_bigbed){
@@ -241,7 +241,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
     cat( paste0("priority ", i+1, "\n") )
     cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
     cat( "itemRgb on\n" )
-    file.path(bigDataUrl_base, hub_dir, projection, track_names_file[i]) %>% 
+    file.path(bigDataUrl_base, hub_dir, projection, track_file_names[i]) %>% 
       { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
   }
   
