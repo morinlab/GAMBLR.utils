@@ -207,7 +207,17 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
     track_names = lapply(these_seq_types, function(x) list("all"))
     these_samples_metadata = lapply(these_samples_metadata, list)
   }
-  track_names = mapply(paste, these_seq_types, track_names, sep = "_")
+  
+  # check seq types that ssms could be found
+  is_there_muts = lengths(track_names) > 0
+  if( !any(is_there_muts) ){
+    stop("No SSMs were found. Reset your paramters.")
+  }
+  maf_data = maf_data[is_there_muts]
+  these_samples_metadata = these_samples_metadata[is_there_muts]
+  these_seq_types = these_seq_types[is_there_muts]
+  track_names = track_names[is_there_muts] %>% 
+    mapply(paste, these_seq_types, ., sep = "_")
   
   # convert and save track files
   track_file_names = lapply(track_names, paste0, ifelse(as_bigbed, ".bb", ".bed"))
