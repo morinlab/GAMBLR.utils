@@ -17,7 +17,7 @@ build_browser_hub(
   hub_name = basename(hub_dir),
   shortLabel = basename(hub_dir),
   longLabel = basename(hub_dir),
-  email = "rdmorin@sfu.ca",
+  email,
   visibility = "squish",
   bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"
 )
@@ -64,8 +64,9 @@ hub.txt file. Default is \code{basename(hub_dir)}.}
 recommended; spaces are allowed) to fill in the \code{longLabel} field of the
 hub.txt file. Default is \code{basename(hub_dir)}.}
 
-\item{email}{A string with the contact email to fill in the \code{email} field of
-the hub.txt file. Default is \code{rdmorin@sfu.ca}.}
+\item{email}{Optional parameter. A string with the contact email to fill in the
+\code{email} field of the hub.txt file. If not provided, hub.txt will not have this
+field.}
 
 \item{visibility}{A string that controls the track visibility mode. Possible
 values are "pack", "dense", "full", or "squish" (default).}

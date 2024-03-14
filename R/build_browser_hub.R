@@ -47,8 +47,9 @@
 #' @param longLabel A string with the long hub label (maximum of 80 characters 
 #'   recommended; spaces are allowed) to fill in the `longLabel` field of the 
 #'   hub.txt file. Default is `basename(hub_dir)`.
-#' @param email A string with the contact email to fill in the `email` field of 
-#'   the hub.txt file. Default is `rdmorin@sfu.ca`.
+#' @param email Optional parameter. A string with the contact email to fill in the 
+#'   `email` field of the hub.txt file. If not provided, hub.txt will not have this 
+#'   field.
 #' @param visibility A string that controls the track visibility mode. Possible 
 #'   values are "pack", "dense", "full", or "squish" (default).
 #' @param bigDataUrl_base A string with the base path of the web location of the 
@@ -97,7 +98,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                              hub_name = basename(hub_dir),
                              shortLabel = basename(hub_dir),
                              longLabel = basename(hub_dir),
-                             email = "rdmorin@sfu.ca",
+                             email,
                              visibility = "squish",
                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
   
@@ -216,7 +217,9 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   cat( paste0("shortLabel ", shortLabel, "\n") )
   cat( paste0("longLabel ", longLabel, "\n") )
   cat( "useOneFile on\n" )
-  cat( paste0("email ", email, "\n") )
+  if(!missing(email)){
+    cat( paste0("email ", email, "\n") )
+  }
   cat( "\n" )
   cat( paste0("genome ", replace(projection, projection == "grch37", "hg19"), "\n") )
   
