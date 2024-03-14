@@ -85,12 +85,12 @@ Nothing.
 }
 \description{
 Create a directory that contains the track hub files. They are:
-a hub.txt file (marked with \verb{useOneFile on}), and a subdirectory (named as the
-projection in use) with the custom tracks to be visualized in UCSC browser. The
-custom track \code{regions} contains the regions from where SSMs were retrieved. All
-other custom tracks contain SSMs from samples separated by the \code{splitColumnName}
-parameter, where each file is named according to the value in \code{splitColumnName}
-that it refers to.
+a hub.txt file (named as \verb{<projection>_hub.txt} and marked with \verb{useOneFile on}),
+and a subdirectory (named as the projection in use) with the custom tracks to
+be visualized in UCSC browser. The custom track \code{regions} contains the regions
+from where SSMs were retrieved. All other custom tracks contain SSMs from samples
+separated by the \code{splitColumnName} parameter, where each file is named according
+to the value in \code{splitColumnName} that it refers to.
 }
 \details{
 \code{build_browser_hub} will create a custom track file for each combination of

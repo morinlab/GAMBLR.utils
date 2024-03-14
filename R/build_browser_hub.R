@@ -1,12 +1,12 @@
 #' @title Build UCSC browser track hub
 #' 
 #' @description Create a directory that contains the track hub files. They are: 
-#' a hub.txt file (marked with `useOneFile on`), and a subdirectory (named as the 
-#' projection in use) with the custom tracks to be visualized in UCSC browser. The 
-#' custom track `regions` contains the regions from where SSMs were retrieved. All 
-#' other custom tracks contain SSMs from samples separated by the `splitColumnName` 
-#' parameter, where each file is named according to the value in `splitColumnName` 
-#' that it refers to. 
+#' a hub.txt file (named as `<projection>_hub.txt` and marked with `useOneFile on`), 
+#' and a subdirectory (named as the projection in use) with the custom tracks to 
+#' be visualized in UCSC browser. The custom track `regions` contains the regions 
+#' from where SSMs were retrieved. All other custom tracks contain SSMs from samples 
+#' separated by the `splitColumnName` parameter, where each file is named according 
+#' to the value in `splitColumnName` that it refers to. 
 #' 
 #' @details `build_browser_hub` will create a custom track file for each combination of 
 #' `these_seq_types` and `splitColumnName` (if mutations could be found). Custom 
@@ -229,7 +229,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   ### create hub.txt file
   
   # open file
-  hub_file = file.path(hub_dir_full_path, "hub.txt")
+  hub_file = paste0(projection, "_hub.txt") %>% 
+    file.path(hub_dir_full_path, .)
   sink(hub_file)
   
   # write header
