@@ -17,7 +17,7 @@
 #'
 #' @return list
 #'
-#' @import dplyr metaviz readr tidyr
+#' @import dplyr ggpubr readr tidyr
 #' @export
 #'
 #' @examples
@@ -189,15 +189,134 @@ FtestCNV = function(gistic_lesions,
     `colnames<-`(gsub("GROUP2", GROUPS.TO.COMPARE[2], colnames(.)))
 
   # actual plot
-  GRAPH = metaviz::viz_forest(x = mergedPassed[, c("OddsRatio", "SE")],
-                                  variant = "thick",
-                                  col = "Greys",
-                                  xlab = "Log(OddsRatio)",
-                                  annotate_CI = T,
-                                  type = "study_only",
-                                  study_table = study_table,
-                                  text_size = text_size,
-                                  table_headers = c("Region"))
+    res <- bind_cols(
+        mergedPassed,
+        study_table
+    ) %>%
+    mutate(Region = factor(Region, levels = rev(Region)))
+
+
+    p_mid <- res %>%
+        ggplot(aes(y = Region)) +
+        geom_linerange(
+            aes(
+                xmin=OddsRatio-SE,
+                xmax=OddsRatio+SE,
+                linewidth = (Mutated_GROUP1 + Mutated_GROUP2)
+            )
+        ) +
+        geom_point(
+            aes(x = OddsRatio),
+            shape = 15,
+            size = 3,
+            color = "red"
+        ) +
+        geom_vline(xintercept = 0, linetype="dashed") +
+        labs(
+            x = "Log(OddsRatio)",
+            y = ""
+        ) +
+        theme(
+            axis.line.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title.y = element_blank(),
+            legend.position = "none",
+            axis.text.x = element_text(
+                size = text_size,
+                face = "bold",
+                color = "black"
+            ),
+            axis.title = element_text(
+                size = text_size,
+                face = "bold"
+            ),
+            panel.background = element_blank(),
+            panel.grid.major.x = element_line(color = "grey"),
+            panel.border = element_rect(colour = "black", fill = NA)
+        )
+
+
+    p_left <- res %>%
+        mutate(name = Region) %>%
+        select(Region, name, starts_with("Events")) %>%
+        pivot_longer(
+            !Region,
+            names_to = "column",
+            values_to = "label"
+        ) %>%
+        mutate(column = factor(column, levels = unname(c("name", paste0("Events_", GROUPS.TO.COMPARE)))
+    )) %>%
+        ggplot(aes(y = Region)) +
+        geom_text(
+            aes(
+                x = column,
+                label = label,
+                size = text_size
+            )
+        ) +
+        scale_x_discrete(position = "top") +
+        theme(
+            axis.line.x = element_line(color = "black"),
+            axis.line.y = element_blank(),
+            axis.ticks = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title = element_blank(),
+            panel.background = element_blank(),
+            legend.position = "none",
+            axis.text.x = element_text(
+                size = text_size,
+                face = "bold",
+                color = "black"
+            )
+        )
+
+
+    p_right <- res %>%
+        select(Region, OddsRatio, SE, FDR) %>%
+        mutate(
+            label = paste0(
+                round(OddsRatio, 2),
+                " [",
+                round(OddsRatio - SE, 2),
+                ", ",
+                round(OddsRatio + SE, 2),
+                "]"
+            ),
+            column = "Log(OddsRatio)"
+        ) %>%
+        ggplot(aes(y = Region)) +
+        geom_text(
+            aes(
+                x = column,
+                label = label,
+                size = text_size
+            )
+        ) +
+        scale_x_discrete(position = "top") +
+        theme(
+            axis.line.x = element_line(color = "black"),
+            axis.line.y = element_blank(),
+            axis.ticks = element_blank(),
+            axis.text.y = element_blank(),
+            axis.title = element_blank(),
+            panel.background = element_blank(),
+            legend.position = "none",
+            axis.text.x = element_text(
+                size = text_size,
+                face = "bold",
+                color = "black"
+            )
+        )
+
+    GRAPH <- ggarrange(
+        p_left,
+        p_mid,
+        p_right,
+        widths = c(1,1,0.3),
+        ncol = 3,
+        align = "h"
+    )
 
   message("Successfully completed step 3/3...")
 
