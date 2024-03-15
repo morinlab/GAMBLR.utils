@@ -24,7 +24,6 @@ Imports:
     ggrepel,
     glue,
     IRanges,
-    maftools,
     plyr,
     purrr,
     readr,

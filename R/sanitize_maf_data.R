@@ -16,7 +16,7 @@
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
 #'
-#' @import maftools dplyr
+#' @import dplyr GAMBLR.helpers utils
 #' @export
 #'
 #' @examples
@@ -47,9 +47,18 @@ sanitize_maf_data = function(mutation_maf_path,
     warning("you should provide a list of genes to retain in the output to ensure your genes of interest are included")
     genes_keep = rev(unique(lymphoma_genes$Gene))
   }
-  maf_o = maftools::read.maf(mutation_maf_data)
-
-  maftools::oncoplot(maf_o, genes = genes_keep, writeMatrix = T, removeNonMutated = F)  #writes to working directory
+  maf_o = as.data.frame(mutation_maf_data)
+  onco_matrix <- create_onco_matrix(
+    maf_df = maf_o,
+    genes = genes_keep
+  ) %>% as.data.frame
+  #writes to working directory
+  write.table(
+    om,
+    file = paste0(getwd(), "/onco_matrix.txt"),
+    quote = F,
+    sep = "\t"
+  )
   if(!missing(output_oncomatrix)){
     #rename it
     file.rename("onco_matrix.txt", output_oncomatrix)

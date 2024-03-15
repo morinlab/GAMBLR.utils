@@ -7,7 +7,7 @@
 #' `genome_build`, `padding`, and `chr_prefixed` are also available for greater control of how this function operates.
 #' Refer to parameter descriptions for more information on how to use the available parameters.
 #'
-#' @param maf Incoming maf object. Can be maf-like data frame or maftools maf object. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.
+#' @param maf Incoming maf object. Must be maf-like data frame. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.
 #' @param custom_bed Optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in the first 3 columns. Other columns are disregarded if provided.
 #' @param genome_build String indicating genome build of the maf file. Default is grch37, but can accept modifications of both grch37- and hg38-based builds.
 #' @param padding Numeric value that will be used to pad probes in WEX data from both ends. Default is 100. After padding, overlapping features are squished together.
@@ -21,7 +21,7 @@
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #get all ssm in the MYC aSHM region
 #' myc_ashm_maf = get_ssm_by_region(region = "8:128748352-128749427")
 #'
@@ -81,10 +81,6 @@ genome_to_exome = function(maf,
   setkey(this_genome_coordinates)
 
   # now the maf file
-  # in case the maf file is from maftools, get the ssm as data table and set keys
-  if (class(maf)[1] == "MAF"){
-    maf = maf@data
-  }
   maf = as.data.table(maf)
   setkey(maf, Chromosome, Start_Position, End_Position)
 
