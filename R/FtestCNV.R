@@ -24,6 +24,8 @@
 #'      uses "fdr".
 #' @param fdr.cutoff Specify FDR significance cut-off. By default, this
 #'      function uses 0.1.
+#' @param confidence_level Numeric value between 0 and 1 representing the
+#'      confidence level for the plotted confidence intervals.
 #' @param text_size Size of the text on the forest plot of differentially
 #'      enriched CNV. Default text-size is 7.
 #' @param blacklisted_regions Optionally, specify any descriptors (value from
@@ -36,6 +38,7 @@
 #'
 #' @return list
 #'
+#' @importFrom stats qnorm
 #' @import dplyr ggpubr readr tidyr ggplot2
 #' @export
 #'
@@ -61,6 +64,7 @@ FtestCNV = function(
     comparison,
     fdr.method = "fdr",
     fdr.cutoff = 0.1,
+    confidence_level = 0.95,
     text_size = 7,
     blacklisted_regions = NULL,
     point_size = 3
@@ -310,7 +314,8 @@ FtestCNV = function(
 
     # calculate SE
     mergedPassed = GROUP1_vs_GROUP2.PASSED %>%
-        dplyr::mutate(SE = (HighConfInt - LowConfInt) / 5.95)
+        dplyr::mutate(SE = (HighConfInt - LowConfInt) / 5.95) %>%
+        dplyr::mutate(interval = qnorm(1 - (1 - confidence_level)/2)*SE)
 
     # order in decreasing order for better visualization
     mergedPassed = mergedPassed[
@@ -351,8 +356,8 @@ FtestCNV = function(
         ggplot(aes(y = Region)) +
         geom_linerange(
             aes(
-                xmin=OddsRatio-SE,
-                xmax=OddsRatio+SE,
+                xmin=OddsRatio-interval,
+                xmax=OddsRatio+interval,
                 linewidth = (Mutated_GROUP1 + Mutated_GROUP2)
             )
         ) +
@@ -424,14 +429,14 @@ FtestCNV = function(
 
 
     p_right <- res %>%
-        select(Region, OddsRatio, SE, FDR) %>%
+        select(Region, OddsRatio, interval, FDR) %>%
         mutate(
             label = paste0(
                 round(OddsRatio, 2),
                 " [",
-                round(OddsRatio - SE, 2),
+                round(OddsRatio - interval, 2),
                 ", ",
-                round(OddsRatio + SE, 2),
+                round(OddsRatio + interval, 2),
                 "]"
             ),
             column = "Log(OddsRatio)"

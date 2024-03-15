@@ -10,6 +10,7 @@ FtestCNV(
   comparison,
   fdr.method = "fdr",
   fdr.cutoff = 0.1,
+  confidence_level = 0.95,
   text_size = 7,
   blacklisted_regions = NULL,
   point_size = 3
@@ -32,6 +33,9 @@ uses "fdr".}
 
 \item{fdr.cutoff}{Specify FDR significance cut-off. By default, this
 function uses 0.1.}
+
+\item{confidence_level}{Numeric value between 0 and 1 representing the
+confidence level for the plotted confidence intervals.}
 
 \item{text_size}{Size of the text on the forest plot of differentially
 enriched CNV. Default text-size is 7.}
