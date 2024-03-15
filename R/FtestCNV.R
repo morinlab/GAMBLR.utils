@@ -31,6 +31,8 @@
 #'      before any comparisons are done. It is possible to specify a list of
 #'      multiple descriptors, for example, c("3p12.3", "12p13.2"). Default
 #'      is NULL.
+#' @param point_size Number specifying size of the red point on the resulting
+#'      forestplot.
 #'
 #' @return list
 #'
@@ -60,7 +62,8 @@ FtestCNV = function(
     fdr.method = "fdr",
     fdr.cutoff = 0.1,
     text_size = 7,
-    blacklisted_regions = NULL
+    blacklisted_regions = NULL,
+    point_size = 3
 ){
 
     # get groups of interest for comparison
@@ -356,7 +359,7 @@ FtestCNV = function(
         geom_point(
             aes(x = OddsRatio),
             shape = 15,
-            size = 3,
+            size = point_size,
             color = "red"
         ) +
         geom_vline(xintercept = 0, linetype="dashed") +

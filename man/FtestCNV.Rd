@@ -11,7 +11,8 @@ FtestCNV(
   fdr.method = "fdr",
   fdr.cutoff = 0.1,
   text_size = 7,
-  blacklisted_regions = NULL
+  blacklisted_regions = NULL,
+  point_size = 3
 )
 }
 \arguments{
@@ -40,6 +41,9 @@ column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out
 before any comparisons are done. It is possible to specify a list of
 multiple descriptors, for example, c("3p12.3", "12p13.2"). Default
 is NULL.}
+
+\item{point_size}{Number specifying size of the red point on the resulting
+forestplot.}
 }
 \value{
 list
