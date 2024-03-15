@@ -37,7 +37,7 @@ jobs:
 
     - name: Build package
       run:
-        Rscript -e "devtools::install()"
+        Rscript -e "devtools::install(repos = BiocManager::repositories())"
 
     - name: Check package
       run:
