@@ -22,8 +22,6 @@ Imports:
     ggpubr,
     ggrepel,
     glue,
-    IRanges,
-    plyr,
     purrr,
     readr,
     Rsamtools,

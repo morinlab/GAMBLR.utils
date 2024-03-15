@@ -29,7 +29,6 @@
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr circlize ggplot2 ggrepel readr tibble GAMBLR.helpers
-#' @importFrom plyr round_any
 #' @export
 #'
 #' @examples
@@ -152,7 +151,8 @@ cnvKompare = function(patient_id,
       band_length = cb.end - cb.start,
       cnv_length = end - start,
       # round the % of cytoband covered to the nearest 5%
-      pct_covered = plyr::round_any((cnv_length / band_length * 100), 5, f = round)
+      pct_covered = (cnv_length / band_length * 100),
+      pct_covered = 5*round(pct_covered/5)
     ) %>%
     # name each cytoband as chr_cytoband
     mutate(name = paste0(cb.chromosome, "_", cb.name)) %>%
