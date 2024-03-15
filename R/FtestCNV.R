@@ -15,7 +15,8 @@
 #' @param gistic_lesions Path to the GISTIC2.0 all_lesions output file.
 #' @param metadata Data frame containing sample ids and column with annotated
 #'      data for the 2 groups of interest. All other columns are ignored.
-#'      Currently, function exits if asked to compare more than 2 groups.
+#'      The function will exit with error if asked to compare more than two
+#'      groups, so please ensure to provide correct metadata.
 #' @param comparison Specify column annotating groups of interest.
 #' @param fdr.method FDR method to adjust p values. Uses p.adjust function, and
 #'      therefore accepts its method for FDR ("holm", "hochberg", "hommel",

@@ -19,7 +19,8 @@ FtestCNV(
 
 \item{metadata}{Data frame containing sample ids and column with annotated
 data for the 2 groups of interest. All other columns are ignored.
-Currently, function exits if asked to compare more than 2 groups.}
+The function will exit with error if asked to compare more than two
+groups, so please ensure to provide correct metadata.}
 
 \item{comparison}{Specify column annotating groups of interest.}
 
