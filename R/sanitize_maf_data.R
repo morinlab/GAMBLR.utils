@@ -16,7 +16,8 @@
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
 #'
-#' @import dplyr GAMBLR.helpers utils
+#' @importFrom utils write.table
+#' @import dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples

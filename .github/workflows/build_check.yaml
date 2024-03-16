@@ -1,8 +1,6 @@
 name: GAMBLR.utils build check
 
 on:
-  push:
-    branches: [kdreval-utils-setup]
   pull_request:
     branches: [master]
 
