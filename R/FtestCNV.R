@@ -44,18 +44,25 @@
 #'
 #' @examples
 #' \dontrun{
+#' library(GAMBLR.data)
+#'
+#' meta <- get_gambl_metadata() %>%
+#'      filter(pathology %in% c("BL", "DLBCL"))
+#'
 #' # basic usage
-#' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
-#'          metadata = derived_data,
-#'          comparison = "pathology")
+#' FtestCNV(
+#'      gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
+#'      metadata = meta,
+#'      comparison = "pathology")
 #'
 #' # advanced usage
-#' FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
-#'          metadata = derived_data,
-#'          comparison = "pathology",
-#'          fdr.method = "bonferroni",
-#'          fdr.cutoff = 0.05,
-#'          blacklisted_regions = c("3p12.3", "12p13.2"))
+#' FtestCNV(
+#'      gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
+#'      metadata = meta,
+#'      comparison = "pathology",
+#'      fdr.method = "bonferroni",
+#'      fdr.cutoff = 0.05,
+#'      blacklisted_regions = c("3p12.3", "12p13.2"))
 #' }
 #'
 FtestCNV = function(
