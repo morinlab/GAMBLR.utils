@@ -64,7 +64,7 @@ sanitize_maf_data = function(mutation_maf_path,
     #rename it
     file.rename("onco_matrix.txt", output_oncomatrix)
   }else{
-    output_oncomatrix = paste0(getwd(), "/onco_matrix.tsv")
+    output_oncomatrix = paste0(getwd(), "/onco_matrix.txt")
   }
   message(paste("your data is in:", output_oncomatrix))
   return(output_oncomatrix)
