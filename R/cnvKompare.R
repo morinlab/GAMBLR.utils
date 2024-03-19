@@ -28,17 +28,16 @@
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr circlize ComplexHeatmap ggplot2 ggrepel readr tibble GAMBLR.helpers
-#' @importFrom plyr round_any
+#' @import dplyr tidyr circlize ggplot2 ggrepel readr tibble GAMBLR.helpers
 #' @export
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#'
 #' #get segs for comparison
 #' my_segs = get_sample_cn_segments(these_sample_ids = c("02-13135T", "04-28140T"))
 #'
-#' my_list = cnvKompare(this_seg = my_segs, 
+#' my_list = cnvKompare(this_seg = my_segs,
 #'                      these_sample_ids = c("02-13135T", "04-28140T"),
 #'                      genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP","GNA13"),
 #'                      show_x_labels = FALSE)
@@ -110,14 +109,14 @@ cnvKompare = function(patient_id,
     these_samples_seg = this_seg
   } else {
     message("Retreiving the CNV data using GAMBLR ...")
-    these_samples_seg = get_sample_cn_segments(these_sample_ids = these_sample_ids, 
-                                               projection = projection, 
+    these_samples_seg = get_sample_cn_segments(these_sample_ids = these_sample_ids,
+                                               projection = projection,
                                                this_seq_type = this_seq_type)
   }
-  
+
   #add the CN column, if not already there
   if(!("CN" %in% colnames(these_samples_seg))){
-    these_samples_seg = dplyr::mutate(these_samples_seg, CN = (2 * 2 ^ log.ratio)) 
+    these_samples_seg = dplyr::mutate(these_samples_seg, CN = (2 * 2 ^ log.ratio))
   }
 
   these_samples_seg = these_samples_seg  %>%
@@ -152,7 +151,8 @@ cnvKompare = function(patient_id,
       band_length = cb.end - cb.start,
       cnv_length = end - start,
       # round the % of cytoband covered to the nearest 5%
-      pct_covered = plyr::round_any((cnv_length / band_length * 100), 5, f = round)
+      pct_covered = (cnv_length / band_length * 100),
+      pct_covered = 5*round(pct_covered/5)
     ) %>%
     # name each cytoband as chr_cytoband
     mutate(name = paste0(cb.chromosome, "_", cb.name)) %>%
@@ -211,17 +211,37 @@ cnvKompare = function(patient_id,
   # heatmap of cnvKompare scores
   if (return_heatmap) {
     message("Building heatmap ...")
-    hmap_legend_param = list(title = "cnvKompare score")
-    hMap = concordance %>%
-      as.matrix() %>%
-      t %>%
-      ComplexHeatmap::Heatmap(
-        .,
-        show_column_names = show_x_labels,
-        cluster_columns = FALSE,
-        cluster_rows = FALSE,
-        heatmap_legend_param = hmap_legend_param
-      )
+    hMap <- concordance %>%
+        as.data.frame %>%
+        rownames_to_column("x") %>%
+        pivot_longer(!x, names_to = "y", values_to = "score") %>%
+        ggplot(aes(x = x, y = y, fill = score)) +
+        geom_tile() +
+            scale_fill_gradientn(
+                colors = hcl.colors(10, "Blue-Yellow")
+            ) +
+        guides(
+            fill = guide_colourbar(
+                title = "cnvKompare score"
+            )
+        )  +
+        labs(
+            y = "",
+            x = "Cytoband"
+        ) +
+        theme(
+            axis.ticks = element_blank(),
+            axis.text.y = element_text(
+                face = "bold",
+                color = "black"
+            ),
+            axis.text.x = element_blank(),
+            axis.title = element_text(
+                face = "bold"
+            ),
+            panel.background = element_blank()
+        )
+
     output$Heatmap = hMap
   }
 

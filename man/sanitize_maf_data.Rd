@@ -37,11 +37,11 @@ and/or perform some statistical analysis on the frequency and assortment of muta
 User J can run this function on a maf file and provide the path of the output to user B.
 }
 \examples{
-
-safe_oncomatrix_path = sanitize_maf_data(
- mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
- genes_keep = c("MYC", "ID3", "ARID1A",
- "FOXO1", "TP53", "FAT4",
- "IGLL5"))
+safe_oncomatrix_path <- sanitize_maf_data(
+     mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
+     genes_keep = c(
+         "MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", "IGLL5"
+     )
+)
 
 }

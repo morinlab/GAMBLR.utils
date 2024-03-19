@@ -12,7 +12,6 @@ Depends:
     R (>= 4.1)
 Imports:
     circlize,
-    ComplexHeatmap,
     config,
     data.table,
     dplyr,
@@ -20,12 +19,9 @@ Imports:
     GAMBLR.helpers,
     GenomicRanges,
     ggplot2,
+    ggpubr,
     ggrepel,
     glue,
-    IRanges,
-    maftools,
-    metaviz,
-    plyr,
     purrr,
     readr,
     Rsamtools,

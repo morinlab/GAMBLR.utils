@@ -16,16 +16,17 @@
 #'
 #' @return The full path to the oncomatrix file (a matrix with Variant_Classification or Multi_Hit indicating coding mutation status per patient).
 #'
-#' @import maftools dplyr
+#' @importFrom utils write.table
+#' @import dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
-#'
-#' safe_oncomatrix_path = sanitize_maf_data(
-#'  mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
-#'  genes_keep = c("MYC", "ID3", "ARID1A",
-#'  "FOXO1", "TP53", "FAT4",
-#'  "IGLL5"))
+#' safe_oncomatrix_path <- sanitize_maf_data(
+#'      mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
+#'      genes_keep = c(
+#'          "MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", "IGLL5"
+#'      )
+#' )
 #'
 sanitize_maf_data = function(mutation_maf_path,
                              mutation_maf_data,
@@ -47,14 +48,23 @@ sanitize_maf_data = function(mutation_maf_path,
     warning("you should provide a list of genes to retain in the output to ensure your genes of interest are included")
     genes_keep = rev(unique(lymphoma_genes$Gene))
   }
-  maf_o = maftools::read.maf(mutation_maf_data)
-
-  maftools::oncoplot(maf_o, genes = genes_keep, writeMatrix = T, removeNonMutated = F)  #writes to working directory
+  maf_o = as.data.frame(mutation_maf_data)
+  onco_matrix <- create_onco_matrix(
+    maf_df = maf_o,
+    genes = genes_keep
+  ) %>% as.data.frame
+  #writes to working directory
+  write.table(
+    onco_matrix,
+    file = paste0(getwd(), "/onco_matrix.txt"),
+    quote = F,
+    sep = "\t"
+  )
   if(!missing(output_oncomatrix)){
     #rename it
     file.rename("onco_matrix.txt", output_oncomatrix)
   }else{
-    output_oncomatrix = paste0(getwd(), "/onco_matrix.tsv")
+    output_oncomatrix = paste0(getwd(), "/onco_matrix.txt")
   }
   message(paste("your data is in:", output_oncomatrix))
   return(output_oncomatrix)
