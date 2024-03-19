@@ -13,7 +13,7 @@ genome_to_exome(
 )
 }
 \arguments{
-\item{maf}{Incoming maf object. Can be maf-like data frame or maftools maf object. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.}
+\item{maf}{Incoming maf object. Must be maf-like data frame. Required parameter. Minimum columns that should be present are Chromosome, Start_Position, and End_Position.}
 
 \item{custom_bed}{Optional argument specifying a path to custom bed file for covered regions. Must be bed-like and contain chrom, start, and end position information in the first 3 columns. Other columns are disregarded if provided.}
 

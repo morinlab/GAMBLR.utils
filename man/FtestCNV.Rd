@@ -10,51 +10,83 @@ FtestCNV(
   comparison,
   fdr.method = "fdr",
   fdr.cutoff = 0.1,
+  confidence_level = 0.95,
   text_size = 7,
-  blacklisted_regions = NULL
+  blacklisted_regions = NULL,
+  point_size = 3
 )
 }
 \arguments{
 \item{gistic_lesions}{Path to the GISTIC2.0 all_lesions output file.}
 
-\item{metadata}{Data frame containing sample ids and column with annotated data for the 2 groups of interest. All other columns are ignored. Currently, function exists if asked to compare more than 2 groups.}
+\item{metadata}{Data frame containing sample ids and column with annotated
+data for the 2 groups of interest. All other columns are ignored.
+The function will exit with error if asked to compare more than two
+groups, so please ensure to provide correct metadata.}
 
 \item{comparison}{Specify column annotating groups of interest.}
 
-\item{fdr.method}{FDR method to adjust p values. Uses p.adjust function, and therefore accepts its method for FDR ("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none"). By default, this function uses "fdr".}
+\item{fdr.method}{FDR method to adjust p values. Uses p.adjust function, and
+therefore accepts its method for FDR ("holm", "hochberg", "hommel",
+"bonferroni", "BH", "BY", "fdr", "none"). By default, this function
+uses "fdr".}
 
-\item{fdr.cutoff}{Specify FDR significance cut-off. By default, this function uses 0.1.}
+\item{fdr.cutoff}{Specify FDR significance cut-off. By default, this
+function uses 0.1.}
 
-\item{text_size}{Size of the text on the forest plot of differentially enriched CNV. Default text-size is 7.}
+\item{confidence_level}{Numeric value between 0 and 1 representing the
+confidence level for the plotted confidence intervals.}
 
-\item{blacklisted_regions}{Optionally, specify any descriptors (value from column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out before any comparisons are done. It is possible to specify a list of multiple descriptors, for example, c("3p12.3", "12p13.2"). Default is NULL.}
+\item{text_size}{Size of the text on the forest plot of differentially
+enriched CNV. Default text-size is 7.}
+
+\item{blacklisted_regions}{Optionally, specify any descriptors (value from
+column \code{Descriptor} of GISTIC2.0 all_lesions output file) to filter out
+before any comparisons are done. It is possible to specify a list of
+multiple descriptors, for example, c("3p12.3", "12p13.2"). Default
+is NULL.}
+
+\item{point_size}{Number specifying size of the red point on the resulting
+forestplot.}
 }
 \value{
 list
 }
 \description{
-Using GISTIC2.0 outputs, perform Fisher's exact test to compare CNV frequencies between 2 groups.
+Using GISTIC2.0 outputs, perform Fisher's exact test to compare
+CNV frequencies between 2 groups.
 }
 \details{
-This function was developed to compare (Fisher's exact test) CNV frequencies between two groups.
-To do so, set the path to the GISTIC2.0 all_lesions file with \code{gistic_lesions}, together with a metadata table with the sample IDs of interest (\code{metadata}).
-The last remaining required parameter is \code{comparison}, this parameter takes the name of the column annotating the groups of interest, e.g pathology, cohort, etc.
-For more information on how to run this function, refer to the function examples and parameter descriptions.
+This function was developed to compare (Fisher's exact test) CNV
+frequencies between two groups. To do so, set the path to the GISTIC2.0
+all_lesions file with \code{gistic_lesions}, together with a metadata table with
+the sample IDs of interest (\code{metadata}). The last remaining required
+parameter is \code{comparison}, this parameter takes the name of the column
+annotating the groups of interest, e.g pathology, cohort, etc.
+For more information on how to run this function, refer to the function
+examples and parameter descriptions.
 }
 \examples{
 \dontrun{
+library(GAMBLR.data)
+
+meta <- get_gambl_metadata() \%>\%
+     filter(pathology \%in\% c("BL", "DLBCL"))
+
 # basic usage
-FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
-         metadata = derived_data,
-         comparison = "pathology")
+FtestCNV(
+     gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
+     metadata = meta,
+     comparison = "pathology")
 
 # advanced usage
-FtestCNV(gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
-         metadata = derived_data,
-         comparison = "pathology",
-         fdr.method = "bonferroni",
-         fdr.cutoff = 0.05,
-         blacklisted_regions = c("3p12.3", "12p13.2"))
+FtestCNV(
+     gistic_lesions = "path_to_GISTIC2.0_output/all_lesions.conf_{confidence_level}.txt",
+     metadata = meta,
+     comparison = "pathology",
+     fdr.method = "bonferroni",
+     fdr.cutoff = 0.05,
+     blacklisted_regions = c("3p12.3", "12p13.2"))
 }
 
 }
