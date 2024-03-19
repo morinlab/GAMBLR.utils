@@ -6,7 +6,8 @@
 \usage{
 maf_to_custom_track(
   maf_data,
-  these_samples_metadata,
+  these_sample_ids = NULL,
+  these_samples_metadata = NULL,
   this_seq_type = "genome",
   output_file,
   as_bigbed = FALSE,
@@ -22,7 +23,9 @@ maf_to_custom_track(
 \arguments{
 \item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
-\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will return metadata for all available samples.}
+\item{these_sample_ids}{A vector of sample IDs to subset the samples of interest from the input \code{maf_data}. If NULL (the default), all samples in \code{maf_data} are kept.}
+
+\item{these_samples_metadata}{A metadata table to subset the samples of interest from the input \code{maf_data}. If NULL (the default), all samples in \code{maf_data} are kept.}
 
 \item{this_seq_type}{The seq type you want back, default is "genome".}
 
