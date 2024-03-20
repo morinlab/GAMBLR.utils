@@ -19,7 +19,7 @@
 #' @param maf_data A data frame in MAF format.
 #' @param coding_only Boolean parameter. Set to TRUE to restrict to only coding mutations.
 #' The default is FALSE.
-#' @param return_removed_rows Boolean parameter. Set to TRUE for returning rows from the 
+#' @param debug_flag Boolean parameter. Set to TRUE for returning rows from the 
 #' incoming MAF that do not contain any values in the required columns. Commonly used for 
 #' checking purposes only. Setting this to TRUE, does not produce an output compatible with 
 #' Protein paint. The default is FALSE.
@@ -48,7 +48,7 @@
 #' 
 ssm_to_proteinpaint = function(maf_data,
                                coding_only = FALSE,
-                               return_removed_rows = FALSE){
+                               debug_flag = FALSE){
   
   # check for required columns in maf_data 
   maf_req_cols = c("Hugo_Symbol", "RefSeq", "Chromosome", "Start_Position", "HGVSp_Short", 
@@ -157,7 +157,7 @@ ssm_to_proteinpaint = function(maf_data,
   required_cols = dplyr::filter(required_cols, class %in% suported_class)
   
   # if only removed rows should be returned (for checking purpose)
-  if(return_removed_rows){  
+  if(debug_flag){  
     removed_rows = 1:nrow(maf_data) %>% 
       "["(! . %in% required_cols$i) %>% 
       slice(maf_data, .)
@@ -168,7 +168,7 @@ ssm_to_proteinpaint = function(maf_data,
   num_removed_rows = (nrow(maf_data) - nrow(required_cols)) %>% 
     format(big.mark="'")
   k = format( nrow(maf_data), big.mark="'" ) %>% 
-    gettextf("Warning: %s rows out of %s were removed from the output table because there were missing or unsupported values in required columns. Run `ssm_to_proteinpaint` again with `return_removed_rows = TRUE` to see these rows.",
+    gettextf("Warning: %s rows out of %s were removed from the output table because there were missing or unsupported values in required columns. Run `ssm_to_proteinpaint` again with `debug_flag = TRUE` to see these rows.",
              num_removed_rows, .)
   message(k)
   maf_data = slice(maf_data, required_cols$i)

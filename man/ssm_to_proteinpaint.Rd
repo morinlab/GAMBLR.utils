@@ -4,7 +4,7 @@
 \alias{ssm_to_proteinpaint}
 \title{MAF to ProteinPaint table}
 \usage{
-ssm_to_proteinpaint(maf_data, coding_only = FALSE, return_removed_rows = FALSE)
+ssm_to_proteinpaint(maf_data, coding_only = FALSE, debug_flag = FALSE)
 }
 \arguments{
 \item{maf_data}{A data frame in MAF format.}
@@ -12,7 +12,7 @@ ssm_to_proteinpaint(maf_data, coding_only = FALSE, return_removed_rows = FALSE)
 \item{coding_only}{Boolean parameter. Set to TRUE to restrict to only coding mutations.
 The default is FALSE.}
 
-\item{return_removed_rows}{Boolean parameter. Set to TRUE for returning rows from the
+\item{debug_flag}{Boolean parameter. Set to TRUE for returning rows from the
 incoming MAF that do not contain any values in the required columns. Commonly used for
 checking purposes only. Setting this to TRUE, does not produce an output compatible with
 Protein paint. The default is FALSE.}
