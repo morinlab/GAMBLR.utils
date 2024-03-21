@@ -13,10 +13,19 @@
 #' Tumor_Sample_Barcode, Reference_Allele. In the case of using functions `get_ssm_by_samples`, 
 #' `get_coding_ssm`, or `get_ssm_by_patients` to get your MAF table and required/desired 
 #' columns are missing, consider using parameter `basic_columns = FALSE` to ensure that your 
-#' MAF has all needed columns. Other columns are taken from the metadata table generated 
-#' internally in `ssm_to_proteinpaint`.
+#' MAF has all needed columns. Other columns are taken from the metadata provided by the
+#' `these_samples_metadata` parameter or generated internally.
 #' 
 #' @param maf_data A data frame in MAF format.
+#' @param these_sample_ids A vector of sample IDs to subset the samples of interest from the 
+#' input `maf_data`. If NULL (the default), samples are not filtered by this parameter.
+#' @param these_samples_metadata A metadata table, with sample IDs in a column, to subset 
+#' the samples of interest from the input `maf_data`. Also, important information from the 
+#' metadata is added to the output table. If NULL (the default), `ssm_to_proteinpaint` 
+#' internally creates the metadata table with samples according to the parameters 
+#' `these_sample_ids` and `this_seq_type`.
+#' @param this_seq_type The seq type to get results for. One of "genome" (default) or 
+#' "capture".
 #' @param coding_only Boolean parameter. Set to TRUE to restrict to only coding mutations.
 #' The default is FALSE.
 #' @param debug_flag Boolean parameter. Set to TRUE for returning rows from the 
@@ -47,8 +56,15 @@
 #' pp_df_coding = ssm_to_proteinpaint(maf_data = my_maf, coding_only = TRUE)
 #' 
 ssm_to_proteinpaint = function(maf_data,
+                               these_sample_ids = NULL,
+                               these_samples_metadata = NULL,
+                               this_seq_type = "genome",
                                coding_only = FALSE,
                                debug_flag = FALSE){
+  
+  # check parameters
+  stopifnot( "`this_seq_type` must be one of \"genome\" or \"capture\"." = 
+               this_seq_type %in% c("genome", "capture") & length(this_seq_type) == 1 )
   
   # check for required columns in maf_data 
   maf_req_cols = c("Hugo_Symbol", "RefSeq", "Chromosome", "Start_Position", "HGVSp_Short", 
@@ -72,9 +88,19 @@ ssm_to_proteinpaint = function(maf_data,
     message(k)
   }
   
+  # get metadata with the dedicated helper function
+  these_samples_metadata = id_ease(
+    these_samples_metadata = these_samples_metadata,
+    these_sample_ids = these_sample_ids,
+    this_seq_type = this_seq_type,
+    verbose = FALSE
+  )
+  
+  # filter maf according to the samples in the metadata
+  maf_data = dplyr::filter(maf_data, Tumor_Sample_Barcode %in% these_samples_metadata$sample_id)
+  
   # add metadata columns to maf_data
-  metadata = get_gambl_metadata(seq_type_filter = c("genome", "capture", "mrna"))
-  maf_data = left_join(maf_data, metadata, by = join_by(Tumor_Sample_Barcode == sample_id))
+  maf_data = left_join(maf_data, these_samples_metadata, by = join_by(Tumor_Sample_Barcode == sample_id))
   
   # check for optional columns in maf_data, including columns from the metadata
   maf_opt_cols = c("pathology", "patient_id", "time_point")
@@ -82,7 +108,7 @@ ssm_to_proteinpaint = function(maf_data,
     "["(! . %in% names(maf_data))
   if( length(maf_opt_cols_not_present) > 0 ){
     k = paste(maf_opt_cols_not_present, collapse = ", ") %>% 
-      gettextf("Warning: Optional columns missing in the metadata (created internally): %s.", .)
+      gettextf("Warning: Optional columns missing in the metadata: %s.", .)
     message(k)
   }
   

@@ -4,10 +4,29 @@
 \alias{ssm_to_proteinpaint}
 \title{MAF to ProteinPaint table}
 \usage{
-ssm_to_proteinpaint(maf_data, coding_only = FALSE, debug_flag = FALSE)
+ssm_to_proteinpaint(
+  maf_data,
+  these_sample_ids = NULL,
+  these_samples_metadata = NULL,
+  this_seq_type = "genome",
+  coding_only = FALSE,
+  debug_flag = FALSE
+)
 }
 \arguments{
 \item{maf_data}{A data frame in MAF format.}
+
+\item{these_sample_ids}{A vector of sample IDs to subset the samples of interest from the
+input \code{maf_data}. If NULL (the default), samples are not filtered by this parameter.}
+
+\item{these_samples_metadata}{A metadata table, with sample IDs in a column, to subset
+the samples of interest from the input \code{maf_data}. Also, important information from the
+metadata is added to the output table. If NULL (the default), \code{ssm_to_proteinpaint}
+internally creates the metadata table with samples according to the parameters
+\code{these_sample_ids} and \code{this_seq_type}.}
+
+\item{this_seq_type}{The seq type to get results for. One of "genome" (default) or
+"capture".}
 
 \item{coding_only}{Boolean parameter. Set to TRUE to restrict to only coding mutations.
 The default is FALSE.}
@@ -35,8 +54,8 @@ from the MAF table are: Mutation_Status, t_alt_count, t_depth, n_alt_count, n_de
 Tumor_Sample_Barcode, Reference_Allele. In the case of using functions \code{get_ssm_by_samples},
 \code{get_coding_ssm}, or \code{get_ssm_by_patients} to get your MAF table and required/desired
 columns are missing, consider using parameter \code{basic_columns = FALSE} to ensure that your
-MAF has all needed columns. Other columns are taken from the metadata table generated
-internally in \code{ssm_to_proteinpaint}.
+MAF has all needed columns. Other columns are taken from the metadata provided by the
+\code{these_samples_metadata} parameter or generated internally.
 }
 \examples{
 library(GAMBLR.data)
