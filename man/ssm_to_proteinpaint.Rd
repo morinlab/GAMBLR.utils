@@ -9,6 +9,7 @@ ssm_to_proteinpaint(
   these_sample_ids = NULL,
   these_samples_metadata = NULL,
   this_seq_type = "genome",
+  sample_type = "time_point",
   coding_only = FALSE,
   debug_flag = FALSE
 )
@@ -27,6 +28,12 @@ internally creates the metadata table with samples according to the parameters
 
 \item{this_seq_type}{The seq type to get results for. One of "genome" (default) or
 "capture".}
+
+\item{sample_type}{A single sting with the name of the optional column (from \code{maf_data}
+or the metadata) that you want to use to distinguish multiple samples from the same
+patient. If NULL, the ProteinPaint visualization is split only by pathologies. If not
+NULL, the visualization will be split by each combination between pathologies and the
+column specified by \code{sample_type}. The default is "time_point".}
 
 \item{coding_only}{Boolean parameter. Set to TRUE to restrict to only coding mutations.
 The default is FALSE.}

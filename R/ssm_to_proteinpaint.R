@@ -26,6 +26,11 @@
 #' `these_sample_ids` and `this_seq_type`.
 #' @param this_seq_type The seq type to get results for. One of "genome" (default) or 
 #' "capture".
+#' @param sample_type A single sting with the name of the optional column (from `maf_data` 
+#' or the metadata) that you want to use to distinguish multiple samples from the same 
+#' patient. If NULL, the ProteinPaint visualization is split only by pathologies. If not 
+#' NULL, the visualization will be split by each combination between pathologies and the 
+#' column specified by `sample_type`. The default is "time_point".
 #' @param coding_only Boolean parameter. Set to TRUE to restrict to only coding mutations.
 #' The default is FALSE.
 #' @param debug_flag Boolean parameter. Set to TRUE for returning rows from the 
@@ -59,12 +64,18 @@ ssm_to_proteinpaint = function(maf_data,
                                these_sample_ids = NULL,
                                these_samples_metadata = NULL,
                                this_seq_type = "genome",
+                               sample_type = "time_point",
                                coding_only = FALSE,
                                debug_flag = FALSE){
   
   # check parameters
   stopifnot( "`this_seq_type` must be one of \"genome\" or \"capture\"." = 
                this_seq_type %in% c("genome", "capture") & length(this_seq_type) == 1 )
+  
+  if(!is.null(sample_type)){
+    stopifnot( "`sample_type` must be either NULL or a single string." = 
+                 is.character(sample_type) & length(sample_type) == 1 )
+  }
   
   # check for required columns in maf_data 
   maf_req_cols = c("Hugo_Symbol", "RefSeq", "Chromosome", "Start_Position", "HGVSp_Short", 
@@ -75,17 +86,6 @@ ssm_to_proteinpaint = function(maf_data,
     k = paste(maf_req_cols_not_present, collapse = ", ") %>% 
       gettextf("Required columns missing in the input MAF data frame: %s.", .)
     stop(k)
-  }
-  
-  # check for optional columns in maf_data
-  maf_opt_cols = c("Mutation_Status", "t_alt_count", "t_depth", "n_alt_count", "n_depth", 
-                   "Tumor_Sample_Barcode", "Reference_Allele")
-  maf_opt_cols_not_present = maf_opt_cols %>% 
-    "["(! . %in% names(maf_data))
-  if( length(maf_opt_cols_not_present) > 0 ){
-    k = paste(maf_opt_cols_not_present, collapse = ", ") %>% 
-      gettextf("Warning: Optional columns missing in the input MAF data frame: %s.", .)
-    message(k)
   }
   
   # get metadata with the dedicated helper function
@@ -102,13 +102,15 @@ ssm_to_proteinpaint = function(maf_data,
   # add metadata columns to maf_data
   maf_data = left_join(maf_data, these_samples_metadata, by = join_by(Tumor_Sample_Barcode == sample_id))
   
-  # check for optional columns in maf_data, including columns from the metadata
-  maf_opt_cols = c("pathology", "patient_id", "time_point")
+  # check for optional columns in maf_data (columns from the metadata included)
+  maf_opt_cols = c("Mutation_Status", "t_alt_count", "t_depth", "n_alt_count", "n_depth", 
+                   "Tumor_Sample_Barcode", "Reference_Allele", "pathology", "patient_id",
+                   sample_type)
   maf_opt_cols_not_present = maf_opt_cols %>% 
     "["(! . %in% names(maf_data))
   if( length(maf_opt_cols_not_present) > 0 ){
     k = paste(maf_opt_cols_not_present, collapse = ", ") %>% 
-      gettextf("Warning: Optional columns missing in the metadata: %s.", .)
+      gettextf("Warning: Optional columns missing in the input MAF data frame or in the metadata and will be ignored: %s.", .)
     message(k)
   }
   
@@ -119,8 +121,8 @@ ssm_to_proteinpaint = function(maf_data,
                     disease = pathology, mutant_in_tumor = t_alt_count, 
                     total_in_tumor = t_depth, mutant_in_normal = n_alt_count, 
                     total_in_normal = n_depth, patient = patient_id, 
-                    sample = Tumor_Sample_Barcode, sampletype = time_point,
-                    REF = Reference_Allele) %>% 
+                    sample = Tumor_Sample_Barcode, REF = Reference_Allele,
+                    sampletype = any_of(sample_type)) %>% 
     mutate(class = recode(class,
                           Missense_Mutation = "missense",
                           In_Frame_Del = "proteinDel",
@@ -161,8 +163,11 @@ ssm_to_proteinpaint = function(maf_data,
   maf_data = mutate(maf_data, VAF = mutant_in_tumor/total_in_tumor)
   
   # keep only columns that are meaningful for proteinpaint
+  if( !is.null(sample_type) ){
+    sample_type = "sampletype"
+  }
   maf_data = dplyr::select(maf_data, gene, refseq, chromosome, start, aachange, class, 
-                           disease, origin, patient, sample, sampletype, mutant_in_tumor, 
+                           disease, origin, patient, sample, any_of(sample_type), mutant_in_tumor, 
                            total_in_tumor, mutant_in_normal, total_in_normal, REF, ALT, VAF)
   
   # if aachange is empty, change it to NA. this is to avoid filtering out desirable rows
