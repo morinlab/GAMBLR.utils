@@ -45,15 +45,15 @@
 #' my_samples = c("DOHH-2", "OCI-Ly10", "OCI-Ly3", "SU-DHL-10", "SU-DHL-4")
 #' 
 #' # get maf data frame
-#' my_meta = get_gambl_metadata()
-#' my_meta = dplyr::filter(my_meta, sample_id %in% my_samples)
-#' my_maf = get_ssm_by_samples(these_samples_metadata = my_meta, basic_columns = FALSE)
+#' my_maf = get_ssm_by_samples(these_sample_ids = my_samples, 
+#'                             this_seq_type = "genome", basic_columns = FALSE)
 #' 
 #' # convert maf to ProteinPaint format
-#' pp_df = ssm_to_proteinpaint(maf_data = my_maf)
+#' pp_df = ssm_to_proteinpaint(maf_data = my_maf, this_seq_type = "genome")
 #' 
 #' # convert only coding mutations to ProteinPaint format
-#' pp_df_coding = ssm_to_proteinpaint(maf_data = my_maf, coding_only = TRUE)
+#' pp_df = ssm_to_proteinpaint(maf_data = my_maf, this_seq_type = "genome",
+#'                             coding_only = TRUE)
 #' 
 ssm_to_proteinpaint = function(maf_data,
                                these_sample_ids = NULL,
