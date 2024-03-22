@@ -11,6 +11,7 @@ ssm_to_proteinpaint(
   this_seq_type = "genome",
   sample_type = "time_point",
   coding_only = FALSE,
+  these_genes = GAMBLR.data::lymphoma_genes_comprehensive$Gene,
   debug_flag = FALSE
 )
 }
@@ -37,6 +38,9 @@ column specified by \code{sample_type}. The default is "time_point".}
 
 \item{coding_only}{Boolean parameter. Set to TRUE to restrict to only coding mutations.
 The default is FALSE.}
+
+\item{these_genes}{A vector of strings with name of genes that you want results for.
+If NULL, all genes of the input \code{maf_data} are kept. The default is all lymphoma genes.}
 
 \item{debug_flag}{Boolean parameter. Set to TRUE for returning rows from the
 incoming MAF that do not contain any values in the required columns. Commonly used for

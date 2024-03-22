@@ -33,6 +33,8 @@
 #' column specified by `sample_type`. The default is "time_point".
 #' @param coding_only Boolean parameter. Set to TRUE to restrict to only coding mutations.
 #' The default is FALSE.
+#' @param these_genes A vector of strings with name of genes that you want results for. 
+#' If NULL, all genes of the input `maf_data` are kept. The default is all lymphoma genes. 
 #' @param debug_flag Boolean parameter. Set to TRUE for returning rows from the 
 #' incoming MAF that do not contain any values in the required columns. Commonly used for 
 #' checking purposes only. Setting this to TRUE, does not produce an output compatible with 
@@ -66,6 +68,7 @@ ssm_to_proteinpaint = function(maf_data,
                                this_seq_type = "genome",
                                sample_type = "time_point",
                                coding_only = FALSE,
+                               these_genes = GAMBLR.data::lymphoma_genes_comprehensive$Gene,
                                debug_flag = FALSE){
   
   # check parameters
@@ -98,6 +101,11 @@ ssm_to_proteinpaint = function(maf_data,
   
   # filter maf according to the samples in the metadata
   maf_data = dplyr::filter(maf_data, Tumor_Sample_Barcode %in% these_samples_metadata$sample_id)
+  
+  # keep only those ssms in lymphoma genes
+  if( ! is.null(these_genes) ){
+    maf_data = filter(maf_data, Hugo_Symbol %in% these_genes)
+  }
   
   # add metadata columns to maf_data
   maf_data = left_join(maf_data, these_samples_metadata, by = join_by(Tumor_Sample_Barcode == sample_id))
