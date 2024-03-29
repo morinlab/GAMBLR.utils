@@ -9,7 +9,7 @@
 #' to the value in `splitColumnName` that it refers to. 
 #' 
 #' @details `build_browser_hub` will create a custom track file for each combination of 
-#' `these_seq_types` and `splitColumnName` (if mutations could be found). Custom 
+#' `these_seq_types` and `splitColumnName` (if mutations can be found). Custom 
 #' track files are named as `<a_seq_type_value>_<a_splitColumnName_value>.bb/bed`. 
 #' 
 #' The `bigDataUrl` field of a track in the hub.txt file is defined in 
@@ -31,7 +31,7 @@
 #' @param these_samples_metadata A metadata table (with sample IDs in a column) to 
 #'   subset the samples of interest.
 #' @param these_seq_types A vector of one or more seq types you want results for. 
-#'   Possible values are "genome", "capture", or "mrna". If more than 
+#'   Possible values are "genome" or "capture". If more than 
 #'   one seq type is provided, for each value in `splitColumnName`, the function 
 #'   creates a separate track for each provided seq type. The default is 
 #'   `c("genome", "capture")`. See the **Details** section for more information.
@@ -110,8 +110,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
   
   # check some provided parameter 
-  stopifnot("`these_seq_types` must be one or more of \"genome\", \"capture\" or \"mrna\"." = 
-              all(these_seq_types %in% c("genome", "capture", "mrna")))
+  stopifnot("`these_seq_types` must be one or more of \"genome\" or \"capture\"." = 
+              all(these_seq_types %in% c("genome", "capture")))
   stopifnot("`projection` must be one of \"grch37\" or \"hg38\"." = 
               projection %in% c("grch37", "hg38"))
   stopifnot("`visibility` must be one of \"pack\", \"dense\", \"full\", or \"squish\"." = 

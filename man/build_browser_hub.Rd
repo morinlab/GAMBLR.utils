@@ -35,7 +35,7 @@ regions can be provided.}
 subset the samples of interest.}
 
 \item{these_seq_types}{A vector of one or more seq types you want results for.
-Possible values are "genome", "capture", or "mrna". If more than
+Possible values are "genome" or "capture". If more than
 one seq type is provided, for each value in \code{splitColumnName}, the function
 creates a separate track for each provided seq type. The default is
 \code{c("genome", "capture")}. See the \strong{Details} section for more information.}
@@ -94,7 +94,7 @@ to the value in \code{splitColumnName} that it refers to.
 }
 \details{
 \code{build_browser_hub} will create a custom track file for each combination of
-\code{these_seq_types} and \code{splitColumnName} (if mutations could be found). Custom
+\code{these_seq_types} and \code{splitColumnName} (if mutations can be found). Custom
 track files are named as \verb{<a_seq_type_value>_<a_splitColumnName_value>.bb/bed}.
 
 The \code{bigDataUrl} field of a track in the hub.txt file is defined in
