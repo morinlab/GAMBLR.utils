@@ -196,12 +196,12 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
         left_join(maf_data_i, ., join_by(Tumor_Sample_Barcode == sample_id))
       dplyr::select(maf_data_i, -all_of(splitColumnName)) %>% 
         split(maf_data_i[[splitColumnName]])
-    }, maf_data, these_samples_metadata)
+    }, maf_data, these_samples_metadata, SIMPLIFY = FALSE)
     track_names = lapply(maf_data, names)
     these_samples_metadata = mapply(function(these_samples_metadata_i, track_names_i){
       split(these_samples_metadata_i, these_samples_metadata_i[[splitColumnName]]) %>% 
         "["(track_names_i)
-    }, these_samples_metadata, track_names)
+    }, these_samples_metadata, track_names, SIMPLIFY = FALSE)
   }else{
     maf_data = lapply(maf_data, list)
     track_names = lapply(these_seq_types, function(x) list("all"))
