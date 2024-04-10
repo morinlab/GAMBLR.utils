@@ -217,7 +217,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   these_samples_metadata = these_samples_metadata[is_there_muts]
   these_seq_types = these_seq_types[is_there_muts]
   track_names = track_names[is_there_muts] %>% 
-    mapply(paste, these_seq_types, ., sep = "_")
+    mapply(paste, these_seq_types, ., sep = "_", SIMPLIFY = FALSE)
   
   # convert and save track files
   track_file_names = lapply(track_names, paste0, ifelse(as_bigbed, ".bb", ".bed"))
@@ -256,11 +256,11 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   
   # write info of the track which stores regions from where ssms are retrieved
   cat( "\n" )
-  cat( paste0("track ", hub_name, "_regions\n") )
-  cat( paste0("shortLabel ", hub_name, " regions\n") )
-  cat( paste0("longLabel Regions where mutations were taken to hub ", hub_name, "\n") )
+  cat( "track regions\n" )
+  cat( "shortLabel regions\n" )
+  cat( "longLabel Regions of interest from where mutations were retrieved\n" )
   cat( paste0("visibility ", visibility, "\n") )
-  cat( paste0("priority 1\n") )
+  cat( "priority 1\n" )
   cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
   file.path(bigDataUrl_base, hub_dir, projection, basename(regions_bed_file)) %>% 
     { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
@@ -270,9 +270,9 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   track_file_names = unlist(track_file_names)
   for(i in seq_along(track_names)){
     cat( "\n" )
-    cat( paste0("track ", hub_name, "_", track_names[i], "\n") )
-    cat( paste0("shortLabel ", hub_name, " ", track_names[i], "\n") )
-    cat( paste0("longLabel ", hub_name, " ", track_names[i], "\n") )
+    cat( paste0("track ", track_names[i], "\n") )
+    cat( paste0("shortLabel ", track_names[i], "\n") )
+    cat( paste0("longLabel ", track_names[i], "\n") )
     cat( paste0("visibility ", visibility, "\n") )
     cat( paste0("priority ", i+1, "\n") )
     cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
