@@ -19,6 +19,11 @@
 #' @param padding_size Optional parameter specifying the padding size in the returned file, default is 0.
 #' @param projection Specify which genome build to use. Possible values are "grch37" (default) or "hg38". This parameter has 
 #'   effect only when `as_bigbed` or `as_biglolly` is TRUE.
+#' @param bedToBigBed_path Path to your local `bedToBigBed` UCSC tool or the string 
+#'   `"config"` (default). If set to `"config"`, `GAMBLR.helpers::check_config_value` 
+#'   is called internally and the `bedToBigBed` path is obtained from the `config.yml` 
+#'   file saved in the current working directory. This parameter is ignored if both
+#'   `as_bigbed` and `as_biglolly` is set to `FALSE`. 
 #'
 #' @return Nothing.
 #'
@@ -43,7 +48,22 @@ maf_to_custom_track = function(maf_data,
                                track_description = "mutations from GAMBL",
                                verbose = FALSE,
                                padding_size = 0,
-                               projection = "grch37"){
+                               projection = "grch37",
+                               bedToBigBed_path = "config"){
+  
+  # check some provided parameter 
+  if(bedToBigBed_path == "config"){
+    bedToBigBed_path = tryCatch(
+      GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed),
+      error=function(e){
+        k = paste0("You set bedToBigBed_path parameter to \"config\". However...\n", e)
+        stop(k, call. = FALSE)
+      }
+    )
+  }else{
+    stopifnot("`bedToBigBed_path` points to a non-existent file." = 
+                file.exists(bedToBigBed_path))
+  }
   
   # get metadata with the dedicated helper function
   these_samples_metadata = id_ease(
@@ -110,9 +130,6 @@ maf_to_custom_track = function(maf_data,
     maf_coloured = mutate(maf_coloured,sample_id="redacted") %>%
       arrange(chrom,start)
     
-    # get bedToBigBed path from config file (config.yml from GAMBLR.results)
-    bedtobigbed <- GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
-    
     # create temp file chrom.sizes
     if(projection == "grch37"){
       chr_arms <- GAMBLR.data::chromosome_arms_grch37 %>% 
@@ -146,14 +163,14 @@ maf_to_custom_track = function(maf_data,
       #conversion:
       autosql_file = "/Users/rmorin/git/LLMPP/resources/reference/ucsc/bigLollyExample3.as"
       
-      bigbed_conversion = paste(bedtobigbed, "-as=", autosql_file, "-tab -type=bed9+1", temp_bed,
+      bigbed_conversion = paste(bedToBigBed_path, "-as=", autosql_file, "-tab -type=bed9+1", temp_bed,
                                 temp_chr_sizes, output_file)
       print(bigbed_conversion)
       system(bigbed_conversion)
     }else{
       write.table(maf_coloured, file = temp_bed, quote = F, sep = "\t", row.names = F, col.names = F)
       #conversion:
-      bigbed_conversion = paste(bedtobigbed, "-tab -type=bed9", temp_bed, temp_chr_sizes, output_file)
+      bigbed_conversion = paste(bedToBigBed_path, "-tab -type=bed9", temp_bed, temp_chr_sizes, output_file)
       
       system(bigbed_conversion)
     }
