@@ -17,7 +17,7 @@ build_browser_hub(
   hub_name = basename(hub_dir),
   shortLabel = basename(hub_dir),
   longLabel = basename(hub_dir),
-  email,
+  contact_email,
   visibility = "squish",
   bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"
 )
@@ -67,9 +67,8 @@ hub.txt file. Default is \code{basename(hub_dir)}.}
 recommended; spaces are allowed) to fill in the \code{longLabel} field of the
 hub.txt file. Default is \code{basename(hub_dir)}.}
 
-\item{email}{Optional parameter. A string with the contact email to fill in the
-\code{email} field of the hub.txt file. If not provided, hub.txt will not have this
-field.}
+\item{contact_email}{Required parameter. A string with the contact email to fill
+in the \code{email} field of the hub.txt file.}
 
 \item{visibility}{A string that controls the track visibility mode. Possible
 values are "pack", "dense", "full", or "squish" (default).}
@@ -125,7 +124,8 @@ build_browser_hub(
   local_web_host_dir = local_web_host_dir,
   hub_dir = hub_dir,
   splitColumnName = "pathology",
-  longLabel = "Public aSHM mutations separated by pathologies"
+  longLabel = "Public aSHM mutations separated by pathologies",
+  contact_email = "rdmorin@sfu.ca"
 )
 }
 

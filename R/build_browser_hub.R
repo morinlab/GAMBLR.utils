@@ -54,9 +54,8 @@
 #' @param longLabel A string with the long hub label (maximum of 80 characters 
 #'   recommended; spaces are allowed) to fill in the `longLabel` field of the 
 #'   hub.txt file. Default is `basename(hub_dir)`.
-#' @param email Optional parameter. A string with the contact email to fill in the 
-#'   `email` field of the hub.txt file. If not provided, hub.txt will not have this 
-#'   field.
+#' @param contact_email Required parameter. A string with the contact email to fill 
+#'   in the `email` field of the hub.txt file.
 #' @param visibility A string that controls the track visibility mode. Possible 
 #'   values are "pack", "dense", "full", or "squish" (default).
 #' @param bigDataUrl_base A string with the base path of the web location of the 
@@ -89,7 +88,8 @@
 #'   local_web_host_dir = local_web_host_dir,
 #'   hub_dir = hub_dir,
 #'   splitColumnName = "pathology",
-#'   longLabel = "Public aSHM mutations separated by pathologies"
+#'   longLabel = "Public aSHM mutations separated by pathologies",
+#'   contact_email = "rdmorin@sfu.ca"
 #' )
 #' }
 #' 
@@ -105,7 +105,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                              hub_name = basename(hub_dir),
                              shortLabel = basename(hub_dir),
                              longLabel = basename(hub_dir),
-                             email,
+                             contact_email,
                              visibility = "squish",
                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
   
@@ -116,6 +116,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
               projection %in% c("grch37", "hg38"))
   stopifnot("`visibility` must be one of \"pack\", \"dense\", \"full\", or \"squish\"." = 
               visibility %in% c("pack", "dense", "full", "squish"))
+  stopifnot("`contact_email` must be provided. UCSC browser will require this field to upload the track hub." = 
+              !missing(contact_email))
   
   # get metadata with the dedicated helper function (for each seq type)
   these_seq_types = setNames(these_seq_types, these_seq_types)
@@ -248,9 +250,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   cat( paste0("shortLabel ", shortLabel, "\n") )
   cat( paste0("longLabel ", longLabel, "\n") )
   cat( "useOneFile on\n" )
-  if(!missing(email)){
-    cat( paste0("email ", email, "\n") )
-  }
+  cat( paste0("email ", contact_email, "\n") )
   cat( "\n" )
   cat( paste0("genome ", replace(projection, projection == "grch37", "hg19"), "\n") )
   
