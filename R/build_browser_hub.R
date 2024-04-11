@@ -63,6 +63,11 @@
 #'   if the hub should be hosted on GitHub, `bigDataUrl_base` should be something 
 #'   like "https://github.com/morinlab/LLMPP/blob/main" (the default). See how the 
 #'   track's paths from the bigDataUrl fields are set in the **Details** section.
+#' @param bedToBigBed_path Path to your local `bedToBigBed` UCSC tool or the string 
+#'   `"config"` (default). If set to `"config"`, `GAMBLR.helpers::check_config_value` 
+#'   is called internally and the `bedToBigBed` path is obtained from the `config.yml` 
+#'   file saved in the current working directory. This parameter is ignored if 
+#'   `as_bigbed = FALSE`. 
 #'
 #' @return Nothing.
 #' 
@@ -107,7 +112,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
                              longLabel = basename(hub_dir),
                              contact_email,
                              visibility = "squish",
-                             bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"){
+                             bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main",
+                             bedToBigBed_path = "config"){
   
   # check some provided parameter 
   stopifnot("`these_seq_types` must be one or more of \"genome\" or \"capture\"." = 
@@ -118,6 +124,19 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
               visibility %in% c("pack", "dense", "full", "squish"))
   stopifnot("`contact_email` must be provided. UCSC browser will require this field to upload the track hub." = 
               !missing(contact_email))
+  
+  if(bedToBigBed_path == "config"){
+    bedToBigBed_path = tryCatch(
+      GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed),
+      error=function(e){
+        k = paste0("You set bedToBigBed_path parameter to \"config\". However...\n", e)
+        stop(k, call. = FALSE)
+      }
+    )
+  }else{
+    stopifnot("`bedToBigBed_path` points to a non-existent file." = 
+                file.exists(bedToBigBed_path))
+  }
   
   # get metadata with the dedicated helper function (for each seq type)
   these_seq_types = setNames(these_seq_types, these_seq_types)
@@ -168,9 +187,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
     temp_chr_sizes = tempfile(pattern = "chrom.sizes_")
     write.table(chr_sizes, temp_chr_sizes, quote = FALSE, sep = "\t", row.names = FALSE, 
                 col.names = FALSE)
-    bedtobigbed = GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed)
     regions_bed_file = file.path(track_dir, "regions.bb")
-    bigbed_conversion = gettextf("%s %s %s %s", bedtobigbed, temp_bed, temp_chr_sizes, 
+    bigbed_conversion = gettextf("%s %s %s %s", bedToBigBed_path, temp_bed, temp_chr_sizes, 
                                  regions_bed_file)
     system(bigbed_conversion)
     unlink(temp_bed)
@@ -231,7 +249,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
              this_seq_type = these_seq_types_i,
              output_file = file.path(track_dir, track_names_file_i),
              as_bigbed = as_bigbed,
-             projection = projection)
+             projection = projection,
+             bedToBigBed_path = bedToBigBed_path)
     },
     maf_data, these_samples_metadata, these_seq_types, track_file_names
   ) %>% 

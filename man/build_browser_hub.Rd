@@ -19,7 +19,8 @@ build_browser_hub(
   longLabel = basename(hub_dir),
   contact_email,
   visibility = "squish",
-  bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main"
+  bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main",
+  bedToBigBed_path = "config"
 )
 }
 \arguments{
@@ -78,6 +79,12 @@ tracks' data files (\code{bigDataUrl} fields from the hub.txt file). For example
 if the hub should be hosted on GitHub, \code{bigDataUrl_base} should be something
 like "https://github.com/morinlab/LLMPP/blob/main" (the default). See how the
 track's paths from the bigDataUrl fields are set in the \strong{Details} section.}
+
+\item{bedToBigBed_path}{Path to your local \code{bedToBigBed} UCSC tool or the string
+\code{"config"} (default). If set to \code{"config"}, \code{GAMBLR.helpers::check_config_value}
+is called internally and the \code{bedToBigBed} path is obtained from the \code{config.yml}
+file saved in the current working directory. This parameter is ignored if
+\code{as_bigbed = FALSE}.}
 }
 \value{
 Nothing.
