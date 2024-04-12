@@ -294,7 +294,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
     cat( paste0("longLabel ", track_names[i], "\n") )
     cat( paste0("visibility ", visibility, "\n") )
     cat( paste0("priority ", i+1, "\n") )
-    cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), "\n") )
+    cat( paste0("type ", ifelse(as_bigbed, "bigBed", "bed"), " 9\n") )
     cat( "itemRgb on\n" )
     file.path(bigDataUrl_base, hub_dir, projection, track_file_names[i]) %>% 
       { cat( paste0("bigDataUrl ", ., "?raw=true\n") ) }
