@@ -231,7 +231,7 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   # check seq types that ssms could be found
   is_there_muts = lengths(track_names) > 0
   if( !any(is_there_muts) ){
-    stop("No SSMs were found. Reset your paramters.")
+    stop("No SSMs were found. Reset your parameters.")
   }
   maf_data = maf_data[is_there_muts]
   these_samples_metadata = these_samples_metadata[is_there_muts]
