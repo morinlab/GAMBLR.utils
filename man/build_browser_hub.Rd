@@ -12,7 +12,6 @@ build_browser_hub(
   projection = "grch37",
   local_web_host_dir = NULL,
   hub_dir = "my_hub",
-  as_bigbed = TRUE,
   splitColumnName = "pathology",
   hub_name = basename(hub_dir),
   shortLabel = basename(hub_dir),
@@ -51,9 +50,6 @@ directory. Default is NULL.}
 \item{hub_dir}{Path to the directory (inside a web host) where you want to build
 your track hub. If this directory does not exist, it will be created.}
 
-\item{as_bigbed}{A Boolean value. If TRUE (default), custom tracks are saved as
-bigBed (.bb) files. BED files otherwise.}
-
 \item{splitColumnName}{An single string to indicate which metadata column is used
 to split the MAF data into custom track files. Default is "pathology".}
 
@@ -83,8 +79,7 @@ track's paths from the bigDataUrl fields are set in the \strong{Details} section
 \item{bedToBigBed_path}{Path to your local \code{bedToBigBed} UCSC tool or the string
 \code{"config"} (default). If set to \code{"config"}, \code{GAMBLR.helpers::check_config_value}
 is called internally and the \code{bedToBigBed} path is obtained from the \code{config.yml}
-file saved in the current working directory. This parameter is ignored if
-\code{as_bigbed = FALSE}.}
+file saved in the current working directory.}
 }
 \value{
 Nothing.
@@ -101,7 +96,7 @@ to the value in \code{splitColumnName} that it refers to.
 \details{
 \code{build_browser_hub} will create a custom track file for each combination of
 \code{these_seq_types} and \code{splitColumnName} (if mutations can be found). Custom
-track files are named as \verb{<a_seq_type_value>_<a_splitColumnName_value>.bb/bed}.
+track files are named as \verb{<a_seq_type_value>_<a_splitColumnName_value>.bb}.
 
 The \code{bigDataUrl} field of a track in the hub.txt file is defined in
 the following way:
