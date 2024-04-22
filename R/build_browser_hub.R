@@ -64,10 +64,10 @@
 #'   if the hub should be hosted on GitHub, `bigDataUrl_base` should be something 
 #'   like "https://github.com/morinlab/LLMPP/blob/main" (the default). See how the 
 #'   track's paths from the bigDataUrl fields are set in the **Details** section.
-#' @param bedToBigBed_path Path to your local `bedToBigBed` UCSC tool or the string 
-#'   `"config"` (default). If set to `"config"`, `GAMBLR.helpers::check_config_value` 
-#'   is called internally and the `bedToBigBed` path is obtained from the `config.yml` 
-#'   file saved in the current working directory.
+#' @param bedToBigBed_path Path to your local `bedToBigBed` UCSC tool. If missing, 
+#'   `GAMBLR.helpers::check_config_value` is called internally and the `bedToBigBed` 
+#'   path is obtained from the `config.yml` file saved in the current working 
+#'   directory.
 #'
 #' @return Nothing.
 #' 
@@ -113,7 +113,7 @@ build_browser_hub = function(maf_data,
                              contact_email,
                              visibility = "squish",
                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main",
-                             bedToBigBed_path = "config"){
+                             bedToBigBed_path){
   
   # check some provided parameter 
   stopifnot("`these_seq_types` must be one or more of \"genome\" or \"capture\"." = 
@@ -125,11 +125,11 @@ build_browser_hub = function(maf_data,
   stopifnot("`contact_email` must be provided. UCSC browser will require this field to upload the track hub." = 
               !missing(contact_email))
   
-  if(bedToBigBed_path == "config"){
+  if(missing(bedToBigBed_path)){
     bedToBigBed_path = tryCatch(
       GAMBLR.helpers::check_config_value(config::get("dependencies")$bedToBigBed),
       error=function(e){
-        k = paste0("You set bedToBigBed_path parameter to \"config\". However...\n", e)
+        k = paste0("Since a `bedToBigBed_path` wasn't provided, `build_browser_hub` tries to use a config.yml file to get the bedToBigBed path. However...\n", e)
         stop(k, call. = FALSE)
       }
     )
