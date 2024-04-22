@@ -22,6 +22,9 @@
 #'
 #' where `track_file_names[i]` is the custom track file name.
 #'
+#' @param maf_data A MAF-format data frame with the SSMs to be visualized in the 
+#'   UCSC browser. It can be filtered by regions and samples provided by parameters 
+#'   `regions_bed` and `these_sample_ids`/`these_samples_metadata`, respectively.
 #' @param regions_bed A BED-format table with the regions you want to retrieve SSMs 
 #'   from. The columns 1, 2 and 3 must be chromosome names, start positions and 
 #'   end positions, respectively. The default is the `GAMBLR.data::grch37_ashm_regions`
@@ -95,7 +98,8 @@
 #' )
 #' }
 #' 
-build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
+build_browser_hub = function(maf_data,
+                             regions_bed = GAMBLR.data::grch37_ashm_regions,
                              these_sample_ids = NULL,
                              these_samples_metadata = NULL,
                              these_seq_types = c("genome", "capture"),
@@ -143,6 +147,8 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
             this_seq_type = these_seq_types_i)
   }) %>% 
     suppressMessages
+  
+  # check provided splitColumnName parameter 
   stopifnot("`splitColumnName` must be a column name contained in the metadata." = 
               splitColumnName %in% names(these_samples_metadata[[1]]))
   
@@ -190,13 +196,28 @@ build_browser_hub = function(regions_bed = GAMBLR.data::grch37_ashm_regions,
   unlink(temp_chr_sizes)
   
   # get maf data from the specified regions and metadata/samples (for each seq type)
-  maf_data = mapply(function(these_seq_types_i, these_samples_metadata_i){
-    get_ssm_by_regions(regions_bed = regions_bed, this_seq_type = these_seq_types_i,
-                       these_samples_metadata = these_samples_metadata_i, 
-                       projection = projection, streamlined = FALSE, 
-                       basic_columns = TRUE) %>% 
-      suppressMessages
-  }, these_seq_types, these_samples_metadata, SIMPLIFY = FALSE)
+  if(missing(maf_data)){
+    maf_data = mapply(function(these_seq_types_i, these_samples_metadata_i){
+      get_ssm_by_regions(regions_bed = regions_bed,
+                         this_seq_type = these_seq_types_i,
+                         these_samples_metadata = these_samples_metadata_i, 
+                         projection = projection,
+                         streamlined = FALSE, 
+                         basic_columns = TRUE) %>% 
+        suppressMessages
+    }, these_seq_types, these_samples_metadata, SIMPLIFY = FALSE)
+  }else{
+    maf_data = mapply(function(these_seq_types_i, these_samples_metadata_i){
+      get_ssm_by_regions(maf_data = maf_data,
+                         regions_bed = regions_bed,
+                         this_seq_type = these_seq_types_i,
+                         these_samples_metadata = these_samples_metadata_i, 
+                         projection = projection,
+                         streamlined = FALSE, 
+                         basic_columns = TRUE) %>% 
+        suppressMessages
+    }, these_seq_types, these_samples_metadata, SIMPLIFY = FALSE)
+  }
   
   # split maf table according to splitColumnName
   if(!is.null(splitColumnName)){
