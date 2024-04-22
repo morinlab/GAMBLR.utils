@@ -27,9 +27,9 @@
 #'   `regions_bed` and `these_sample_ids`/`these_samples_metadata`, respectively.
 #' @param regions_bed A BED-format table with the regions you want to retrieve SSMs 
 #'   from. The columns 1, 2 and 3 must be chromosome names, start positions and 
-#'   end positions, respectively. The default is the `GAMBLR.data::grch37_ashm_regions`
-#'   object which contains public-available SSMs from aSHM regions, but any other 
-#'   regions can be provided.
+#'   end positions, respectively. If not provided, the function defaults to aSHM 
+#'   regions, *i.e.* one of `GAMBLR.data::grch37_ashm_regions` or `GAMBLR.data::hg38_ashm_regions`,
+#'   which is chosen automatically depending on the provided `projection`.
 #' @param these_sample_ids A vector of sample IDs that you want results for.
 #' @param these_samples_metadata A metadata table (with sample IDs in a column) to 
 #'   subset the samples of interest.
@@ -99,7 +99,7 @@
 #' }
 #' 
 build_browser_hub = function(maf_data,
-                             regions_bed = GAMBLR.data::grch37_ashm_regions,
+                             regions_bed,
                              these_sample_ids = NULL,
                              these_samples_metadata = NULL,
                              these_seq_types = c("genome", "capture"),
@@ -168,6 +168,21 @@ build_browser_hub = function(maf_data,
   dir.create(hub_dir_full_path, showWarnings = FALSE)
   track_dir = file.path(hub_dir_full_path, projection)
   dir.create(track_dir, showWarnings = FALSE)
+  
+  # define regions_bed
+  if(!missing(regions_bed)){
+    if(is.null(regions_bed)){
+      warning("`regions_bed = NULL` is treated as it was not provided. The default aSHM regions of the provided `projection` are used.")
+      rm(regions_bed)
+    }
+  }
+  if(missing(regions_bed)){
+    if(projection == "grch37"){
+      regions_bed = GAMBLR.data::grch37_ashm_regions
+    }else{
+      regions_bed = GAMBLR.data::hg38_ashm_regions
+    }
+  }
   
   # save regions_bed to a bb file
   regions_bed = dplyr::select(regions_bed, 1,2,3) %>% 

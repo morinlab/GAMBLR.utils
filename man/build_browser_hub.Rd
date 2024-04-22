@@ -5,7 +5,8 @@
 \title{Build UCSC browser track hub}
 \usage{
 build_browser_hub(
-  regions_bed = GAMBLR.data::grch37_ashm_regions,
+  maf_data,
+  regions_bed,
   these_sample_ids = NULL,
   these_samples_metadata = NULL,
   these_seq_types = c("genome", "capture"),
@@ -23,11 +24,15 @@ build_browser_hub(
 )
 }
 \arguments{
+\item{maf_data}{A MAF-format data frame with the SSMs to be visualized in the
+UCSC browser. It can be filtered by regions and samples provided by parameters
+\code{regions_bed} and \code{these_sample_ids}/\code{these_samples_metadata}, respectively.}
+
 \item{regions_bed}{A BED-format table with the regions you want to retrieve SSMs
 from. The columns 1, 2 and 3 must be chromosome names, start positions and
-end positions, respectively. The default is the \code{GAMBLR.data::grch37_ashm_regions}
-object which contains public-available SSMs from aSHM regions, but any other
-regions can be provided.}
+end positions, respectively. If not provided, the function defaults to aSHM
+regions, \emph{i.e.} one of \code{GAMBLR.data::grch37_ashm_regions} or \code{GAMBLR.data::hg38_ashm_regions},
+which is chosen automatically depending on the provided \code{projection}.}
 
 \item{these_sample_ids}{A vector of sample IDs that you want results for.}
 
