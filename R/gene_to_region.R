@@ -29,7 +29,8 @@ gene_to_region = function(gene_symbol,
                           ensembl_id,
                           projection = "grch37",
                           return_as = "region",
-                          sort_regions = TRUE){
+                          sort_regions = TRUE,
+                          pad_length = 0){
   
   stopifnot('`projection` parameter must be "grch37" or "hg38"' = projection %in% c("grch37", "hg38"))
   stopifnot('`return_as` parameter must be "region", "bed" or "df"' = return_as %in% c("region", "bed", "df"))
@@ -64,7 +65,7 @@ gene_to_region = function(gene_symbol,
   region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
     as.data.frame() %>% 
     dplyr::filter(chromosome %in% chr_select)
-  
+  region = mutate(region, start = start - pad_length, end = end + pad_length)
   if(sort_regions){
     if(projection == "grch37"){
       chrm_num = region$chromosome
