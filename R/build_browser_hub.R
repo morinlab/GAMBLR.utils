@@ -113,7 +113,8 @@ build_browser_hub = function(maf_data,
                              contact_email,
                              visibility = "squish",
                              bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main",
-                             bedToBigBed_path){
+                             bedToBigBed_path,
+                             verbose=FALSE){
   
   # check some provided parameter 
   stopifnot("`these_seq_types` must be one or more of \"genome\" or \"capture\"." = 
@@ -134,6 +135,10 @@ build_browser_hub = function(maf_data,
       }
     )
   }else{
+    if(dir.exists(bedToBigBed_path)){
+      #directory was provided, add expected binary name
+      bedToBigBed_path = paste0(bedToBigBed_path,"/bedToBigBed")
+    }
     stopifnot("`bedToBigBed_path` points to a non-existent file." = 
                 file.exists(bedToBigBed_path))
   }
@@ -147,7 +152,10 @@ build_browser_hub = function(maf_data,
             this_seq_type = these_seq_types_i)
   }) %>% 
     suppressMessages
-  
+  if(verbose){
+    group_by(these_samples_metadata$genome,seq_type,pathology) %>% tally() %>% print()
+    group_by(these_samples_metadata$capture,seq_type,pathology) %>% tally() %>% print()
+  }
   # check provided splitColumnName parameter 
   stopifnot("`splitColumnName` must be a column name contained in the metadata." = 
               splitColumnName %in% names(these_samples_metadata[[1]]))
@@ -188,6 +196,9 @@ build_browser_hub = function(maf_data,
   regions_bed = dplyr::select(regions_bed, 1,2,3) %>% 
     arrange( .[[1]], .[[2]] )
   temp_bed = tempfile(pattern = "regionsBed_", fileext = ".bed")
+  if(verbose){
+    print(paste("writing temporary file:",temp_bed))
+  }
   write.table(regions_bed, temp_bed, quote = FALSE, sep = "\t", row.names = FALSE, 
               col.names = FALSE)
   if(projection == "grch37"){
@@ -213,13 +224,22 @@ build_browser_hub = function(maf_data,
   # get maf data from the specified regions and metadata/samples (for each seq type)
   if(missing(maf_data)){
     maf_data = mapply(function(these_seq_types_i, these_samples_metadata_i){
-      get_ssm_by_regions(regions_bed = regions_bed,
+      if(verbose){
+        get_ssm_by_regions(regions_bed = regions_bed,
+                           this_seq_type = these_seq_types_i,
+                           these_samples_metadata = these_samples_metadata_i, 
+                           projection = projection,
+                           streamlined = FALSE, 
+                           basic_columns = TRUE) 
+      }else{
+        get_ssm_by_regions(regions_bed = regions_bed,
                          this_seq_type = these_seq_types_i,
                          these_samples_metadata = these_samples_metadata_i, 
                          projection = projection,
                          streamlined = FALSE, 
                          basic_columns = TRUE) %>% 
-        suppressMessages
+          suppressMessages
+      }
     }, these_seq_types, these_samples_metadata, SIMPLIFY = FALSE)
   }else{
     maf_data = mapply(function(these_seq_types_i, these_samples_metadata_i){
