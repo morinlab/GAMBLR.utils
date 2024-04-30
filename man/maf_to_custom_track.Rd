@@ -6,8 +6,9 @@
 \usage{
 maf_to_custom_track(
   maf_data,
-  these_samples_metadata,
-  seq_type = "genome",
+  these_sample_ids = NULL,
+  these_samples_metadata = NULL,
+  this_seq_type = "genome",
   output_file,
   as_bigbed = FALSE,
   colour_column = "lymphgen",
@@ -16,15 +17,18 @@ maf_to_custom_track(
   track_description = "mutations from GAMBL",
   verbose = FALSE,
   padding_size = 0,
-  projection = "grch37"
+  projection = "grch37",
+  bedToBigBed_path = "config"
 )
 }
 \arguments{
 \item{maf_data}{Either a maf loaded from disk or from the database using a get_ssm function.}
 
-\item{these_samples_metadata}{Optional argument, a metadata table subset to the samples of interest. If not provided, the function will return metadata for all available samples.}
+\item{these_sample_ids}{A vector of sample IDs to subset the samples of interest from the input \code{maf_data}. If NULL (the default), all samples in \code{maf_data} are kept.}
 
-\item{seq_type}{The seq type you want back, default is "genome".}
+\item{these_samples_metadata}{A metadata table to subset the samples of interest from the input \code{maf_data}. If NULL (the default), all samples in \code{maf_data} are kept.}
+
+\item{this_seq_type}{The seq type you want back, default is "genome".}
 
 \item{output_file}{Name for your new bed file that can be uploaded as a custom track to UCSC.}
 
@@ -44,6 +48,12 @@ maf_to_custom_track(
 
 \item{projection}{Specify which genome build to use. Possible values are "grch37" (default) or "hg38". This parameter has
 effect only when \code{as_bigbed} or \code{as_biglolly} is TRUE.}
+
+\item{bedToBigBed_path}{Path to your local \code{bedToBigBed} UCSC tool or the string
+\code{"config"} (default). If set to \code{"config"}, \code{GAMBLR.helpers::check_config_value}
+is called internally and the \code{bedToBigBed} path is obtained from the \code{config.yml}
+file saved in the current working directory. This parameter is ignored if both
+\code{as_bigbed} and \code{as_biglolly} is set to \code{FALSE}.}
 }
 \value{
 Nothing.
