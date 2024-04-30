@@ -71,7 +71,7 @@
 #'
 #' @return Nothing.
 #' 
-#' @import dplyr GAMBLR.helpers
+#' @import dplyr
 #' @export
 #'
 #' @examples
