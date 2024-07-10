@@ -143,6 +143,7 @@ dependencies:
   - r-magrittr=2.0.3
   - r-mass=7.3_58.3
   - r-matrix=1.5_4.1
+  - r-matrixmodels=0.5_2
   - r-memoise=2.0.1
   - r-mime=0.12
   - r-miniui=0.1.1.1
