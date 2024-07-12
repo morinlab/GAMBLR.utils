@@ -104,11 +104,9 @@ to the value in \code{splitColumnName} that it refers to.
 track files are named as \verb{<a_seq_type_value>_<a_splitColumnName_value>.bb}.
 
 The \code{bigDataUrl} field of a track in the hub.txt file is defined in
-the following way:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{file.path(bigDataUrl_base, hub_dir, projection, 
+the following way:\preformatted{file.path(bigDataUrl_base, hub_dir, projection, 
           paste0(track_file_names[i], "?raw=true\\n"))
-}\if{html}{\out{</div>}}
+}
 
 where \code{track_file_names[i]} is the custom track file name.
 }
