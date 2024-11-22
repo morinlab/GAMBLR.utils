@@ -20,7 +20,8 @@ build_browser_hub(
   contact_email,
   visibility = "squish",
   bigDataUrl_base = "https://github.com/morinlab/LLMPP/blob/main",
-  bedToBigBed_path
+  bedToBigBed_path,
+  verbose = FALSE
 )
 }
 \arguments{

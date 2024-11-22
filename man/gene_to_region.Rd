@@ -9,7 +9,8 @@ gene_to_region(
   ensembl_id,
   projection = "grch37",
   return_as = "region",
-  sort_regions = TRUE
+  sort_regions = TRUE,
+  pad_length = 0
 )
 }
 \arguments{
