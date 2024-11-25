@@ -16,7 +16,7 @@
 #' @return A data frame of a maf-like object with the same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
 #'
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import stringr dplyr
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -69,10 +69,10 @@ genome_to_exome = function(maf,
     dplyr::mutate_if(is.factor, as.character)
 
   # handle the chr prefixes
-  if(chr_prefixed & ! str_detect(this_genome_coordinates$chrom[1], "chr")){
+  if(chr_prefixed & ! grepl("chr", this_genome_coordinates$chrom[1])){
     this_genome_coordinates = this_genome_coordinates %>%
       dplyr::mutate(chrom = paste0("chr", chrom))
-  }else if(!chr_prefixed & str_detect(this_genome_coordinates$chrom[1], "chr")){
+  }else if(!chr_prefixed & grepl("chr", this_genome_coordinates$chrom[1])){
     this_genome_coordinates = this_genome_coordinates %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom, ignore.case = TRUE))
   }

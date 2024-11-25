@@ -28,7 +28,6 @@ Imports:
     rtracklayer,
     S4Vectors,
     SRAdb,
-    stringr,
     tibble,
     tidyr
 Remotes:

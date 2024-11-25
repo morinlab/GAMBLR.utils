@@ -34,7 +34,7 @@ supplement_maf <- function(incoming_maf,
     dplyr::filter(Tumor_Sample_Barcode == "Imaginary Sample ID") %>%
     add_row(Tumor_Sample_Barcode = missing_sample_ids,
            Hugo_Symbol = "GARBAGE",
-           Chromosome = ifelse(stringr::str_detect(incoming_maf$Chromosome[1], "chr"), "chr1", "1"),
+           Chromosome = ifelse(grepl("chr", incoming_maf$Chromosome[1]), "chr1", "1"),
            Start_Position = 1,
            End_Position = 1,
            Variant_Classification = "Missense_Mutation")

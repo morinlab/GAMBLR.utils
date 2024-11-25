@@ -36,7 +36,7 @@
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
 #' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import tidyr dplyr stringr
+#' @import tidyr dplyr
 #' @export
 #'
 #' @examples
@@ -71,8 +71,8 @@ annotate_sv = function(sv_data,
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
   suppressWarnings({
     if(any(grepl("chr", bedpe1$chrom))){
-      bedpe1 = dplyr::mutate(bedpe1, chrom = str_replace(chrom, "chr", ""))
-      bedpe2 = dplyr::mutate(bedpe2, chrom = str_replace(chrom, "chr", ""))
+      bedpe1 = dplyr::mutate(bedpe1, chrom = gsub("chr", "", chrom))
+      bedpe2 = dplyr::mutate(bedpe2, chrom = gsub("chr", "", chrom))
     }
   })
   if(missing(partner_bed)){
