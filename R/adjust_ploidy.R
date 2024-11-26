@@ -17,7 +17,6 @@
 #'
 #' @return A data frame in seg-consistent format with ploidy-adjusted log ratios.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr tidyr readr
 #' @export
 #'
