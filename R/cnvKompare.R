@@ -27,7 +27,7 @@
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
-#' @import dplyr tidyr circlize ggplot2 ggrepel readr tibble GAMBLR.helpers
+#' @import dplyr tidyr ggplot2 ggrepel readr tibble GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -83,15 +83,13 @@ cnvKompare = function(patient_id,
 
   # get cytobands
   if (projection %in% c("hg19", "grch37")) {
-    cytobands = circlize::read.cytoband(species = "hg19")$df %>%
-      mutate(V1 = gsub("chr", "", V1))
+    cytobands = cytobands_grch37
   } else if (projection %in% c("hg38", "grch38")) {
-    cytobands = circlize::read.cytoband(species = "hg38")$df
+    cytobands = cytobands_hg38
   } else {
     stop("Please specify one of hg19, grch37, hg38, or grch38 projections.")
   }
   cytobands = cytobands %>%
-    `names<-`(c("cb.chromosome", "cb.start", "cb.end", "cb.name", "label")) %>%
     dplyr::filter(!label %in% ignore_cytoband_labels)
   if (exclude_sex) {
     cytobands = dplyr::filter(cytobands,!grepl("X|Y", cb.chromosome))

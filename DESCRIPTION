@@ -11,9 +11,6 @@ License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
 Imports:
-    circlize,
-    config,
-    data.table,
     dplyr,
     GAMBLR.data,
     GAMBLR.helpers,
