@@ -26,7 +26,6 @@ Imports:
     Rsamtools,
     rtracklayer,
     S4Vectors,
-    SRAdb,
     tibble,
     tidyr
 Remotes:
