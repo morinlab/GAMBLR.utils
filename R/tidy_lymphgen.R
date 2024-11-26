@@ -15,7 +15,7 @@
 #'
 #' @return A data frame with a tidied lymphGen column
 #'
-#' @import dplyr purrr readr
+#' @import dplyr
 #' @export
 #'
 #' @examples

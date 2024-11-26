@@ -22,7 +22,6 @@ Imports:
     ggpubr,
     ggrepel,
     glue,
-    purrr,
     readr,
     Rsamtools,
     rtracklayer,

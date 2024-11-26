@@ -13,7 +13,8 @@
 #'
 #' @return A data frame containing MAF data from a MAF file.
 #'
-#' @export dplyr readr
+#' @import dplyr readr
+#' @export
 #'
 #' @examples
 #' \dontrun{
