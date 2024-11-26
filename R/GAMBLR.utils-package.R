@@ -2,7 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom GAMBLR.helpers check_config_value
 #' @importFrom GAMBLR.helpers coding_class
 #' @importFrom GAMBLR.helpers socketWrite
 #' @importFrom graphics segments
