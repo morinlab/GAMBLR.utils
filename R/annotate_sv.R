@@ -276,6 +276,13 @@ annotate_sv = function(sv_data,
         dplyr::mutate(chrom2 = paste0("chr", chrom2))
     }
   }
-  
+  all.annotated <- all.annotated %>%
+    group_by(chrom1, start1, end1, chrom2, start2, end2) %>%
+    # Keep rows where partner is not NA if both NA and value exist
+    filter(
+        !(is.na(partner) & any(!is.na(partner)))
+    ) %>%
+    ungroup() %>%
+    as.data.frame
   return(all.annotated)
 }
