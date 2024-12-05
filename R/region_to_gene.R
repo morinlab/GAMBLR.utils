@@ -17,7 +17,6 @@
 #'
 #' @return A data frame with columns detailing the gene/region.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr
 #' @export
 #'
@@ -65,8 +64,8 @@ region_to_gene = function(region,
 
   gene_list = as.data.frame(gene_list)
 
-  if(is.data.frame(region)){
-    region_table = as.data.table(region)
+  if(!is.data.frame(region)){
+    region_table = as.data.frame(region)
   }else if(is.character(region)){
     split_chunks = unlist(strsplit(region, ":"))
     split_chunks = unlist(strsplit(split_chunks, "-"))
@@ -76,25 +75,21 @@ region_to_gene = function(region,
     region = cbind(chromosome, start, end) %>%
       as.data.frame()
 
-    region_table = as.data.table(region)
-
-    region_table$chromosome = as.character(region_table$chromosome)
-    region_table$start = as.double(region_table$start)
-    region_table$end = as.double(region_table$end)
+    region$chromosome = as.character(region$chromosome)
+    region$start = as.double(region$start)
+    region$end = as.double(region$end)
   }
 
-  #transform regions to data tables
-  gene_table = as.data.table(gene_list)
-
-  #set keys
-  data.table::setkey(region_table, chromosome, start, end)
-  data.table::setkey(gene_table, chromosome, start, end)
-
   #intersect regions
-  intersect = data.table::foverlaps(region_table, gene_table, nomatch = 0)
-  colnames(intersect)[7] = "region_start"
-  colnames(intersect)[8] = "region_end"
-
+  intersect = cool_overlaps(
+    region,
+    gene_list,
+    columns1 = c("chromosome", "start", "end"),
+    columns2 = c("chromosome", "start", "end")
+  )
+  colnames(intersect)[2] = "region_start"
+  colnames(intersect)[3] = "region_end"
+  colnames(intersect) <- gsub("\\.y", "", colnames(intersect))
   #transform object to data frame
   inter_df = as.data.frame(intersect)
 
@@ -123,7 +118,7 @@ region_to_gene = function(region,
   }
 
   #paste chr in chromosome column, if not there
-  if(!str_detect(genes$chromosome[1], "chr")){
+  if(!grepl("chr", genes$chromosome[1])){
     genes = mutate(genes, chromosome = paste0("chr", chromosome))}
 
   if(verbose){

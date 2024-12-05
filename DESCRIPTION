@@ -11,9 +11,6 @@ License: MIT + file LICENSE
 Depends:
     R (>= 4.1)
 Imports:
-    circlize,
-    config,
-    data.table,
     dplyr,
     GAMBLR.data,
     GAMBLR.helpers,
@@ -22,13 +19,10 @@ Imports:
     ggpubr,
     ggrepel,
     glue,
-    purrr,
     readr,
     Rsamtools,
     rtracklayer,
     S4Vectors,
-    SRAdb,
-    stringr,
     tibble,
     tidyr
 Remotes:

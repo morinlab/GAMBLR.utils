@@ -14,7 +14,7 @@ fread_maf(maf_file_path, select_cols, return_cols = FALSE)
 \item{return_cols}{Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.}
 }
 \value{
-A data table containing MAF data from a MAF file.
+A data frame containing MAF data from a MAF file.
 }
 \description{
 Read a MAF into R with options for what columns to keep (default all columns will be returned).

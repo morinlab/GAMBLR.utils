@@ -15,8 +15,7 @@
 #'
 #' @return A data frame of a maf-like object with the same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import stringr dplyr
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
@@ -48,9 +47,9 @@ genome_to_exome = function(maf,
         this_genome_coordinates = GAMBLR.data::target_regions_hg38 # exome space for the variations of hg38
       }
   }else{
-      this_genome_coordinates = fread(custom_bed)
+      this_genome_coordinates = read_tsv(custom_bed)
       this_genome_coordinates = this_genome_coordinates[,1:3]
-      colnames(this_genome_coordinates) = c("chrom", "start", "end")
+      colnames(this_genome_coordinates)[1:3] = c("chrom", "start", "end")
   }
 
   # pad the ends of the probes with the padding length
@@ -69,23 +68,20 @@ genome_to_exome = function(maf,
     dplyr::mutate_if(is.factor, as.character)
 
   # handle the chr prefixes
-  if(chr_prefixed & ! str_detect(this_genome_coordinates$chrom[1], "chr")){
+  if(chr_prefixed & ! grepl("chr", this_genome_coordinates$chrom[1])){
     this_genome_coordinates = this_genome_coordinates %>%
       dplyr::mutate(chrom = paste0("chr", chrom))
-  }else if(!chr_prefixed & str_detect(this_genome_coordinates$chrom[1], "chr")){
+  }else if(!chr_prefixed & grepl("chr", this_genome_coordinates$chrom[1])){
     this_genome_coordinates = this_genome_coordinates %>%
       dplyr::mutate(chrom = gsub("chr", "", chrom, ignore.case = TRUE))
   }
-  # make the coordinates as data table and set keys
-  this_genome_coordinates = data.table::as.data.table(this_genome_coordinates)
-  setkey(this_genome_coordinates)
-
-  # now the maf file
-  maf = as.data.table(maf)
-  setkey(maf, Chromosome, Start_Position, End_Position)
 
   # subset to only features covered in exome with provided padding
-  features_in_exome = foverlaps(maf, this_genome_coordinates, mult = "first", nomatch = 0L) %>% # nomatch automatically drops those that do not overlap between DTs
+  features_in_exome = cool_overlaps(
+    maf,
+    this_genome_coordinates,
+    columns2 = c("chrom", "start", "end")
+    ) %>%
     as.data.frame() %>%
     dplyr::select(colnames(maf)) # make sure columns and their order is consitent with the input maf
   return(features_in_exome)
