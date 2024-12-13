@@ -164,7 +164,7 @@ fread_maf = function(maf_file_path,
   maf_df = read_tsv(
     file = maf_file_path
     ) %>%
-    dplyr::select(any_of(names(select_cols)))
+    dplyr::select(any_of(select_cols))
 
   return(maf_df)
 }
