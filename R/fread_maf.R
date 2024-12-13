@@ -162,9 +162,10 @@ fread_maf = function(maf_file_path,
     }
   }
   maf_df = read_tsv(
-    file = maf_file_path
+    file = maf_file_path,
+    col_types = colClasses
     ) %>%
-    dplyr::select(any_of(names(select_cols)))
+    dplyr::select(all_of(select_cols))
 
   return(maf_df)
 }
