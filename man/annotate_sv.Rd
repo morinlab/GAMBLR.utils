@@ -17,7 +17,8 @@ annotate_sv(
   genome_build = "grch37",
   priority_to_be_oncogene = c("MYC", "BCL6"),
   oncogene_bed,
-  include_shm_partners = FALSE
+  include_shm_partners = FALSE,
+  overlap_engine = "cool_overlaps"
 )
 }
 \arguments{
@@ -39,7 +40,9 @@ Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE
 
 \item{priority_to_be_oncogene}{Vector of gene names (default is \code{c("MYC", "BCL6")}) used to filter}
 
-\item{include_shm_partners}{Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs
+\item{include_shm_partners}{Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs}
+
+\item{overlap_engine}{Default is cool_overlaps. You change this to foverlaps to restore the old functionality if you encounter issues with the default setting
 rows based on genes that have the highest priority to be considered oncogenes. Genes to the left
 (\emph{i.e.} first elements of this vector) have higher priority; non-listed genes have the lowest priority.
 See \strong{Details} section for more information.}
