@@ -140,9 +140,9 @@ annotate_sv = function(sv_data,
   if(overlap_engine=="cool_overlaps"){
     y = as.data.frame(oncogene_regions)
     a = as.data.frame(bedpe1)
-    a.onco = cool_overlaps(a, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
+    a.onco = cool_overlaps(a, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"),type="any", nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
     b = as.data.frame(bedpe2)
-    b.onco = cool_overlaps(b, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
+    b.onco = cool_overlaps(b, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), type="any",nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
     #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
     #other end of breakpoint
     a.onco.break = a.onco[which(!is.na(a.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
