@@ -63,10 +63,18 @@ annotate_sv = function(sv_data,
   sv_data = unique(sv_data)
   
   bedpe1 = sv_data %>%
-    dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", ends_with("SCORE"), "STRAND_A", "ID")
+    dplyr::select(
+        "CHROM_A", "START_A", "END_A", "tumour_sample_id",
+        ends_with("SCORE"), "STRAND_A",
+        if ("ID" %in% colnames(sv_data)) "ID" else "manta_name"
+    )
   
   bedpe2 = sv_data %>%
-    dplyr::select("CHROM_B", "START_B", "END_B", "tumour_sample_id", ends_with("SCORE"), "STRAND_B", "ID")
+    dplyr::select(
+        "CHROM_B", "START_B", "END_B", "tumour_sample_id",
+        ends_with("SCORE"), "STRAND_B",
+        if ("ID" %in% colnames(sv_data)) "ID" else "manta_name"
+    )
   
   colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1", "ID")
   colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2", "ID")
