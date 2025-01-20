@@ -27,8 +27,7 @@
 #'
 #' @return A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import dplyr tidyr circlize ggplot2 ggrepel readr tibble GAMBLR.helpers
+#' @import dplyr tidyr ggplot2 ggrepel readr tibble GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -84,21 +83,17 @@ cnvKompare = function(patient_id,
 
   # get cytobands
   if (projection %in% c("hg19", "grch37")) {
-    cytobands = circlize::read.cytoband(species = "hg19")$df %>%
-      mutate(V1 = gsub("chr", "", V1))
+    cytobands = cytobands_grch37
   } else if (projection %in% c("hg38", "grch38")) {
-    cytobands = circlize::read.cytoband(species = "hg38")$df
+    cytobands = cytobands_hg38
   } else {
     stop("Please specify one of hg19, grch37, hg38, or grch38 projections.")
   }
   cytobands = cytobands %>%
-    `names<-`(c("cb.chromosome", "cb.start", "cb.end", "cb.name", "label")) %>%
     dplyr::filter(!label %in% ignore_cytoband_labels)
   if (exclude_sex) {
     cytobands = dplyr::filter(cytobands,!grepl("X|Y", cb.chromosome))
   }
-  cytobands = as.data.table(cytobands)
-  setkey(cytobands, cb.chromosome, cb.start, cb.end)
 
   # get the multi-sample seg file
   if (!missing(seg_path)) {
@@ -126,15 +121,15 @@ cnvKompare = function(patient_id,
     these_samples_seg = dplyr::filter(these_samples_seg,!grepl("X|Y", chrom))
   }
 
-  these_samples_seg = as.data.table(these_samples_seg)
-  setkey(these_samples_seg, chrom, start, end)
-
   # overlap seg with cytoband regions
   # if segment extends beyond cytoband, cut it at the cytoband coordinates
   cytoband_overlap =
-    foverlaps(cytobands,
-              these_samples_seg,
-              nomatch = 0) %>%
+        cool_overlaps(
+        cytobands,
+        these_samples_seg,
+        columns1 = c("cb.chromosome", "cb.start", "cb.end"),
+        columns2 = c("chrom", "start", "end")
+        ) %>%
     as.data.frame %>%
     group_by(cb.name) %>%
     mutate(
@@ -248,28 +243,27 @@ cnvKompare = function(patient_id,
   # VAF-like plot
   # genes
   if (projection %in% c("hg19", "grch37")) {
-    for_plot_lg = GAMBLR.data::grch37_lymphoma_genes_bed %>%
-      as.data.table()
+    for_plot_lg = GAMBLR.data::grch37_lymphoma_genes_bed
   } else if (projection %in% c("hg38", "grch38")) {
-    for_plot_lg = GAMBLR.data::hg38_lymphoma_genes_bed %>%
-      as.data.table()
+    for_plot_lg = GAMBLR.data::hg38_lymphoma_genes_bed
   }
   # did user specify particular genes of interest to display on the plot?
   if (!missing(genes_of_interest)) {
     message("Subsetting lymphoma genes to specified genes of interest ...")
     for_plot_lg = dplyr::filter(for_plot_lg, hgnc_symbol %in% genes_of_interest)
   }
-  setkey(for_plot_lg, chromosome_name, start_position, end_position)
 
   # CNV data
-  for_plot = as.data.table(for_output)
-  setkey(for_plot, cb.chromosome, start, end)
+  for_plot = for_output
 
   # generate plot
   time_plot =
-    foverlaps(for_plot_lg,
-              for_plot,
-              nomatch = NULL) %>%
+    cool_overlaps(
+        for_plot_lg,
+        for_plot,
+        columns1 = c("chromosome_name", "start_position", "end_position"),
+        columns2 = c("cb.chromosome", "start", "end")
+    ) %>%
     as.data.frame %>%
     select(ID, hgnc_symbol, log.ratio) %>%
     ggplot(., aes(x = ID, y = log.ratio, group = hgnc_symbol)) +

@@ -10,7 +10,6 @@
 #'
 #' @return A slightly modified bedpe with added columns.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @import dplyr
 #' @export
 #'
@@ -59,16 +58,24 @@ annotate_igh_breakpoints = function(annotated_df,
     mutate(IGH_end = IGH_start + 1)
 
   #assign a higher resolution position by matching to nearest annotation
-  sv_igh_anno_dt = as.data.table(sv_igh_anno)
+  sv_igh_anno_dt = as.data.frame(sv_igh_anno)
 
   j_segs_dt = dplyr::filter(j_segs, label != "Emu") %>%
-    as.data.table()
+    as.data.frame()
 
   #annotate Emu separately because it overlaps with some annoying J segments
-  setkey(sv_igh_anno_dt, IGH_start, IGH_end)
-  setkey(j_segs_dt, start_wide, end_wide)
-  foverlaps(sv_igh_anno_dt, j_segs_dt, by.x = c("IGH_start", "IGH_end"), by.y = c("start_wide", "end_wide"))
-  annotated = foverlaps(sv_igh_anno_dt,j_segs_dt, by.x = c("IGH_start", "IGH_end"), by.y = c("start_wide", "end_wide"))
-  annotated[is.na(label) & IGH_start > emu_start & IGH_end < emu_end, "label"] = "Emu"
+  annotated = sv_igh_anno_dt %>%
+    left_join(j_segs_dt, by = character(0)) %>%
+    filter(start_wide <= IGH_start & IGH_end <= end_wide | is.na(label))
+  without_matches <- anti_join(sv_igh_anno_dt, annotated)
+  annotated <- bind_rows(annotated, without_matches)
+  annotated <- annotated %>%
+    mutate(
+        label = ifelse(
+            is.na(label) & IGH_start > emu_start & IGH_end < emu_end,
+            "Emu",
+            label
+        )
+    )
   return(annotated)
 }

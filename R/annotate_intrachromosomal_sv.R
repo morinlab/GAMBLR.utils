@@ -16,8 +16,7 @@
 #'
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
-#' @import tidyr dplyr stringr
+#' @import tidyr dplyr
 #' @export
 #'
 #' @examples

@@ -25,8 +25,4 @@ annotate_recurrent_cnv = function(seg_df,
                             min_cn = c(3),
                             name = "18der_gain")
 
-  cnv_dt = as.data.table(cnv_coord_df)
-  seg_dt = as.data.table(seg_df)
-  setkey(cnv_dt, chrom, start, end)
-  setkey(seg_dt, start, end)
 }

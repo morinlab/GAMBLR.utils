@@ -11,9 +11,9 @@
 #' @param select_cols Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.
 #' @param return_cols Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.
 #'
-#' @return A data table containing MAF data from a MAF file.
+#' @return A data frame containing MAF data from a MAF file.
 #'
-#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
+#' @import dplyr readr
 #' @export
 #'
 #' @examples
@@ -161,20 +161,11 @@ fread_maf = function(maf_file_path,
       return(select_cols)
     }
   }
-  maf_dt = data.table::fread(
+  maf_df = read_tsv(
     file = maf_file_path,
-    sep = "\t",
-    stringsAsFactors = FALSE,
-    verbose = FALSE,
-    data.table = TRUE,
-    showProgress = TRUE,
-    header = TRUE,
-    fill = TRUE,
-    skip = "Hugo_Symbol",
-    quote = "",
-    colClasses = colClasses,
-    select=select_cols
-    )
+    col_types = colClasses
+    ) %>%
+    dplyr::select(all_of(select_cols))
 
-  return(maf_dt)
+  return(maf_df)
 }
