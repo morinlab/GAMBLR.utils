@@ -15,7 +15,9 @@ annotate_sv(
     72551554, 72551555, 72551558, 72551559, 72551562, 189255425, 189255426, 189255461,
     189255462),
   genome_build = "grch37",
-  priority_to_be_oncogene = c("MYC", "BCL6")
+  priority_to_be_oncogene = c("MYC", "BCL6"),
+  oncogene_bed,
+  include_shm_partners = FALSE
 )
 }
 \arguments{
@@ -35,7 +37,9 @@ Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE
 
 \item{genome_build}{Reference genome build parameter, default is grch37.}
 
-\item{priority_to_be_oncogene}{Vector of gene names (default is \code{c("MYC", "BCL6")}) used to filter
+\item{priority_to_be_oncogene}{Vector of gene names (default is \code{c("MYC", "BCL6")}) used to filter}
+
+\item{include_shm_partners}{Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs
 rows based on genes that have the highest priority to be considered oncogenes. Genes to the left
 (\emph{i.e.} first elements of this vector) have higher priority; non-listed genes have the lowest priority.
 See \strong{Details} section for more information.}

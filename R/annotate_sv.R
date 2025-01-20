@@ -29,6 +29,7 @@
 #' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37.
 #' @param priority_to_be_oncogene Vector of gene names (default is `c("MYC", "BCL6")`) used to filter 
+#' @param include_shm_partners Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs
 #' rows based on genes that have the highest priority to be considered oncogenes. Genes to the left 
 #' (*i.e.* first elements of this vector) have higher priority; non-listed genes have the lowest priority. 
 #' See **Details** section for more information.
@@ -56,8 +57,12 @@ annotate_sv = function(sv_data,
                        return_as = "bedpe",
                        blacklist = c(60565248, 30303126, 187728894, 101357565, 101359747, 161734970, 69400840, 65217851, 187728889, 187728888,187728892, 187728893,188305164, 72551424, 72551425, 72551554, 72551555, 72551558, 72551559, 72551562, 189255425, 189255426, 189255461, 189255462),
                        genome_build = "grch37",
-                       priority_to_be_oncogene = c("MYC", "BCL6")){
-  
+                       priority_to_be_oncogene = c("MYC", "BCL6"),
+                       oncogene_bed,
+                       include_shm_partners = FALSE){
+  if(!"SCORE" %in% colnames(sv_data)){
+    stop("input is missing required column 'SCORE'")
+  }
   # remove duplicate rows in sv_data, if any
   sv_data = unique(sv_data)
   
@@ -78,8 +83,39 @@ annotate_sv = function(sv_data,
   if(missing(partner_bed)){
     if(genome_build == "hg38"){
       ig_regions = GAMBLR.data::hg38_partners
+      if(include_shm_partners){
+        extra_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh38_v_latest %>% 
+          filter(!gene %in% ig_regions$gene) %>%
+          dplyr::select(chr_name,hg38_start,hg38_end,gene) %>%
+          mutate(chr_name=str_remove(chr_name,"chr"))
+        extra_regions = extra_regions %>% 
+          mutate(start=ifelse(hg38_start<hg38_end,hg38_start,hg38_end)) %>%
+          mutate(end=ifelse(hg38_start<hg38_end,hg38_end,hg38_start)) %>%
+          mutate(chrom = chr_name) %>%
+          dplyr::select(chrom,start,end,gene) %>%
+          mutate(start=start-5000,end=end+5000)
+        
+        extra_regions$entrez = 0
+        ig_regions = bind_rows(extra_regions,ig_regions)
+      }
     }else{
-      ig_regions = GAMBLR.data::grch37_partners
+      ig_regions = GAMBLR.data::grch37_partners 
+      
+      if(include_shm_partners){
+       extra_regions = GAMBLR.data::somatic_hypermutation_locations_GRCh37_v_latest %>% 
+        filter(!gene %in% ig_regions$gene) %>%
+        dplyr::select(chr_name,hg19_start,hg19_end,gene) %>%
+         mutate(chr_name=str_remove(chr_name,"chr"))
+       extra_regions = extra_regions %>% 
+         mutate(start=ifelse(hg19_start<hg19_end,hg19_start,hg19_end)) %>%
+         mutate(end=ifelse(hg19_start<hg19_end,hg19_end,hg19_start)) %>%
+         mutate(chrom = chr_name) %>%
+         dplyr::select(chrom,start,end,gene) %>%
+         mutate(start=start-5000,end=end+5000)
+       
+       extra_regions$entrez = 0
+       ig_regions = bind_rows(extra_regions,ig_regions) %>% arrange(chrom)
+      }
     }
   }else{
     ig_regions = partner_bed
@@ -87,11 +123,16 @@ annotate_sv = function(sv_data,
       ig_regions$entrez = 0
     }
   }
-  if(genome_build == "hg38"){
-    oncogene_regions = GAMBLR.data::hg38_oncogene
+  if(missing(oncogene_bed)){
+    if(genome_build == "hg38"){
+      oncogene_regions = GAMBLR.data::hg38_oncogene
+    }else{
+      oncogene_regions = GAMBLR.data::grch37_oncogene
+    }
   }else{
-    oncogene_regions = GAMBLR.data::grch37_oncogene
+    oncogene_regions = oncogene_bed
   }
+  
   y = data.table::as.data.table(oncogene_regions)
   data.table::setkey(y, chrom, start, end)
   
@@ -101,7 +142,7 @@ annotate_sv = function(sv_data,
   
   b = data.table::as.data.table(bedpe2)
   b.onco = data.table::foverlaps(b, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-  
+ 
   #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
   #other end of breakpoint
   a.onco.break = a.onco[which(!is.na(a.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
@@ -112,10 +153,10 @@ annotate_sv = function(sv_data,
   
   y = data.table::as.data.table(ig_regions)
   data.table::setkey(y, chrom, start, end)
-  
+ 
   a.ig = data.table::foverlaps(a.partner, y, type = "any", mult = "first")
   b.ig = data.table::foverlaps(b.partner, y, type = "any", mult = "first")
-  
+ 
   a.ig = a.ig[,c("chrom", "i.start", "i.end", "strand2", "gene")]
   b.ig = b.ig[,c("chrom", "i.start", "i.end", "strand1", "gene")]
   
@@ -128,7 +169,7 @@ annotate_sv = function(sv_data,
   all.annotated = rbind(a.annotated.both, b.annotated.both)
   
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated, fusion, partner, gene, sep = "-"), fusion)
-  all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1"))
+  all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1","PAX5-PAX5"))
   
   all.annotated = dplyr::filter(all.annotated, !start1 %in% blacklist)
   all.annotated = dplyr::filter(all.annotated, !start2 %in% blacklist)
