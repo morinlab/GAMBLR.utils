@@ -25,7 +25,7 @@
 #' @rawNamespace import(S4Vectors, except = c("merge", "second", "first", "union", "intersect", "setdiff", "setequal", "rename", "expand", "head", "tail", "end", "start"))
 #' @rawNamespace import(GenomicRanges, except = c("start", "end", "merge", "shift", "union", "intersect", "setdiff", "reduce", "trim"))
 #' @rawNamespace import(rtracklayer, except = c("start", "end"))
-#' @import dplyr tidyr readr
+#' @import dplyr tidyr readr GAMBLR.data
 #' @export
 #'
 #' @examples
