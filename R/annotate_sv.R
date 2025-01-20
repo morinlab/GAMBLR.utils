@@ -29,6 +29,7 @@
 #' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37.
 #' @param priority_to_be_oncogene Vector of gene names (default is `c("MYC", "BCL6")`) used to filter rows based on genes that have the highest priority to be considered oncogenes. Genes to the left (*i.e.* first elements of this vector) have higher priority; non-listed genes have the lowest priority. See **Details** section for more information.
+#' @param oncogene_bed Optionally, provide bed for regions to be considered oncogenes.
 #' @param include_shm_partners Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs
 #' 
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).

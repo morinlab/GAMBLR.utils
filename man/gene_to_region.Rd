@@ -23,6 +23,8 @@ gene_to_region(
 \item{return_as}{Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".}
 
 \item{sort_regions}{A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.}
+
+\item{pad_length}{Optionally, specify integer by how much to pad the region. Default 0 (no padding).}
 }
 \value{
 A data frame, or a string with region(s) for the provided gene(s).
