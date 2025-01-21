@@ -165,7 +165,7 @@ fread_maf = function(maf_file_path,
     file = maf_file_path,
     col_types = colClasses
     ) %>%
-    dplyr::select(all_of(select_cols))
+    dplyr::select(any_of(select_cols))
 
   return(maf_df)
 }
