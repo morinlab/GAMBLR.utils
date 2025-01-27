@@ -30,26 +30,26 @@
 #'                                 missing_data_as_diploid = TRUE, # if FALSE, missing data will be NA
 #'                                 seg_data = all_segments,
 #'                                 these_samples_metadata = metadata)
-#' result = cn_states(cn_state_matrix, 
-#'                    metadata, 
-#'                    remove_chrom = c("chrX"), 
-#'                    auto_calc_cutoff=FALSE,
-#'                    cutoff_gain_custom = 0.05,
-#'                    cutoff_loss_custom = 0.005)
+#' result = cn_core_processor(cn_state_matrix, 
+#'                            metadata, 
+#'                            remove_chrom = c("chrX"), 
+#'                            auto_calc_cutoff=FALSE,
+#'                            cutoff_gain_custom = 0.05,
+#'                            cutoff_loss_custom = 0.005)
 
 ######################################################################################
 ###################                 MAIN FUNCTION                  ###################
 ######################################################################################
-cn_states = function(cn_state_matrix,
-                     remove_chrom = c("chrX"),
-                     round_first=FALSE,
-                     drop_bin_if_sd_below=0,
-                     nrm_by_avg_ploidy=FALSE,
-                     simplyfy_nrm=TRUE,
-                     auto_calc_cutoff=FALSE,
-                     auto_calc_cutoff_method="median",
-                     cutoff_gain_custom = 0.05,
-                     cutoff_loss_custom = 0.005) {
+cn_core_processor = function(cn_state_matrix,
+                             remove_chrom = c("chrX"),
+                             round_first=FALSE,
+                             drop_bin_if_sd_below=0,
+                             nrm_by_avg_ploidy=FALSE,
+                             simplyfy_nrm=TRUE,
+                             auto_calc_cutoff=FALSE,
+                             auto_calc_cutoff_method="median",
+                             cutoff_gain_custom = 0.05,
+                             cutoff_loss_custom = 0.005) {
 
     # Check segments
     bin_data = data.frame(segments = colnames(cn_state_matrix)) %>%
