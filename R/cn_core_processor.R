@@ -21,7 +21,7 @@
 #'   \item \code{data}: A `data` object containing filtered bin data, CNAR statistics for bins and lengths.
 #' }
 #' 
-#' @import dplyr tidyr
+#' @import dplyr tidyr methods
 #' @export 
 #'
 #' @examples

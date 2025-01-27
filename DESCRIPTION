@@ -19,6 +19,7 @@ Imports:
     ggpubr,
     ggrepel,
     glue,
+    methods,
     readr,
     Rsamtools,
     rtracklayer,
