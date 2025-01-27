@@ -24,7 +24,7 @@
 #' @import dplyr tidyr
 #' @export 
 #'
-#' @example 
+#' @examples
 #' metadata = get_gambl_metadata() %>% filter(pathology == "DLBCL")
 #' cn_state_matrix = get_cn_states(n_bins_split=5000,
 #'                                 missing_data_as_diploid = TRUE, # if FALSE, missing data will be NA
@@ -193,14 +193,14 @@ calc_cnar = function(cn_state_matrix,
 }
 
 # Define S4 Class
-repr_all = representation(mat = "mat", data = "data", plots = "plots")
-setClass("all", representation = repr_all)
-
 repr_mat = representation(flt = "data.frame", flt_nrm = "ANY")
 setClass("mat", representation = repr_mat)
 
 repr_data = representation(bin_data = "data.frame", cnar_bins = "data.frame", cnar_length = "data.frame")
 setClass("data", representation = repr_data)
+
+repr_all = representation(mat = "mat", data = "data")
+setClass("all", representation = repr_all)
 
 return_as_S4 = function(cn_state_matrix_flt, 
                         cn_state_matrix_flt_nrm,  
