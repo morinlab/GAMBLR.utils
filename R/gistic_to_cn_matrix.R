@@ -14,7 +14,7 @@
 #' @param scale_by_sample Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports
 #' @param missing_data_as_diploid Fill in gaps as diploid
 #'
-#' @returns
+#' @returns a list of data frames
 #' @export
 #'
 #' @examples

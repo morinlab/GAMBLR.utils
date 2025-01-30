@@ -35,6 +35,9 @@ gistic_to_cn_matrix(
 
 \item{missing_data_as_diploid}{Fill in gaps as diploid}
 }
+\value{
+a list of data frames
+}
 \description{
 Make a binary CN matrix in GISTIC regions using segmented data
 }
