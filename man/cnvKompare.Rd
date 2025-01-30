@@ -10,7 +10,6 @@ cnvKompare(
   this_seg,
   seg_path,
   genes_of_interest,
-  projection = "grch37",
   this_seq_type = "genome",
   ignore_cytoband_labels = c("acen", "gvar", "stalk"),
   max_overlap = 20,
@@ -32,8 +31,6 @@ cnvKompare(
 
 \item{genes_of_interest}{Provide specific genes to be displayed on the time-series plot.}
 
-\item{projection}{Argument specifying the projection of seg file, which will determine coordinates of the cytobands. Default is grch37, but hg38 is also accepted.}
-
 \item{this_seq_type}{Seq type for returned CN segments. One of "genome" (default) or "capture".}
 
 \item{ignore_cytoband_labels}{Cytobands to be ignored. By default, "acen", "gvar", "stalk" are excluded.}
@@ -49,6 +46,8 @@ cnvKompare(
 \item{compare_pairwise}{Boolean argument specifying whether to perform pairwise comparisons if there are more than 2 time points in the group. Default is TRUE.}
 
 \item{show_x_labels}{Optional boolean parameter for hiding/showing x axis labels, default is TRUE.}
+
+\item{projection}{Argument specifying the projection of seg file, which will determine coordinates of the cytobands. Default is grch37, but hg38 is also accepted.}
 }
 \value{
 A list of overall and pairwise percent concordance, concordant and discordant cytobands, comparison heatmap of cnvKompare scores, and time series ggplot object.

@@ -46,7 +46,6 @@ cnvKompare = function(patient_id,
                       this_seg,
                       seg_path,
                       genes_of_interest,
-                      projection = "grch37",
                       this_seq_type = "genome",
                       ignore_cytoband_labels = c("acen", "gvar", "stalk"),
                       max_overlap = 20,
@@ -55,7 +54,15 @@ cnvKompare = function(patient_id,
                       return_heatmap = TRUE,
                       compare_pairwise = TRUE,
                       show_x_labels = TRUE){
-
+  if(missing(projection)){
+    if (inherits(this_seg, "seg_data")) {
+      projection <- get_genome_build.seg_data(this_seg)
+    } else {
+      projection = "grch37"
+      message(paste("Defaulting to",projection, ". To avoid this, specify projection or provide this_seg as a seg_data object"))
+    }
+  }
+  
   # initialize output list
   output = list()
 
