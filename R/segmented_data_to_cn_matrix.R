@@ -102,7 +102,7 @@ segmented_data_to_cn_matrix = function(seg_data,
     
   }
   if(!use_cytoband_name & !missing(regions)){
-    region_names = regions
+    region_names = names(regions)
   }
   
   if(!missing(these_samples_metadata)){
