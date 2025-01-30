@@ -12,6 +12,7 @@
 #' @param projection Reference genome build. Possible values are "grch37" (default) or "hg38".
 #' @param return_as Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".
 #' @param sort_regions A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.
+#' @param pad_length Optionally, specify integer by how much to pad the region. Default 0 (no padding).
 #'
 #' @return A data frame, or a string with region(s) for the provided gene(s).
 #'

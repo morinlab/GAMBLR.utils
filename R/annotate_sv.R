@@ -28,12 +28,9 @@
 #' @param return_as Stated format for returned output, default is "bedpe". Other accepted output formats are "bed" and "bedpe_entrez" (to keep entrez_ids for compatibility with portal.R and cBioPortal).
 #' @param blacklist A vector of regions to be removed from annotations. Default coordinates are in respect to hg19.
 #' @param genome_build Reference genome build parameter, default is grch37.
-#' @param priority_to_be_oncogene Vector of gene names (default is `c("MYC", "BCL6")`) used to filter 
+#' @param priority_to_be_oncogene Vector of gene names (default is `c("MYC", "BCL6")`) used to filter rows based on genes that have the highest priority to be considered oncogenes. Genes to the left (*i.e.* first elements of this vector) have higher priority; non-listed genes have the lowest priority. See **Details** section for more information.
+#' @param oncogene_bed Optionally, provide bed for regions to be considered oncogenes.
 #' @param include_shm_partners Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs
-#' @param overlap_engine Default is cool_overlaps. You change this to foverlaps to restore the old functionality if you encounter issues with the default setting
-#' rows based on genes that have the highest priority to be considered oncogenes. Genes to the left 
-#' (*i.e.* first elements of this vector) have higher priority; non-listed genes have the lowest priority. 
-#' See **Details** section for more information.
 #' 
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
@@ -59,8 +56,7 @@ annotate_sv = function(sv_data,
                        genome_build = "grch37",
                        priority_to_be_oncogene = c("MYC", "BCL6"),
                        oncogene_bed,
-                       include_shm_partners = FALSE,
-                       overlap_engine="cool_overlaps"){
+                       include_shm_partners = FALSE){
   if(!"SCORE" %in% colnames(sv_data)){
     stop("input is missing required column 'SCORE'")
   }
@@ -68,13 +64,21 @@ annotate_sv = function(sv_data,
   sv_data = unique(sv_data)
   
   bedpe1 = sv_data %>%
-    dplyr::select("CHROM_A", "START_A", "END_A", "tumour_sample_id", ends_with("SCORE"), "STRAND_A")
+    dplyr::select(
+        "CHROM_A", "START_A", "END_A", "tumour_sample_id",
+        ends_with("SCORE"), "STRAND_A",
+        if ("ID" %in% colnames(sv_data)) "ID" else "manta_name"
+    )
   
   bedpe2 = sv_data %>%
-    dplyr::select("CHROM_B", "START_B", "END_B", "tumour_sample_id", ends_with("SCORE"), "STRAND_B")
+    dplyr::select(
+        "CHROM_B", "START_B", "END_B", "tumour_sample_id",
+        ends_with("SCORE"), "STRAND_B",
+        if ("ID" %in% colnames(sv_data)) "ID" else "manta_name"
+    )
   
-  colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1")
-  colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2")
+  colnames(bedpe1) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand1", "ID")
+  colnames(bedpe2) = c("chrom", "start", "end", "tumour_sample_id", "score", "strand2", "ID")
   suppressWarnings({
     if(any(grepl("chr", bedpe1$chrom))){
       bedpe1 = dplyr::mutate(bedpe1, chrom = gsub("chr", "", chrom))
@@ -134,87 +138,57 @@ annotate_sv = function(sv_data,
     oncogene_regions = oncogene_bed
   }
 
-
+  y = as.data.frame(oncogene_regions)
   
+  #use overlaps to get oncogene SVs
+  a = as.data.frame(bedpe1)
+  a.onco = cool_overlaps(a, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
+  b = as.data.frame(bedpe2)
+  b.onco = cool_overlaps(b, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
+
+  #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
+  #other end of breakpoint
+  a.onco.break = a.onco[which(!is.na(a.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
+  b.onco.break = b.onco[which(!is.na(b.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
   
-  if(overlap_engine=="cool_overlaps"){
-    y = as.data.frame(oncogene_regions)
-    a = as.data.frame(bedpe1)
-    a.onco = cool_overlaps(a, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"),type="any", nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
-    b = as.data.frame(bedpe2)
-    b.onco = cool_overlaps(b, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), type="any",nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
-    #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
-    #other end of breakpoint
-    a.onco.break = a.onco[which(!is.na(a.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
-    b.onco.break = b.onco[which(!is.na(b.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
-    
-    a.partner = b[which(!is.na(a.onco$start.y)),]
-    b.partner = a[which(!is.na(b.onco$start.y)),]
-    
-    y = as.data.frame(ig_regions)
-    
-    a.ig = cool_overlaps(a.partner, y, type = "any", columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE)
-    b.ig = cool_overlaps(b.partner, y, type = "any", columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE)
-    a.ig <- a.ig %>%
-      mutate(id = row_number()) %>% # make sure the order is consistent
-      group_by(chrom, start, end, tumour_sample_id, score) %>%
-      slice_head() %>%
-      ungroup %>%
-      arrange(id) %>%
-      as.data.frame() %>%
-      select(-id)
-    b.ig <- b.ig %>%
-      mutate(id = row_number()) %>% # make sure the order is consistent
-      group_by(chrom, start, end, tumour_sample_id, score) %>%
-      slice_head() %>%
-      ungroup %>%
-      arrange(id) %>%
-      as.data.frame() %>%
-      select(-id)
-    a.ig = a.ig[,c("chrom", "start", "end", "strand2", "gene")]
-    b.ig = b.ig[,c("chrom", "start", "end", "strand1", "gene")]
-    a.annotated.both = bind_cols(a.onco.break, a.ig)
-    
-  }else{
-    y = data.table::as.data.table(oncogene_regions)
-    data.table::setkey(y, chrom, start, end)
-    #use foverlaps to get oncogene SVs
-    a = data.table::as.data.table(bedpe1)
-    a.onco = data.table::foverlaps(a, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-    
-    b = data.table::as.data.table(bedpe2)
-    b.onco = data.table::foverlaps(b, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
-    
-    a.onco.break = a.onco[which(!is.na(a.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
-    b.onco.break = b.onco[which(!is.na(b.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
-    y = data.table::as.data.table(ig_regions)
-    data.table::setkey(y, chrom, start, end)
-    a.partner = b[which(!is.na(a.onco$start)),]
-    b.partner = a[which(!is.na(b.onco$start)),]
+  a.partner = b[which(!is.na(a.onco$start.y)),]
+  b.partner = a[which(!is.na(b.onco$start.y)),]
+  
+  y = as.data.frame(ig_regions)
+  
+  a.ig = cool_overlaps(a.partner, y, type = "any", columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE)
+  b.ig = cool_overlaps(b.partner, y, type = "any", columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE)
 
+  a.ig <- a.ig %>%
+    mutate(row_id = row_number()) %>% # make sure the order is consistent
+    group_by(chrom, start, end, tumour_sample_id, score, ID) %>%
+    slice_head() %>%
+    ungroup %>%
+    arrange(row_id) %>%
+    as.data.frame() %>%
+    select(-row_id)
 
-    a.ig = data.table::foverlaps(a.partner, y, type = "any", mult = "first")
-    b.ig = data.table::foverlaps(b.partner, y, type = "any", mult = "first")
-    a.ig = a.ig[,c("chrom", "i.start", "i.end", "strand2", "gene")]
-    b.ig = b.ig[,c("chrom", "i.start", "i.end", "strand1", "gene")]
-    
-    a.annotated.both = cbind(a.onco.break, a.ig)
-  }
+  b.ig <- b.ig %>%
+    mutate(row_id = row_number()) %>% # make sure the order is consistent
+    group_by(chrom, start, end, tumour_sample_id, score, ID) %>%
+    slice_head() %>%
+    ungroup %>%
+    arrange(row_id) %>%
+    as.data.frame() %>%
+    select(-row_id)
+
+  a.ig = a.ig[,c("chrom", "start", "end", "strand2", "gene")]
+  b.ig = b.ig[,c("chrom", "start", "end", "strand1", "gene")]
+
+  a.annotated.both = bind_cols(a.onco.break, a.ig)
   colnames(a.annotated.both) = c("chrom1", "start1", "end1", "tumour_sample_id", "gene", "entrez", "score", "strand1", "chrom2", "start2", "end2", "strand2", "partner")
+
   b.annotated.both = cbind(b.onco.break, b.ig)
   colnames(b.annotated.both) = c("chrom2", "start2", "end2", "tumour_sample_id", "gene", "entrez", "score", "strand2", "chrom1", "start1", "end1", "strand1", "partner")
-  
-  if(overlap_engine=="cool_overlaps"){
-    all.annotated = rbind(a.annotated.both, b.annotated.both) %>%
-      as.data.frame %>%
-      `rownames<-`(NULL)
-  }else{
-    all.annotated = rbind(a.annotated.both, b.annotated.both)
-  }
 
-  
-
-
+  all.annotated = rbind(a.annotated.both, b.annotated.both) %>%
+    as.data.frame %>%
+    `rownames<-`(NULL)
 
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated, fusion, partner, gene, sep = "-"), fusion)
   all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1","PAX5-PAX5"))
