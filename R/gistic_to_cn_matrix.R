@@ -1,6 +1,7 @@
 
 
 
+
 #' Make a binary CN matrix in GISTIC regions using segmented data
 #'
 #' @param gistic_lesions_file The all_lesions output file from GISTIC from the same pathology you are working on
@@ -53,10 +54,12 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
   #ggplot(wide) + geom_segment(aes(x=start,xend=end,y=type,yend=type)) + facet_wrap(~chrom)
   
   if(wide_peaks){
-    peak = select(lesions_regions,1,`Wide Peak Limits`) %>% 
+    peak = select(lesions_regions,1,`Wide Peak Limits`)  %>% 
       mutate(region=str_remove(`Wide Peak Limits`,"\\(.+")) %>%
-      separate(region,into=c("chrom","start","end")) %>%
-      mutate(type=str_extract(`Unique Name`,"(\\S+)"))
+      mutate(duplicated_region=region) %>%
+      separate(duplicated_region,into=c("chrom","start","end")) %>%
+      mutate(type=str_extract(`Unique Name`,"(\\S+)")) %>%
+      dplyr::rename("Peak Limits"="Wide Peak Limits")
   }else{
     peak = select(lesions_regions,1,`Peak Limits`) %>% 
       mutate(region=str_remove(`Peak Limits`,"\\(.+")) %>%
@@ -64,6 +67,7 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
       separate(duplicated_region,into=c("chrom","start","end")) %>%
       mutate(type=str_extract(`Unique Name`,"(\\S+)"))
   }
+
 
   
   
@@ -109,7 +113,8 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
   if(!missing(these_samples_metadata)){
     gistic_peaks_binned = get_cn_states(regions_bed = regions_bed,
                                         missing_data_as_diploid = missing_data_as_diploid,
-                                        seg_data = these_CN_segments,
+                                        seg_data = dplyr::filter(these_CN_segments,
+                                                                 ID %in% these_samples_metadata$sample_id),
                                         adjust_for_ploidy = scale_by_sample,
                                         these_samples_metadata = these_samples_metadata)
   }else{
