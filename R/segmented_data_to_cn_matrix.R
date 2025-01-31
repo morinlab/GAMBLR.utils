@@ -1,3 +1,51 @@
+
+#' Filter and summarise CN values seg_data for a single genomic region
+#'
+#' @param seg_data 
+#' @param region 
+#' @param streamlined 
+#' @param weighted_average 
+#'
+#' @return data.frame
+#' @export
+#'
+#' @examples
+process_cn_segments_by_region = function(seg_data,
+                                         region,
+                                         streamlined,
+                                         weighted_average=TRUE){
+  region = gsub(",", "", region)
+  split_chunks = unlist(strsplit(region, ":"))
+  chromosome = split_chunks[1]
+  startend = unlist(strsplit(split_chunks[2], "-"))
+  qstart = as.numeric(startend[1])
+  qend = as.numeric(startend[2])
+  
+  all_segs = 
+    dplyr::filter(seg_data, (chrom == chromosome & start >= qstart & start <= qend)|
+                    (chrom == chromosome & end > qstart & end < qend)|
+                    (chrom == chromosome & end > qend & start < qstart)) %>%
+    mutate(start=ifelse(start < qstart,qstart,start),end=ifelse(end>qend,qend,end)) %>% 
+    mutate(length=end-start)
+  
+  all_segs = all_segs %>% mutate(CN_L = length * CN,logr_L = length*log.ratio) 
+  if(weighted_average){
+    all_segs = all_segs %>% 
+      group_by(ID) %>%
+      summarise(total_L = sum(length), log.ratio = sum(logr_L)/sum(length), 
+                CN = sum(CN_L)/sum(length)) %>% ungroup() 
+    
+  }else{
+    all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
+  }
+  if(streamlined){
+    all_segs = dplyr::select(all_segs, ID, CN)
+  }
+  return(all_segs)
+  
+}
+
+
 #' @title Segmented data to CN matrix
 #'
 #' @description Convert segmented data to a matrix of CN States for a set of regions.
@@ -45,6 +93,9 @@ segmented_data_to_cn_matrix = function(seg_data,
                             missing_data_as_diploid = FALSE,
                             adjust_for_ploidy=FALSE,
                             genome_build){
+  if(missing(these_samples_metadata)){
+    print("missing these_samples_metadata")
+  }
   if(missing(genome_build)){
     if (inherits(seg_data, "seg_data")) {
       genome_build <- get_genome_build.seg_data(seg_data)
@@ -73,6 +124,7 @@ segmented_data_to_cn_matrix = function(seg_data,
     paste0(x[1], ":", as.integer(x[2]), "-", as.integer(x[3]))
   }
   if(all_cytobands){
+    print("A")
     message(paste("Working with cytobands for", genome_build,"This will take awhile but it does work, trust me!"))
     if(genome_build=="grch37"){
       regions_bed = circlize::read.cytoband(species = "hg19")$df
@@ -90,27 +142,60 @@ segmented_data_to_cn_matrix = function(seg_data,
       #region_names = pull(regions_bed, region_name)
     }
     regions = apply(regions_bed, 1, bed2region)
+    region_names = regions
     #use the cytobands from the circlize package (currently hg19 but can extend to hg38 once GAMBLR handles it) Has this been updated?
   }else if(strategy=="auto_split"){
-    all_len = circlize::read.chromInfo()$chr.len
-    bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_len[c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX")])
+    print("B")
+    #all_len = circlize::read.chromInfo()$chr.len
+    
+    if(genome_build=="grch37"){
+      length_df = GAMBLR.data::cytobands_grch37 %>% group_by(cb.chromosome) %>% slice_max(cb.end) 
+      all_lengths = pull(length_df,cb.end)
+      names(all_lengths) = pull(length_df,cb.chromosome)
+      
+      bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_lengths)
+      
+    }else if(genome_build=="hg38"){
+      length_df = GAMBLR.data::cytobands_hg38 %>% group_by(cb.chromosome) %>% slice_max(cb.end) 
+      all_lengths = pull(length_df,cb.end)
+      names(all_lengths) = pull(length_df,cb.chromosome)
+      bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_lengths)
+      
+    }else{
+      stop(paste("genome build not supported or not specified:",genome_build))
+    }
+    
     regions = apply(bin_df, 1, bed2region)
+    region_names = regions
+    print("region name:")
+    print(region_names)
+
   }else if(strategy=="custom_regions"){
-    if(!class(regions)=="character"){
-      regions = apply(regions_bed, 1, bed2region)
+    print("C")
+    if("data.frame" %in% class(regions)){
+      region_names = regions$hgnc_symbol
+      regions = apply(regions, 1, bed2region)
+      names(regions) = region_names
     }
     
   }
-  if(!use_cytoband_name & !missing(regions)){
-    region_names = names(regions)
+  if(!use_cytoband_name){
+    if(!is.null(names(regions))){
+      region_names = names(regions)
+    }
   }
-  
+  print("region name:")
+  print(region_names)
   if(!missing(these_samples_metadata)){
       #subset to the samples in the provided
       seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id) 
   }
-  region_segs = lapply(regions,function(x){get_cn_segments(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data)})
-  
+  print(head(seg_data))
+  region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data)})
+  print(head(region_segs))
+  print("tibbling:")
+  print("region name:")
+  print(region_names)
   tibbled_data = tibble(region_segs, region_name = region_names)
   unnested_df = tibbled_data %>%
     unnest_longer(region_segs)
@@ -119,7 +204,7 @@ segmented_data_to_cn_matrix = function(seg_data,
   
   seg_df = dplyr::rename(seg_df,sample_id=ID) 
   
-
+  print("HERE")
   if(missing(these_samples_metadata) & !missing(seg_data)){
     eg = expand_grid(sample_id = unique(seg_data$ID), region_name = as.character(unique(seg_df$region_name)))
   }else{
