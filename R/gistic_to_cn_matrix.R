@@ -6,7 +6,7 @@
 #'
 #' @param gistic_lesions_file The all_lesions output file from GISTIC from the same pathology you are working on
 #' @param these_samples_metadata Optional metadata that will be used to subset your segment data to only overlapping samples 
-#' @param these_CN_segments Data frame containing segmented copy number data (i.e. seg format)
+#' @param seg_data Data frame containing segmented copy number data (i.e. seg format)
 #' @param wide_peaks Whether to use wide peaks instead of narrow peaks (FALSE)
 #' @param max_CN Maximum value where CN will be truncated to limit the range
 #' @param drop_inconsistent Set regions with a CN direction inconsistent with peak type to neutral/diploid
@@ -38,20 +38,23 @@
 #' 
 gistic_to_cn_matrix = function(gistic_lesions_file,
                           these_samples_metadata,
-                          these_CN_segments,
+                          seg_data,
                           wide_peaks=FALSE,
                           max_CN=6,
                           drop_inconsistent = TRUE,
                           as_binary = TRUE,
                           scale_by_sample=TRUE,
-                          missing_data_as_diploid=TRUE){
+                          missing_data_as_diploid=TRUE,
+                          genome_build){
   lesions = suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>% 
     filter(!grepl("CN",`Unique Name`))
   
   lesions_regions = select(lesions,1:6)
 
-  
-  #ggplot(wide) + geom_segment(aes(x=start,xend=end,y=type,yend=type)) + facet_wrap(~chrom)
+  if(missing(genome_build)){
+    genome_build = get_genome_build(seg_data)
+    print(genome_build)
+  }
   
   if(wide_peaks){
     peak = select(lesions_regions,1,`Wide Peak Limits`)  %>% 
@@ -109,18 +112,26 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
   
   regions_bed = select(peak,chrom,start,end,`Unique Name`) %>%
     arrange(chrom,start)
-
+  if(genome_build=="grch37"){
+    regions_bed = mutate(regions_bed,chrom = str_remove(chrom,"chr"))
+  }
+  print(head(regions_bed))
   if(!missing(these_samples_metadata)){
-    gistic_peaks_binned = get_cn_states(regions_bed = regions_bed,
+    print("HERE")
+    gistic_peaks_binned = segmented_data_to_cn_matrix(
+                                        regions = regions_bed,
+                                        strategy="custom_regions",
                                         missing_data_as_diploid = missing_data_as_diploid,
-                                        seg_data = dplyr::filter(these_CN_segments,
-                                                                 ID %in% these_samples_metadata$sample_id),
+                                        seg_data = seg_data,
                                         adjust_for_ploidy = scale_by_sample,
                                         these_samples_metadata = these_samples_metadata)
   }else{
-    gistic_peaks_binned = get_cn_states(regions_bed = regions_bed,
+    return(regions_bed)
+    gistic_peaks_binned = segmented_data_to_cn_matrix(
+                                        regions = regions_bed,
+                                        strategy="custom_regions",
                                         missing_data_as_diploid = missing_data_as_diploid,
-                                        seg_data = these_CN_segments,
+                                        seg_data = seg_data,
                                         adjust_for_ploidy = scale_by_sample
     )
   }

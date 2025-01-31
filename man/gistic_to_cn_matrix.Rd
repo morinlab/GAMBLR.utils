@@ -7,13 +7,14 @@
 gistic_to_cn_matrix(
   gistic_lesions_file,
   these_samples_metadata,
-  these_CN_segments,
+  seg_data,
   wide_peaks = FALSE,
   max_CN = 6,
   drop_inconsistent = TRUE,
   as_binary = TRUE,
   scale_by_sample = TRUE,
-  missing_data_as_diploid = TRUE
+  missing_data_as_diploid = TRUE,
+  genome_build
 )
 }
 \arguments{
@@ -21,7 +22,7 @@ gistic_to_cn_matrix(
 
 \item{these_samples_metadata}{Optional metadata that will be used to subset your segment data to only overlapping samples}
 
-\item{these_CN_segments}{Data frame containing segmented copy number data (i.e. seg format)}
+\item{seg_data}{Data frame containing segmented copy number data (i.e. seg format)}
 
 \item{wide_peaks}{Whether to use wide peaks instead of narrow peaks (FALSE)}
 

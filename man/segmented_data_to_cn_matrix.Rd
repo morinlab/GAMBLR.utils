@@ -13,7 +13,8 @@ segmented_data_to_cn_matrix(
   use_cytoband_name = FALSE,
   missing_data_as_diploid = FALSE,
   adjust_for_ploidy = FALSE,
-  genome_build
+  genome_build,
+  gistic_lesions_file
 )
 }
 \arguments{
@@ -58,6 +59,11 @@ all_states_binned = segmented_data_to_cn_matrix(
                                   missing_data_as_diploid = T,
                                   these_samples_metadata = dlbcl_genome_meta)
 
+
+gistic_cn_mat = segmented_data_to_cn_matrix(
+                             seg_data=all_segments,
+                             strategy="GISTIC",
+                             gistic_lesions_file="all_lesions.conf_90.txt")
 
 
 }

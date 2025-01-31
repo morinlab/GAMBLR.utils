@@ -8,7 +8,8 @@ process_cn_segments_by_region(
   seg_data,
   region,
   streamlined,
-  weighted_average = TRUE
+  weighted_average = TRUE,
+  missing_data_as_diploid = TRUE
 )
 }
 \arguments{
@@ -24,5 +25,19 @@ process_cn_segments_by_region(
 data.frame
 }
 \description{
-Filter and summarise CN values seg_data for a single genomic region
+Assign the copy number value to a region based on the segment(s) that overlap it
+}
+\details{
+This function returns CN states for a single region specified in the format "chromosome:start-end"
+using segmented copy number data (seg_data). It will either return a segment in the standard format (all original columns)
+or a streamlined format with only the ID and CN columns
+}
+\examples{
+
+region_segs = process_cn_segments_by_region(
+       region = "chrX:1-1000000",
+       streamlined = FALSE, 
+       weighted_average = T, 
+       seg_data = seg_data)
+
 }
