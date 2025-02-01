@@ -177,9 +177,9 @@ segmented_data_to_cn_matrix = function(seg_data,
   if(all_cytobands){
     message(paste("Working with cytobands for", genome_build,"This will take awhile but it does work, trust me!"))
     if(genome_build=="grch37"){
-      regions_bed = circlize::read.cytoband(species = "hg19")$df
+      regions_bed = GAMBLR.data::cytobands_grch37
     }else if(genome_build=="hg38"){
-      regions_bed = circlize::read.cytoband(species = "hg38")$df
+      regions_bed = GAMBLR.data::cytobands_hg38
     }else{
       stop(paste("Unsupported genome_build:",genome_build))
     }

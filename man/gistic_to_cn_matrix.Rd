@@ -49,7 +49,7 @@ dlbcl_genomes_meta = get_gambl_metadata() \%>\%
     dplyr::filter(pathology=="DLBCL",seq_type=="genome")
     
 all_out = gistic_to_cn_matrix("all_lesions.conf_90.txt",
-                              dlbcl_genomes_meta, #only segments for samples in this file will be used
+                              dlbcl_genomes_meta,
                               all_segments,
                               as_binary = T,
                               scale_by_sample = T)
