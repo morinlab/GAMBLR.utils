@@ -17,7 +17,8 @@ cnvKompare(
   exclude_sex = FALSE,
   return_heatmap = TRUE,
   compare_pairwise = TRUE,
-  show_x_labels = TRUE
+  show_x_labels = TRUE,
+  projection
 )
 }
 \arguments{

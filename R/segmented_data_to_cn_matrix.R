@@ -8,10 +8,11 @@
 #' or a streamlined format with only the ID and CN columns
 #'
 #'
-#' @param seg_data 
-#' @param region 
-#' @param streamlined 
-#' @param weighted_average 
+#' @param seg_data Data that will be processed for the specified region
+#' @param region Region to be processed in the format "chromosome:start-end"
+#' @param streamlined If TRUE, only return the ID and CN columns (default is FALSE)
+#' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
+#' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
 #'
 #' @return data.frame
 #' @export

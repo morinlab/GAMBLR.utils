@@ -53,7 +53,8 @@ cnvKompare = function(patient_id,
                       exclude_sex = FALSE,
                       return_heatmap = TRUE,
                       compare_pairwise = TRUE,
-                      show_x_labels = TRUE){
+                      show_x_labels = TRUE,
+                      projection){
   if(missing(projection)){
     if (inherits(this_seg, "seg_data")) {
       projection <- get_genome_build.seg_data(this_seg)
