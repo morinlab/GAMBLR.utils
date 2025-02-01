@@ -13,6 +13,7 @@
 #' @param as_binary One-hot encoding (0 = no CN, 1 = CN)
 #' @param scale_by_sample Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports
 #' @param missing_data_as_diploid Fill in gaps as diploid
+#' @param genome_build Specify the genome build if necessary
 #'
 #' @returns a list of data frames
 #' @export

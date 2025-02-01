@@ -32,7 +32,11 @@ segmented_data_to_cn_matrix(
 
 \item{missing_data_as_diploid}{Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.}
 
+\item{adjust_for_ploidy}{Whether to adjust for high ploidy}
+
 \item{genome_build}{Specify the genome build (usually not required)}
+
+\item{gistic_lesions_file}{Path to gistic lesions file (only needed if strategy="GISTIC")}
 }
 \value{
 Copy number matrix with sample_id as rows and regions as columns.
@@ -61,7 +65,7 @@ all_states_binned = segmented_data_to_cn_matrix(
 
 
 gistic_cn_mat = segmented_data_to_cn_matrix(
-                             these_samples_metadata = dlbcl_genome_meta
+                             these_samples_metadata = dlbcl_genome_meta,
                              seg_data=all_segments,
                              strategy="GISTIC",
                              gistic_lesions_file="all_lesions.conf_90.txt")

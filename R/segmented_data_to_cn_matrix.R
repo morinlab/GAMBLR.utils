@@ -13,7 +13,8 @@
 #' @param streamlined If TRUE, only return the ID and CN columns (default is FALSE)
 #' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
 #' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
-#'
+#' @param missing_data_as_diploid If there is no data for the region assume it is diploid
+#' 
 #' @return data.frame
 #' @export
 #'
@@ -97,6 +98,8 @@ process_cn_segments_by_region = function(seg_data,
 #' @param n_bins_split Split genome into N equally sized bins
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param missing_data_as_diploid Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.
+#' @param adjust_for_ploidy Whether to adjust for high ploidy
+#' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
 #' @param genome_build Specify the genome build (usually not required)
 #'
 #' @return Copy number matrix with sample_id as rows and regions as columns.
@@ -121,7 +124,7 @@ process_cn_segments_by_region = function(seg_data,
 #' 
 #'
 #' gistic_cn_mat = segmented_data_to_cn_matrix(
-#'                              these_samples_metadata = dlbcl_genome_meta
+#'                              these_samples_metadata = dlbcl_genome_meta,
 #'                              seg_data=all_segments,
 #'                              strategy="GISTIC",
 #'                              gistic_lesions_file="all_lesions.conf_90.txt")

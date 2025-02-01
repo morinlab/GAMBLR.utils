@@ -35,6 +35,8 @@ gistic_to_cn_matrix(
 \item{scale_by_sample}{Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports}
 
 \item{missing_data_as_diploid}{Fill in gaps as diploid}
+
+\item{genome_build}{Specify the genome build if necessary}
 }
 \value{
 a list of data frames
