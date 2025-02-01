@@ -110,7 +110,7 @@ process_cn_segments_by_region = function(seg_data,
 #'     filter(pathology=="DLBCL",
 #'     seq_type=="genome")
 #' # Create the copy number matrix from this data
-#' all_segments = get_cn_segments()
+#' all_segments = get_cn_segments(these_samples_metadata = dlbcl_genome_meta)
 #' all_states_binned = segmented_data_to_cn_matrix(
 #'                                   seg_data = all_segments,
 #'                                   strategy="auto_split",
@@ -120,6 +120,7 @@ process_cn_segments_by_region = function(seg_data,
 #' 
 #'
 #' gistic_cn_mat = segmented_data_to_cn_matrix(
+#'                              these_samples_metadata = dlbcl_genome_meta
 #'                              seg_data=all_segments,
 #'                              strategy="GISTIC",
 #'                              gistic_lesions_file="all_lesions.conf_90.txt")
@@ -146,13 +147,13 @@ segmented_data_to_cn_matrix = function(seg_data,
     }
   }
   if(strategy=="GISTIC"){
-    cn_matrix = gistic_to_cn_matrix(seg_data=seg_data,
+    gistic_processed = gistic_to_cn_matrix(seg_data=seg_data,
                                     gistic_lesions_file=gistic_lesions_file,
                                     wide_peaks=TRUE,
                                     drop_inconsistent=TRUE,
                                     scale_by_sample=adjust_for_ploidy,
                                     missing_data_as_diploid=missing_data_as_diploid)
-    return(cn_matrix)
+    return(gistic_processed$gambl_cn_matrix)
   }
   if(any(missing(seg_data))){
     stop("one or more required arguments are missing. Required: seg_data, genome_build")

@@ -104,20 +104,13 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
     column_to_rownames("sample_id")
 
   gh = Heatmap(lesions_values,cluster_columns = T)
-  
 
-  
-  # Create the copy number matrix using the helper functions
-  #all_segments = get_cn_segments()
-  
   regions_bed = select(peak,chrom,start,end,`Unique Name`) %>%
     arrange(chrom,start)
   if(genome_build=="grch37"){
     regions_bed = mutate(regions_bed,chrom = str_remove(chrom,"chr"))
   }
-  print(head(regions_bed))
   if(!missing(these_samples_metadata)){
-    print("HERE")
     gistic_peaks_binned = segmented_data_to_cn_matrix(
                                         regions = regions_bed,
                                         strategy="custom_regions",
@@ -126,7 +119,7 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
                                         adjust_for_ploidy = scale_by_sample,
                                         these_samples_metadata = these_samples_metadata)
   }else{
-    return(regions_bed)
+
     gistic_peaks_binned = segmented_data_to_cn_matrix(
                                         regions = regions_bed,
                                         strategy="custom_regions",
