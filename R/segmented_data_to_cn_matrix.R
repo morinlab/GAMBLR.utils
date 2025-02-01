@@ -100,7 +100,7 @@ process_cn_segments_by_region = function(seg_data,
 #'
 #' @return Copy number matrix with sample_id as rows and regions as columns.
 #'
-#' @import dplyr circlize tibble stringr tidyr GenomicDistributions
+#' @import dplyr tibble stringr tidyr GenomicDistributions
 #' @export
 #'
 #' @examples

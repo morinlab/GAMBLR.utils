@@ -21,6 +21,8 @@ Imports:
     glue,
     methods,
     readr,
+    stringr,
+    GenomicDistributions,
     Rsamtools,
     rtracklayer,
     S4Vectors,

@@ -51,7 +51,7 @@ dlbcl_genome_meta = get_gambl_metadata() \%>\%
     filter(pathology=="DLBCL",
     seq_type=="genome")
 # Create the copy number matrix from this data
-all_segments = get_cn_segments()
+all_segments = get_cn_segments(these_samples_metadata = dlbcl_genome_meta)
 all_states_binned = segmented_data_to_cn_matrix(
                                   seg_data = all_segments,
                                   strategy="auto_split",
@@ -61,6 +61,7 @@ all_states_binned = segmented_data_to_cn_matrix(
 
 
 gistic_cn_mat = segmented_data_to_cn_matrix(
+                             these_samples_metadata = dlbcl_genome_meta
                              seg_data=all_segments,
                              strategy="GISTIC",
                              gistic_lesions_file="all_lesions.conf_90.txt")
