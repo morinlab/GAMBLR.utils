@@ -13,6 +13,7 @@
 #' @param as_binary One-hot encoding (0 = no CN, 1 = CN)
 #' @param scale_by_sample Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports
 #' @param missing_data_as_diploid Fill in gaps as diploid
+#' @param missing_data_as_avg_ploidy Fill in gaps as average ploidy
 #' @param genome_build Specify the genome build if necessary
 #'
 #' @returns a list of data frames
@@ -46,6 +47,7 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
                           as_binary = TRUE,
                           scale_by_sample=TRUE,
                           missing_data_as_diploid=TRUE,
+                          missing_data_as_avg_ploidy=FALSE,
                           genome_build){
   lesions = suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>% 
     filter(!grepl("CN",`Unique Name`))
@@ -116,6 +118,7 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
                                         regions = regions_bed,
                                         strategy="custom_regions",
                                         missing_data_as_diploid = missing_data_as_diploid,
+                                        missing_data_as_avg_ploidy = missing_data_as_avg_ploidy,
                                         seg_data = seg_data,
                                         adjust_for_ploidy = scale_by_sample,
                                         these_samples_metadata = these_samples_metadata)
@@ -125,6 +128,7 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
                                         regions = regions_bed,
                                         strategy="custom_regions",
                                         missing_data_as_diploid = missing_data_as_diploid,
+                                        missing_data_as_avg_ploidy = missing_data_as_avg_ploidy,
                                         seg_data = seg_data,
                                         adjust_for_ploidy = scale_by_sample
     )
