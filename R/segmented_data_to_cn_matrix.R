@@ -28,7 +28,7 @@
 #' 
 process_cn_segments_by_region = function(seg_data,
                                          region,
-                                         streamlined,
+                                         streamlined=FALSE,
                                          weighted_average=TRUE,
                                          missing_data_as_diploid=TRUE){
   region = gsub(",", "", region)
