@@ -125,6 +125,7 @@ process_cn_segments_by_region = function(seg_data,
 #' @param n_bins_split Split genome into N equally sized bins
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param missing_data_as_diploid Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.
+#' @param missing_data_as_avg_ploidy Fill in any sample/region combinations with missing data as average ploidy. Default is FALSE.
 #' @param adjust_for_ploidy Whether to adjust for high ploidy
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
 #' @param genome_build Specify the genome build (usually not required)
@@ -164,6 +165,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                             n_bins_split=1000,
                             use_cytoband_name = FALSE,
                             missing_data_as_diploid = FALSE,
+                            missing_data_as_avg_ploidy = FALSE,
                             adjust_for_ploidy=FALSE,
                             genome_build,
                             gistic_lesions_file){
@@ -271,7 +273,7 @@ segmented_data_to_cn_matrix = function(seg_data,
       seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id) 
   }
 
-  region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data)})
+  region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data,missing_data_as_diploid=missing_data_as_diploid,missing_data_as_avg_ploidy = missing_data_as_avg_ploidy)})
 
   
   tibbled_data = tibble(region_segs, region_name = region_names)
