@@ -45,10 +45,10 @@ process_cn_segments_by_region = function(seg_data,
     stop("Error: Either 'missing_data_as_diploid' or 'missing_data_as_avg_ploidy' must be TRUE, not both.")
     }
   if (missing_data_as_diploid) {
-    message("Using missing data as diploid.")
+    # message("Using missing data as diploid.")
     dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
   } else if  (missing_data_as_avg_ploidy) {
-    message("Using missing data as average ploidy.")
+    # message("Using missing data as average ploidy.")
     avg_ploidy = seg_data %>%
       group_by(ID) %>%
       summarise(mean = mean(CN))
