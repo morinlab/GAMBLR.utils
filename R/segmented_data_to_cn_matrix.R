@@ -156,8 +156,24 @@ segmented_data_to_cn_matrix = function(seg_data,
                                     wide_peaks=TRUE,
                                     drop_inconsistent=TRUE,
                                     scale_by_sample=adjust_for_ploidy,
-                                    missing_data_as_diploid=missing_data_as_diploid)
-    return(gistic_processed$gambl_cn_matrix)
+                                    missing_data_as_diploid=missing_data_as_diploid,
+                                    these_samples_metadata = these_samples_metadata)
+    #fill values for these regions
+    
+    peak_regions = colnames(gistic_processed$gistic_cn_matrix) 
+   
+    region_processed = GAMBLR.data::process_regions(regions_list=peak_regions,
+                               projection = genome_build,sort=T)
+
+    regions_bed=region_processed$regions_bed
+    filled = segmented_data_to_cn_matrix(seg_data = seg_data,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         missing_data_as_diploid=missing_data_as_diploid,
+                                         adjust_for_ploidy=adjust_for_ploidy,
+                                         these_samples_metadata = these_samples_metadata 
+                                         )
+    return(filled)
   }
   if(any(missing(seg_data))){
     stop("one or more required arguments are missing. Required: seg_data, genome_build")
@@ -223,15 +239,16 @@ segmented_data_to_cn_matrix = function(seg_data,
   }else if(strategy=="custom_regions"){
     if("data.frame" %in% class(regions)){
       region_names = unname(unlist(regions[,4]))
-      #print(class(region_names))
       regions = apply(regions, 1, bed2region)
-      #print(regions)
-      #print(region_names)
       names(regions) = str_replace_all(region_names,"\\s","")
+    }else{
+
+      region_names = names(regions)
+      if(is.null(region_names)){
+        region_names = regions
+      }
+
     }
-    #print("HERE")
-    #print(regions)
-    #print("====")
     
   }
   if(strategy != "cytobands"){

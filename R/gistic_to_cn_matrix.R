@@ -13,6 +13,7 @@
 #' @param as_binary One-hot encoding (0 = no CN, 1 = CN)
 #' @param scale_by_sample Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports
 #' @param missing_data_as_diploid Fill in gaps as diploid
+#' @param peak_names_from Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"
 #' @param genome_build Specify the genome build if necessary
 #'
 #' @returns a list of data frames
@@ -24,7 +25,7 @@
 #' dlbcl_genomes_meta = get_gambl_metadata() %>% 
 #'     dplyr::filter(pathology=="DLBCL",seq_type=="genome")
 #'     
-#' all_out = gistic_to_cn_matrix("all_lesions.conf_90.txt",
+#' all_out = gistic_to_cn_state_matrix("all_lesions.conf_90.txt",
 #'                               dlbcl_genomes_meta,
 #'                               all_segments,
 #'                               as_binary = T,
@@ -37,7 +38,7 @@
 #'                         comparison_column = "COO_consensus",
 #'                         comparison_values = c("GCB","ABC"))
 #' 
-gistic_to_cn_matrix = function(gistic_lesions_file,
+gistic_to_cn_state_matrix = function(gistic_lesions_file,
                           these_samples_metadata,
                           seg_data,
                           wide_peaks=FALSE,
@@ -46,7 +47,8 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
                           as_binary = TRUE,
                           scale_by_sample=TRUE,
                           missing_data_as_diploid=TRUE,
-                          genome_build){
+                          genome_build,
+                          peak_names_from="coordinates"){
   lesions = suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>% 
     filter(!grepl("CN",`Unique Name`))
   
@@ -54,7 +56,6 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
 
   if(missing(genome_build)){
     genome_build = get_genome_build(seg_data)
-    print(genome_build)
   }
   
   if(wide_peaks){
@@ -161,7 +162,11 @@ gistic_to_cn_matrix = function(gistic_lesions_file,
     column_to_rownames("sample_id")
  
   hh = Heatmap(gistic_peaks_wide,cluster_columns = T)
-
+  if(peak_names_from=="coordinates"){
+    colnames(gistic_peaks_wide)= colnames(lesions_values)
+  }else{
+    colnames(lesions_values) = colnames(gistic_peaks_wide)
+  }
   return(list(gambl_cn_matrix=gistic_peaks_wide,
               gistic_cn_matrix=lesions_values,
               gambl_heatmap=hh,
