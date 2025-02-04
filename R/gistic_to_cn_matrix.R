@@ -46,7 +46,6 @@ gistic_to_cn_state_matrix = function(gistic_lesions_file,
                           drop_inconsistent = TRUE,
                           as_binary = TRUE,
                           scale_by_sample=TRUE,
-                          genome_build,
                           peak_names_from="coordinates"){
                           fill_missing_with = fill_missing_with,
                           genome_build){
