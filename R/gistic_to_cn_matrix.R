@@ -119,7 +119,6 @@ gistic_to_cn_state_matrix = function(gistic_lesions_file,
                                         strategy="custom_regions",
                                         fill_missing_with = fill_missing_with,
                                         seg_data = seg_data,
-                                        adjust_for_ploidy = scale_by_sample,
                                         these_samples_metadata = these_samples_metadata)
   }else{
 
