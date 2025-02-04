@@ -13,8 +13,7 @@
 #' @param streamlined If TRUE, only return the ID and CN columns (default is FALSE)
 #' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
 #' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
-#' @param missing_data_as_diploid If there is no data for the region assume it is diploid
-#' @param missing_data_as_avg_ploidy If there is no data for the region assume it is average ploidy
+#' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
 #' 
 #' @return data.frame
 #' @export
@@ -31,8 +30,7 @@ process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
                                          weighted_average=TRUE,
-                                         missing_data_as_diploid=TRUE,
-                                         missing_data_as_avg_ploidy=FALSE){
+                                         fill_missing_with="avg_ploidy"){
   region = gsub(",", "", region)
   split_chunks = unlist(strsplit(region, ":"))
   chromosome = split_chunks[1]
@@ -40,19 +38,18 @@ process_cn_segments_by_region = function(seg_data,
   qstart = as.numeric(startend[1])
   qend = as.numeric(startend[2])
   
-  #Save for later 
-  if (missing_data_as_diploid && missing_data_as_avg_ploidy) {
-    stop("Error: Either 'missing_data_as_diploid' or 'missing_data_as_avg_ploidy' must be TRUE, not both.")
-    }
-  if (missing_data_as_diploid) {
-    # message("Using missing data as diploid.")
+
+  if (fill_missing_with=="diploid") {
     dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
-  } else if  (missing_data_as_avg_ploidy) {
-    # message("Using missing data as average ploidy.")
+  } else if  (fill_missing_with=="avg_ploidy") {
     avg_ploidy = seg_data %>%
       group_by(ID) %>%
-      summarise(mean = mean(CN))
-    dummy_df = data.frame(ID=unique(seg_data$ID),CN=avg_ploidy%>%pull(mean),log.ratio=0)
+      summarise(mean = mean(CN)) #changed to ensure the ID and mean(CN) are in the right order
+    dummy_df = data.frame(ID=avg_ploidy$ID,
+                          CN=avg_ploidy,
+                          log.ratio=log(CN/2)) #log.ratio must match CN. log.ratio is log2(CN/2)
+  }else{
+    stop("Error: Either 'diploid' or 'avg_ploidy' must be specified for parameter 'fill_missing_with'")
   }
   
   all_segs = 
