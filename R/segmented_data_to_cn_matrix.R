@@ -14,6 +14,7 @@
 #' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
 #' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
 #' @param missing_data_as_diploid If there is no data for the region assume it is diploid
+#' @param missing_data_as_avg_ploidy If there is no data for the region assume it is average ploidy
 #' 
 #' @return data.frame
 #' @export
@@ -30,7 +31,8 @@ process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
                                          weighted_average=TRUE,
-                                         missing_data_as_diploid=TRUE){
+                                         missing_data_as_diploid=TRUE,
+                                         missing_data_as_avg_ploidy=FALSE){
   region = gsub(",", "", region)
   split_chunks = unlist(strsplit(region, ":"))
   chromosome = split_chunks[1]
@@ -39,7 +41,19 @@ process_cn_segments_by_region = function(seg_data,
   qend = as.numeric(startend[2])
   
   #Save for later 
-  dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
+  if (missing_data_as_diploid && missing_data_as_avg_ploidy) {
+    stop("Error: Either 'missing_data_as_diploid' or 'missing_data_as_avg_ploidy' must be TRUE, not both.")
+    }
+  if (missing_data_as_diploid) {
+    # message("Using missing data as diploid.")
+    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
+  } else if  (missing_data_as_avg_ploidy) {
+    # message("Using missing data as average ploidy.")
+    avg_ploidy = seg_data %>%
+      group_by(ID) %>%
+      summarise(mean = mean(CN))
+    dummy_df = data.frame(ID=unique(seg_data$ID),CN=avg_ploidy%>%pull(mean),log.ratio=0)
+  }
   
   all_segs = 
     dplyr::filter(seg_data, (chrom == chromosome & start >= qstart & start <= qend)|
@@ -58,14 +72,27 @@ process_cn_segments_by_region = function(seg_data,
   }else{
     all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
   }
-  if(missing_data_as_diploid){
+  if(xor(missing_data_as_diploid,missing_data_as_avg_ploidy)){
      dummy_df = dplyr::filter(dummy_df,!ID %in% all_segs$ID)
      all_segs = bind_rows(dummy_df,all_segs)
   }
   #clean up NaN values
-  all_segs = mutate(all_segs,
-                    CN=ifelse(is.nan(CN),2,CN),
-                    log.ratio=ifelse(is.nan(log.ratio),0,log.ratio))
+  n_sample_nan = nrow(all_segs %>% filter(is.nan(CN)))
+  if (n_sample_nan>0) {
+    message(n_sample_nan, " samples have NaN value in CN column.")
+    if (missing_data_as_diploid) {
+      all_segs = mutate(all_segs,
+                      CN=ifelse(is.nan(CN),2,CN), # replace NaN with CN=2
+                      log.ratio=ifelse(is.nan(log.ratio),0,log.ratio))
+    } else if (missing_data_as_avg_ploidy) {
+      all_segs = all_segs %>%
+        left_join(avg_ploidy %>% select(ID, CN_avg = mean), by = "ID") %>%
+        mutate(CN = ifelse(is.nan(CN), CN_avg, CN), # replace NaN with CN=avg_ploidy
+               log.ratio = ifelse(is.nan(log.ratio), 0, log.ratio)) %>%
+        select(-CN_avg) 
+    } 
+  }
+
   if(!streamlined){
     all_segs = mutate(all_segs,
                       chrom=chromosome,
@@ -98,6 +125,7 @@ process_cn_segments_by_region = function(seg_data,
 #' @param n_bins_split Split genome into N equally sized bins
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param missing_data_as_diploid Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.
+#' @param missing_data_as_avg_ploidy Fill in any sample/region combinations with missing data as average ploidy. Default is FALSE.
 #' @param adjust_for_ploidy Whether to adjust for high ploidy
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
 #' @param genome_build Specify the genome build (usually not required)
@@ -137,6 +165,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                             n_bins_split=1000,
                             use_cytoband_name = FALSE,
                             missing_data_as_diploid = FALSE,
+                            missing_data_as_avg_ploidy = FALSE,
                             adjust_for_ploidy=FALSE,
                             genome_build,
                             gistic_lesions_file){
@@ -261,7 +290,7 @@ segmented_data_to_cn_matrix = function(seg_data,
       seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id) 
   }
 
-  region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data)})
+  region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data,missing_data_as_diploid=missing_data_as_diploid,missing_data_as_avg_ploidy = missing_data_as_avg_ploidy)})
 
   
   tibbled_data = tibble(region_segs, region_name = region_names)

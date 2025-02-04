@@ -12,7 +12,7 @@
 #' @param drop_inconsistent Set regions with a CN direction inconsistent with peak type to neutral/diploid
 #' @param as_binary One-hot encoding (0 = no CN, 1 = CN)
 #' @param scale_by_sample Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports
-#' @param missing_data_as_diploid Fill in gaps as diploid
+#' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
 #' @param peak_names_from Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"
 #' @param genome_build Specify the genome build if necessary
 #'
@@ -46,9 +46,10 @@ gistic_to_cn_state_matrix = function(gistic_lesions_file,
                           drop_inconsistent = TRUE,
                           as_binary = TRUE,
                           scale_by_sample=TRUE,
-                          missing_data_as_diploid=TRUE,
                           genome_build,
                           peak_names_from="coordinates"){
+                          fill_missing_with = fill_missing_with,
+                          genome_build){
   lesions = suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>% 
     filter(!grepl("CN",`Unique Name`))
   
@@ -116,7 +117,7 @@ gistic_to_cn_state_matrix = function(gistic_lesions_file,
     gistic_peaks_binned = segmented_data_to_cn_matrix(
                                         regions = regions_bed,
                                         strategy="custom_regions",
-                                        missing_data_as_diploid = missing_data_as_diploid,
+                                        fill_missing_with = fill_missing_with,
                                         seg_data = seg_data,
                                         adjust_for_ploidy = scale_by_sample,
                                         these_samples_metadata = these_samples_metadata)
@@ -125,7 +126,7 @@ gistic_to_cn_state_matrix = function(gistic_lesions_file,
     gistic_peaks_binned = segmented_data_to_cn_matrix(
                                         regions = regions_bed,
                                         strategy="custom_regions",
-                                        missing_data_as_diploid = missing_data_as_diploid,
+                                        fill_missing_with = fill_missing_with,
                                         seg_data = seg_data,
                                         adjust_for_ploidy = scale_by_sample
     )
