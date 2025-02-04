@@ -13,9 +13,9 @@ gistic_to_cn_state_matrix(
   drop_inconsistent = TRUE,
   as_binary = TRUE,
   scale_by_sample = TRUE,
-  missing_data_as_diploid = TRUE,
-  genome_build,
-  peak_names_from = "coordinates"
+  peak_names_from = "coordinates",
+  fill_missing_with = "diploid",
+  genome_build
 )
 }
 \arguments{
@@ -35,11 +35,11 @@ gistic_to_cn_state_matrix(
 
 \item{scale_by_sample}{Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports}
 
-\item{missing_data_as_diploid}{Fill in gaps as diploid}
+\item{peak_names_from}{Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"}
+
+\item{fill_missing_with}{Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"}
 
 \item{genome_build}{Specify the genome build if necessary}
-
-\item{peak_names_from}{Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"}
 }
 \value{
 a list of data frames

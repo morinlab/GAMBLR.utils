@@ -11,7 +11,7 @@ segmented_data_to_cn_matrix(
   these_samples_metadata,
   n_bins_split = 1000,
   use_cytoband_name = FALSE,
-  missing_data_as_diploid = FALSE,
+  fill_missing_with = "diploid",
   adjust_for_ploidy = FALSE,
   genome_build,
   gistic_lesions_file
@@ -30,7 +30,7 @@ segmented_data_to_cn_matrix(
 
 \item{use_cytoband_name}{Use cytoband names instead of region names, e.g p36.33.}
 
-\item{missing_data_as_diploid}{Fill in any sample/region combinations with missing data as diploid (e.g., CN state like 2). Default is FALSE.}
+\item{fill_missing_with}{Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")}
 
 \item{adjust_for_ploidy}{Whether to adjust for high ploidy}
 

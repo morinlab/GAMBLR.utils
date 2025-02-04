@@ -9,7 +9,7 @@ process_cn_segments_by_region(
   region,
   streamlined = FALSE,
   weighted_average = TRUE,
-  missing_data_as_diploid = TRUE
+  fill_missing_with = "avg_ploidy"
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ process_cn_segments_by_region(
 \item{weighted_average}{If TRUE, calculate the CN value as a weighted average of the segments
 that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)}
 
-\item{missing_data_as_diploid}{If there is no data for the region assume it is diploid}
+\item{fill_missing_with}{Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"}
 }
 \value{
 data.frame

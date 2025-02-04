@@ -38,138 +38,160 @@
 #'                         comparison_column = "COO_consensus",
 #'                         comparison_values = c("GCB","ABC"))
 #' 
-gistic_to_cn_state_matrix = function(gistic_lesions_file,
-                          these_samples_metadata,
-                          seg_data,
-                          wide_peaks=FALSE,
-                          max_CN=6,
-                          drop_inconsistent = TRUE,
-                          as_binary = TRUE,
-                          scale_by_sample=TRUE,
-                          peak_names_from="coordinates"){
-                          fill_missing_with = "diploid",
-                          genome_build){
-  lesions = suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>% 
-    filter(!grepl("CN",`Unique Name`))
-  
-  lesions_regions = select(lesions,1:6)
+gistic_to_cn_state_matrix <- function(gistic_lesions_file,
+                                      these_samples_metadata,
+                                      seg_data,
+                                      wide_peaks = FALSE,
+                                      max_CN = 6,
+                                      drop_inconsistent = TRUE,
+                                      as_binary = TRUE,
+                                      scale_by_sample = TRUE,
+                                      peak_names_from = "coordinates",
+                                      fill_missing_with = "diploid",
+                                      generate_heatmaps = TRUE,
+                                      genome_build) {
 
-  if(missing(genome_build)){
-    genome_build = get_genome_build(seg_data)
-  }
-  
-  if(wide_peaks){
-    peak = select(lesions_regions,1,`Wide Peak Limits`)  %>% 
-      mutate(region=str_remove(`Wide Peak Limits`,"\\(.+")) %>%
-      mutate(duplicated_region=region) %>%
-      separate(duplicated_region,into=c("chrom","start","end")) %>%
-      mutate(type=str_extract(`Unique Name`,"(\\S+)")) %>%
-      dplyr::rename("Peak Limits"="Wide Peak Limits")
-  }else{
-    peak = select(lesions_regions,1,`Peak Limits`) %>% 
-      mutate(region=str_remove(`Peak Limits`,"\\(.+")) %>%
-      mutate(duplicated_region=region) %>%
-      separate(duplicated_region,into=c("chrom","start","end")) %>%
-      mutate(type=str_extract(`Unique Name`,"(\\S+)"))
+  process_peaks <- function(lesions_regions, peak_type) {
+    
+    peaks <- select(lesions_regions, 1, !!sym(peak_limits_column)) %>%
+      mutate(sep_region = str_remove(!!sym(peak_limits_column), "\\(.+")) %>%
+      mutate(region=sep_region) %>% 
+      separate(sep_region, into = c("chrom", "start", "end"), convert = TRUE) %>%
+      mutate(type = str_extract(`Unique Name`, "\\S+")) %>%
+      mutate(region = str_remove(region, "\\(.+")) %>%
+      select(-!!sym(peak_limits_column))
+    return(peaks)
   }
 
+  lesions <- suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>%
+    filter(!grepl("CN", `Unique Name`))
+  lesions_regions <- select(lesions, 1:6)
 
-  
-  
-  #10 to ncol(x)-1
-  lasti = ncol(lesions)-1
-  lesions_values = lesions[,c(1,10:lasti)]
-  lesions_values = left_join(lesions_regions,lesions_values) %>%
-    mutate(region=str_remove(`Peak Limits`,"\\(.+")) %>%
-    select(-1:-6) %>% column_to_rownames("region") %>% t() %>% as.data.frame()
-  
-  lesions_values_long = rownames_to_column(lesions_values,"sample_id") %>% 
-    pivot_longer(-sample_id,names_to="region",values_to="magnitude")
-  
-  
-  if(as_binary){
-    lesions_values_long = left_join(lesions_values_long,peak) %>% 
-      mutate(CN=case_when(magnitude==0 ~ 0,
-                          magnitude==1 & type == "Amplification" ~ 1,
-                          magnitude==2 & type == "Amplification" ~ 1,
-                          magnitude==1 & type == "Deletion" ~ 1,
-                          magnitude==2 & type == "Deletion" ~ 1))
-  }else{
-    lesions_values_long = left_join(lesions_values_long,peak) %>% 
-      mutate(CN=case_when(magnitude==0 ~ 2,
-                          magnitude==1 & type == "Amplification" ~ 3,
-                          magnitude==2 & type == "Amplification" ~ 4,
-                          magnitude==1 & type == "Deletion" ~ 1,
-                          magnitude==2 & type == "Deletion" ~ 0))
+  if (missing(genome_build)) {
+    genome_build <- get_genome_build(seg_data)
   }
-  lesions_values = pivot_wider(lesions_values_long,names_from="region",id_cols="sample_id",values_from="CN") %>% 
-    column_to_rownames("sample_id")
 
-  gh = Heatmap(lesions_values,cluster_columns = T)
+  
+  peak_limits_column <- if (wide_peaks ) "Wide Peak Limits" else "Peak Limits"
+  peak <- process_peaks(lesions_regions, peak_limits_column)
+  
+  lesions_values <- lesions %>%
+    select(1, 10:(ncol(lesions) - 1)) %>%
+    left_join(lesions_regions,., by = "Unique Name") %>%
+    mutate(region = str_remove(!!sym(peak_limits_column), "\\(.+")) %>%
+    select(-1:-6)
 
-  regions_bed = select(peak,chrom,start,end,`Unique Name`) %>%
-    arrange(chrom,start)
-  if(genome_build=="grch37"){
-    regions_bed = mutate(regions_bed,chrom = str_remove(chrom,"chr"))
+  lesions_values = lesions_values %>%
+    pivot_longer(cols = -region, names_to = "sample_id", values_to = "magnitude")
+
+  
+  if (as_binary) {
+    lesions_values <- lesions_values %>%
+      left_join(peak, by = "region")  %>%
+      mutate(CN = case_when(
+        magnitude == 0 ~ 0,
+        magnitude %in% c(1, 2) & type == "Amplification" ~ 1,
+        magnitude %in% c(1, 2) & type == "Deletion" ~ 1
+      ))
+  } else {
+    lesions_values <- lesions_values %>%
+      left_join(peak, by = "region") %>%
+      mutate(CN = case_when(
+        magnitude == 0 ~ 2,
+        magnitude == 1 & type == "Amplification" ~ 3,
+        magnitude == 2 & type == "Amplification" ~ 4,
+        magnitude == 1 & type == "Deletion" ~ 1,
+        magnitude == 2 & type == "Deletion" ~ 0
+      ))
   }
-  if(!missing(these_samples_metadata)){
-    gistic_peaks_binned = segmented_data_to_cn_matrix(
-                                        regions = regions_bed,
-                                        strategy="custom_regions",
-                                        fill_missing_with = fill_missing_with,
-                                        seg_data = seg_data,
-                                        these_samples_metadata = these_samples_metadata)
-  }else{
 
-    gistic_peaks_binned = segmented_data_to_cn_matrix(
-                                        regions = regions_bed,
-                                        strategy="custom_regions",
-                                        fill_missing_with = fill_missing_with,
-                                        seg_data = seg_data,
-                                        adjust_for_ploidy = scale_by_sample
+  lesions_values = lesions_values %>% select(-magnitude,-`Unique Name`:-type)
+
+
+  lesions_values <- lesions_values %>%
+    pivot_wider(id_cols = "sample_id",names_from = "region", values_from = "CN") %>%
+   column_to_rownames("sample_id")
+  if(generate_heatmaps){
+    gh <- Heatmap(lesions_values, cluster_columns = TRUE)
+  }
+  
+
+  regions_bed <- select(peak, chrom, start, end, `Unique Name`) %>%
+    arrange(chrom, start)
+  if(peak_names_from == "coordinates"){
+    regions_bed = mutate(regions_bed,name = paste0(chrom,":",start,"-",end)) %>%
+    select(-`Unique Name`)
+
+  }
+
+  regions_bed = create_bed_data(regions_bed,genome_build = genome_build)
+  
+  if (!missing(these_samples_metadata)) {
+    gistic_peaks_binned <- segmented_data_to_cn_matrix(
+      regions = regions_bed,
+      strategy = "custom_regions",
+      fill_missing_with = fill_missing_with,
+      seg_data = seg_data,
+      these_samples_metadata = these_samples_metadata
+    )
+  } else {
+    gistic_peaks_binned <- segmented_data_to_cn_matrix(
+      regions = regions_bed,
+      strategy = "custom_regions",
+      fill_missing_with = fill_missing_with,
+      seg_data = seg_data,
+      adjust_for_ploidy = scale_by_sample
     )
   }
-  
-  
-  gistic_peaks_long = gistic_peaks_binned %>% rownames_to_column("sample_id") %>%
-    pivot_longer(-sample_id,names_to="region",values_to="CN") %>%
-    mutate(original_region=region) %>%
-    separate(region,into=c("chrom","startend"),sep=":") %>%
-    
-    separate(startend,into=c("start","end"),sep="-") %>%
-    mutate(CN=round(CN)) %>%
-    mutate(CN=ifelse(CN>max_CN,max_CN,CN))
 
-  #re-annotate the rows by type
+  gistic_peaks_long <- gistic_peaks_binned %>%
+    rownames_to_column("sample_id") %>%
+    pivot_longer(cols = -sample_id, names_to = "region", values_to = "CN") %>%
+    separate(region, into = c("chrom", "startend"), sep = ":") %>%
+    separate(startend, into = c("start", "end"), sep = "-", convert = TRUE) %>%
+    mutate(CN = pmin(round(CN), max_CN))
   
-  gistic_peaks_long = left_join(gistic_peaks_long,select(peak,chrom,start,end,type))
-  #drop backwards and neutral
-  if(drop_inconsistent){
-    gistic_peaks_long = mutate(gistic_peaks_long,CN=case_when(type=="Deletion" & CN >1 ~ 2,
-                                                              type == "Amplification" & CN < 3 ~ 2,
-                                                              TRUE ~ CN)) 
-    if(as_binary){
-      gistic_peaks_long = mutate(gistic_peaks_long,CN=ifelse(CN==2,0,1))
-    }
-    
-  }
-
-  gistic_peaks_wide = pivot_wider(gistic_peaks_long,
-                                  id_cols="sample_id",
-                                  names_from="original_region",
-                                  values_from="CN") %>% 
-    column_to_rownames("sample_id")
- 
-  hh = Heatmap(gistic_peaks_wide,cluster_columns = T)
   if(peak_names_from=="coordinates"){
-    colnames(gistic_peaks_wide)= colnames(lesions_values)
+    peak = mutate(peak,name=region)
   }else{
-    colnames(lesions_values) = colnames(gistic_peaks_wide)
+    peak = dplyr::rename(peak,name=`Unique Name`)
   }
-  return(list(gambl_cn_matrix=gistic_peaks_wide,
-              gistic_cn_matrix=lesions_values,
-              gambl_heatmap=hh,
-              gistic_heatmap=gh))
-  
-}
 
+  gistic_peaks_long <- left_join(gistic_peaks_long, select(peak, chrom, start, end, type, name), by = c("chrom", "start", "end"))
+
+  if (drop_inconsistent) {
+    gistic_peaks_long <- mutate(gistic_peaks_long, CN = case_when(
+      type == "Deletion" & CN > 1 ~ 2,
+      type == "Amplification" & CN < 3 ~ 2,
+      TRUE ~ CN
+    ))
+    if (as_binary) {
+      gistic_peaks_long <- mutate(gistic_peaks_long, CN = ifelse(CN == 2, 0, 1))
+    }
+  }
+
+  gistic_peaks_wide <- gistic_peaks_long %>%
+    select(-chrom,-start,-end,-type) %>% 
+    pivot_wider(id_cols="sample_id",names_from = "name", values_from = "CN") %>%
+    column_to_rownames("sample_id")
+
+  if (peak_names_from == "coordinates") {
+    colnames(gistic_peaks_wide) <- colnames(lesions_values)
+  } else {
+    colnames(lesions_values) <- colnames(gistic_peaks_wide)
+  }
+  if(generate_heatmaps){
+    hh <- Heatmap(gistic_peaks_wide, cluster_columns = TRUE)
+    return(list(
+      gambl_cn_matrix = gistic_peaks_wide,
+      gistic_cn_matrix = lesions_values,
+      gambl_heatmap = hh,
+      gistic_heatmap = gh
+    ))
+  }else{
+    return(list(
+      gambl_cn_matrix = gistic_peaks_wide,
+      gistic_cn_matrix = lesions_values
+    ))
+  }
+}
