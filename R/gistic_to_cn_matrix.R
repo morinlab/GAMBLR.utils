@@ -47,7 +47,7 @@ gistic_to_cn_state_matrix = function(gistic_lesions_file,
                           as_binary = TRUE,
                           scale_by_sample=TRUE,
                           peak_names_from="coordinates"){
-                          fill_missing_with = fill_missing_with,
+                          fill_missing_with = "diploid",
                           genome_build){
   lesions = suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>% 
     filter(!grepl("CN",`Unique Name`))
