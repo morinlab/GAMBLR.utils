@@ -40,6 +40,8 @@ gistic_to_cn_state_matrix(
 
 \item{fill_missing_with}{Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"}
 
+\item{generate_heatmaps}{Optionally generate heatmaps. Default is TRUE.}
+
 \item{genome_build}{Specify the genome build if necessary}
 }
 \value{
