@@ -15,7 +15,7 @@
 #'
 #' @return A data frame of a maf-like object with the same columns as in input, but where rows are only kept for features that would be present as if the sample is WEX.
 #'
-#' @import dplyr readr
+#' @import dplyr readr GAMBLR.helpers
 #' @export
 #'
 #' @examples

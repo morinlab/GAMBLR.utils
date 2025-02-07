@@ -23,6 +23,7 @@ Imports:
     stringr,
     GenomicDistributions,
     rtracklayer,
+    stringr,
     S4Vectors,
     tibble,
     tidyr
