@@ -15,6 +15,7 @@ gistic_to_cn_state_matrix(
   scale_by_sample = TRUE,
   peak_names_from = "coordinates",
   fill_missing_with = "diploid",
+  generate_heatmaps = TRUE,
   genome_build
 )
 }
@@ -38,6 +39,8 @@ gistic_to_cn_state_matrix(
 \item{peak_names_from}{Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"}
 
 \item{fill_missing_with}{Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"}
+
+\item{generate_heatmaps}{Optionally generate heatmaps. Default is TRUE.}
 
 \item{genome_build}{Specify the genome build if necessary}
 }

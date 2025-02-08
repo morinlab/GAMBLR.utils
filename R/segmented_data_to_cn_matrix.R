@@ -16,6 +16,9 @@
 #' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
 #' 
 #' @return data.frame
+#' 
+#' 
+#' @import GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -191,7 +194,7 @@ segmented_data_to_cn_matrix = function(seg_data,
     
     peak_regions = colnames(gistic_processed$gistic_cn_matrix) 
    
-    region_processed = GAMBLR.data::process_regions(regions_list=peak_regions,
+    region_processed = process_regions(regions_list=peak_regions,
                                projection = genome_build,sort=T)
 
     regions_bed=region_processed$regions_bed

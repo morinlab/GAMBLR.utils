@@ -12,7 +12,7 @@
 #'
 #' @return Incoming MAF, subset to putative driver mutations.
 #'
-#' @import dplyr
+#' @import dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
@@ -61,7 +61,7 @@ annotate_driver_ssm = function(maf_df,
 
       if(!is.na(noncoding_regions[gene])){
         #also restrict to coordinates
-        chunks = GAMBLR.data::region_to_chunks(noncoding_regions[gene])
+        chunks = region_to_chunks(noncoding_regions[gene])
         nc_ssm = dplyr::filter(nc_ssm,Start_Position >= chunks$start & Start_Position <= chunks$end)
       }
       kept_ssm = bind_rows(kept_ssm, nc_ssm)
