@@ -14,6 +14,7 @@
 #' @param scale_by_sample Adjust for overall ploidy of each sample. Default (TRUE) is a close approximation to what GISTIC reports
 #' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
 #' @param peak_names_from Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"
+#' @param generate_heatmaps Optionally generate heatmaps. Default is TRUE.
 #' @param genome_build Specify the genome build if necessary
 #'
 #' @returns a list of data frames

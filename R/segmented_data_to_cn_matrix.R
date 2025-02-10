@@ -16,6 +16,9 @@
 #' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
 #' 
 #' @return data.frame
+#' 
+#' 
+#' @import GAMBLR.helpers
 #' @export
 #'
 #' @examples

@@ -17,7 +17,7 @@
 #'
 #' @return A data frame with columns detailing the gene/region.
 #'
-#' @import dplyr
+#' @import dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
