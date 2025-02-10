@@ -20,15 +20,15 @@ get_genome_build <- function(data) {
 #' @param old_data The original data frame with genomic attributes.
 #' @return A data frame with preserved genomic attributes.
 #' @export
+#' @keywords internal
 preserve_genomic_attributes <- function(new_data, old_data) {
-  # Preserve the genome_build attribute
   attr(new_data, "genome_build") <- attr(old_data, "genome_build")
   
-  # Combine the new data’s classes with the genomic classes
+  # Instead of replacing the class entirely, combine the classes.
+  # For example, force the custom type to come first if it exists.
+  original_custom <- intersect(class(old_data), c("bed_data","seg_data","maf_data"))
   new_data_classes <- class(new_data)
-  # Ensure the genomic classes are at the front
-  new_classes <- unique(c("maf_data", "genomic_data", new_data_classes))
-  class(new_data) <- new_classes
+  class(new_data) <- unique(c(original_custom, new_data_classes))
   
   return(new_data)
 }
