@@ -15,6 +15,7 @@ gistic_to_cn_state_matrix(
   scale_by_sample = TRUE,
   peak_names_from = "coordinates",
   fill_missing_with = "diploid",
+  generate_heatmaps = TRUE,
   genome_build
 )
 }

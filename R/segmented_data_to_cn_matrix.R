@@ -30,7 +30,7 @@ process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
                                          weighted_average=TRUE,
-                                         fill_missing_with="avg_ploidy"){
+                                         fill_missing_with="diploid"){
   region = gsub(",", "", region)
   split_chunks = unlist(strsplit(region, ":"))
   chromosome = split_chunks[1]
@@ -191,17 +191,17 @@ segmented_data_to_cn_matrix = function(seg_data,
     
     peak_regions = colnames(gistic_processed$gistic_cn_matrix) 
    
-    region_processed = GAMBLR.data::process_regions(regions_list=peak_regions,
+    region_processed = process_regions(regions_list=peak_regions,
                                projection = genome_build,sort=T)
 
     regions_bed=region_processed$regions_bed
     filled = segmented_data_to_cn_matrix(seg_data = seg_data,
                                          strategy = "custom_regions",
                                          regions = regions_bed,
-                                         fill_missing_with=fill_missing_with,
-                                         adjust_for_ploidy=adjust_for_ploidy,
-                                         these_samples_metadata = these_samples_metadata
-                                         )
+                                         fill_missing_with = fill_missing_with,
+                                         adjust_for_ploidy = adjust_for_ploidy,
+                                         these_samples_metadata = these_samples_metadata,
+                                         genome_build = genome_build)
     return(filled)
   }
   if(any(missing(seg_data))){
