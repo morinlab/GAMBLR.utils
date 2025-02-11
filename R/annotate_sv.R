@@ -34,7 +34,7 @@
 #' 
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
-#' @import tidyr dplyr
+#' @import tidyr dplyr GAMBLR.helpers
 #' @export
 #'
 #' @examples
