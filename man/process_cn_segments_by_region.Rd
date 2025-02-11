@@ -9,7 +9,7 @@ process_cn_segments_by_region(
   region,
   streamlined = FALSE,
   weighted_average = TRUE,
-  fill_missing_with = "avg_ploidy"
+  fill_missing_with = "diploid"
 )
 }
 \arguments{
