@@ -23,12 +23,11 @@ get_genome_build <- function(data) {
 #' @keywords internal
 preserve_genomic_attributes <- function(new_data, old_data) {
   attr(new_data, "genome_build") <- attr(old_data, "genome_build")
-  
   # Instead of replacing the class entirely, combine the classes.
   # For example, force the custom type to come first if it exists.
   original_custom <- intersect(class(old_data), c("bed_data","seg_data","maf_data"))
   new_data_classes <- class(new_data)
-  class(new_data) <- unique(c(original_custom, new_data_classes))
+  class(new_data) <- unique(c("genomic_data",original_custom, new_data_classes))
   
   return(new_data)
 }
@@ -49,7 +48,7 @@ create_maf_data <- function(maf_df, genome_build) {
   if (!genome_build %in% c("grch37", "hg38")) stop("Invalid genome build")
   
   structure(maf_df,
-            class = c("maf_data", "genomic_data", class(maf_df)),  #  "genomic_data" for generic methods
+            class = c("genomic_data", "maf_data", class(maf_df)),  #  "genomic_data" for generic methods
             genome_build = genome_build)
 }
 
@@ -69,6 +68,27 @@ print.maf_data <- function(x, ...) {
 
 
 # S3 methods for genomic_data class
+# These methods are used to ensure that custom attributes and classes are preserved
+# When users perform dplyr operations on genomic_data objects, these functions
+# are invoked instead of their namesakes along with a few helper functions
+# that reconstruct the object with the correct attributes and class order.
+
+#' Reconstruct genomic_data objects after dplyr operations
+#'
+#' This method is invoked by dplyr after performing operations such as
+#' \code{mutate}, \code{filter}, \code{select}, etc. It ensures that custom
+#' attributes (e.g., \code{genome_build}) and the custom class order for objects
+#' of class \code{genomic_data} are preserved.
+#'
+#' @param data A data frame resulting from a dplyr operation.
+#' @param template The original \code{genomic_data} object used as a template.
+#' @return A \code{genomic_data} object with preserved attributes.
+#' @export
+dplyr_reconstruct.genomic_data <- function(data, template) {
+  preserve_genomic_attributes(data, template)
+}
+
+
 #' @export
 mutate.genomic_data <- function(.data, ...) {
   new_data <- dplyr::mutate(as.data.frame(.data), ...)  
@@ -123,11 +143,13 @@ ungroup.genomic_data <- function(x, ...) {
 bind_genomic_data <- function(..., check_id = TRUE) {
   
   in_list <- list(...)
-  
+  original_type = NULL
   if ("maf_data" %in% class(in_list[[1]])) {
+    original_type = "maf_data"
     # MAF format, ID column is Tumor_Sample_Barcode
     id_col <- "Tumor_Sample_Barcode"
   } else if ("seg_data" %in% class(in_list[[1]])) {
+    original_type = "seg_data"
     # SEG format, ID column is ID
     id_col <- "ID"
   } else {
@@ -170,8 +192,8 @@ bind_genomic_data <- function(..., check_id = TRUE) {
   combined <- dplyr::bind_rows(in_list)
   attr(combined, "genome_build") <- genome_builds[1]  # Assign the common genome build
   
-  if (!"maf_data" %in% class(combined)) {
-    class(combined) <- c("maf_data", "genomic_data", class(combined))  # Preserve class
+  if (original_type %in% class(combined)) {
+    class(combined) <- unique(c("genomic_data",original_type, class(combined)))  # Preserve class
   }
   
   return(combined)
