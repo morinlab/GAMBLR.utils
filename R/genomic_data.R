@@ -489,10 +489,16 @@ create_bed_data <- function(bed_df,
       }
     }
   }
-  # enforce strict matching of chr prefixing
-  if(genome_build == "grch37"){
-    if(any(grepl("chr",bed_df$chrom))){
-      bed_df = mutate(bed_df,chrom = gsub("chr", "", chrom))
+  #ensure chr prefixes are there when necessary 
+  if(genome_build=="grch37"){
+    if(all(str_detect(bed_df$chrom, "chr"))){
+      bed_df = bed_df %>%
+        dplyr::mutate(chrom = gsub("chr", "", chrom))
+    }
+  }else{
+    if(all(!str_detect(bed_df$chrom, "chr"))){
+      bed_df = bed_df %>%
+        dplyr::mutate(chrom = paste0("chr", chrom))
     }
   }
   # Create the S3 object with additional class attributes and genome_build attribute.
