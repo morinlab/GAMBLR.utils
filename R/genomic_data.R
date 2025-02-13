@@ -1,4 +1,52 @@
 
+#' Create Genomic Data
+#'
+#' This function creates a genomic data object from the given input data frame.
+#'
+#' It attaches a `genome_build` attribute and assigns a class of
+#' `"genomic_data"`.
+#' Optionally, a subclass (e.g., `"maf_data"`, `"bed_data"`,
+#' `"seg_data"`, etc.) can be provided to further classify the
+#' data but this handled by the other create_ functions.
+#'
+#' @param data A data frame containing the genomic data.
+#' @param genome_build A string specifying the genome build
+#' ("grch37" or "hg38").
+#' @param subclass Optional. A character string specifying
+#' a subclass for the data.
+#'        For example, "maf_data", "bed_data", or "seg_data".
+#' Default is \code{NULL}.
+#'
+#' @return A data frame with class attributes for genomic
+#' data and a genome_build attribute.
+#' @export
+#' @keywords internal
+create_genomic_data <- function(data, genome_build, subclass = NULL) {
+  if (!inherits(data, "data.frame")) stop("data must be a data frame")
+  if (!genome_build %in% c("grch37", "hg38")) stop("Invalid genome build")
+  
+  # Base class is always "genomic_data". Optionally, add a subclass.
+  new_classes <- "genomic_data"
+  if (!is.null(subclass)) {
+    new_classes <- c(new_classes, subclass)
+  }
+  
+  structure(data,
+            class = c(new_classes, class(data)),
+            genome_build = genome_build)
+}
+
+#' @export
+#' @keywords internal
+print.genomic_data <- function(x, ...) {
+  cat("genomic_data Object\n")
+  cat("Genome Build:", attr(x, "genome_build"), "\n")
+  cat("Showing first 10 rows:\n")
+  # Convert to a plain data.frame (if not already) so that
+  # printing uses the default
+  # data.frame print method rather than printing as a list.
+  print(utils::head(as.data.frame(x), 10))
+}
 
 #' Get Genome Build
 #'
