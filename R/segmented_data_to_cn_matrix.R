@@ -14,21 +14,21 @@
 #' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
 #' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
 #' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
-#' 
+#'
 #' @return data.frame
-#' 
-#' 
+#'
+#'
 #' @import GAMBLR.helpers
 #' @export
 #'
 #' @examples
-#' 
+#'
 #' region_segs = process_cn_segments_by_region(
 #'        region = "chrX:1-1000000",
-#'        streamlined = FALSE, 
-#'        weighted_average = T, 
+#'        streamlined = FALSE,
+#'        weighted_average = T,
 #'        seg_data = seg_data)
-#' 
+#'
 process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
@@ -40,7 +40,7 @@ process_cn_segments_by_region = function(seg_data,
   startend = unlist(strsplit(split_chunks[2], "-"))
   qstart = as.numeric(startend[1])
   qend = as.numeric(startend[2])
-  
+
 
   if (fill_missing_with=="diploid") {
     dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
@@ -54,21 +54,21 @@ process_cn_segments_by_region = function(seg_data,
   }else{
     stop("Error: Either 'diploid' or 'avg_ploidy' must be specified for parameter 'fill_missing_with'")
   }
-  
-  all_segs = 
+
+  all_segs =
     dplyr::filter(seg_data, (chrom == chromosome & start >= qstart & start <= qend)|
                     (chrom == chromosome & end > qstart & end <= qend)|
                     (chrom == chromosome & end > qend & start <= qstart)) %>%
-    mutate(start=ifelse(start < qstart,qstart,start),end=ifelse(end>qend,qend,end)) %>% 
+    mutate(start=ifelse(start < qstart,qstart,start),end=ifelse(end>qend,qend,end)) %>%
     mutate(length=end-start)
-  
-  all_segs = all_segs %>% mutate(CN_L = length * CN,logr_L = length*log.ratio) 
+
+  all_segs = all_segs %>% mutate(CN_L = length * CN,logr_L = length*log.ratio)
   if(weighted_average){
-    all_segs = all_segs %>% 
+    all_segs = all_segs %>%
       group_by(ID) %>%
-      summarise(total_L = sum(length), log.ratio = sum(logr_L)/sum(length), 
-                CN = sum(CN_L)/sum(length)) %>% ungroup() 
-    
+      summarise(total_L = sum(length), log.ratio = sum(logr_L)/sum(length),
+                CN = sum(CN_L)/sum(length)) %>% ungroup()
+
   }else{
     all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
   }
@@ -91,8 +91,8 @@ process_cn_segments_by_region = function(seg_data,
         left_join(avg_ploidy %>% select(ID, CN_avg = mean), by = "ID") %>%
         mutate(CN = ifelse(is.nan(CN), CN_avg, CN), # replace NaN with CN=avg_ploidy
                log.ratio = ifelse(is.nan(log.ratio), 0, log.ratio)) %>%
-        select(-CN_avg) 
-    } 
+        select(-CN_avg)
+    }
   }
 
   if(!streamlined){
@@ -107,9 +107,9 @@ process_cn_segments_by_region = function(seg_data,
   }else{
     all_segs = dplyr::select(all_segs, ID, CN)
   }
-  
+
   return(all_segs)
-  
+
 }
 
 
@@ -121,7 +121,7 @@ process_cn_segments_by_region = function(seg_data,
 #' For how to determine/specify the coordinates of each region, refer to the parameter descriptions and examples.
 #'
 #' @param seg_data A data frame of segments that will be used to infer the copy number state of each region
-#' @param strategy The general strategy to define regions. Available options are: 'custom_regions','auto_split','cytobands','GISTIC' 
+#' @param strategy The general strategy to define regions. Available options are: 'custom_regions','auto_split','cytobands','GISTIC'
 #' @param regions Required when strategy is set to 'custom_regions'. A data frame in bed-like format or a vector of regions in the format "chrom:start-end"
 #' @param these_samples_metadata Optional metadata table to auto-subset the data to samples in that table before returning. If missing, the result will include a row for every sample in seg_data.
 #' @param n_bins_split Split genome into N equally sized bins
@@ -150,7 +150,7 @@ process_cn_segments_by_region = function(seg_data,
 #'                                   n_bins_split=2500,
 #'                                   missing_data_as_diploid = T,
 #'                                   these_samples_metadata = dlbcl_genome_meta)
-#' 
+#'
 #'
 #' gistic_cn_mat = segmented_data_to_cn_matrix(
 #'                              these_samples_metadata = dlbcl_genome_meta,
@@ -191,9 +191,9 @@ segmented_data_to_cn_matrix = function(seg_data,
                                     peak_names_from = "coordinates",
                                     generate_heatmaps = FALSE)
     #fill values for these regions using the data provided to the function
-    
-    peak_regions = colnames(gistic_processed$gistic_cn_matrix) 
-   
+
+    peak_regions = colnames(gistic_processed$gistic_cn_matrix)
+
     region_processed = process_regions(regions_list=peak_regions,
                                projection = genome_build,sort=T)
 
@@ -215,10 +215,10 @@ segmented_data_to_cn_matrix = function(seg_data,
   }else{
     all_cytobands = FALSE
   }
-  
+
   if(adjust_for_ploidy){
-    seg_data = mutate(seg_data,size=end-start,CN=ifelse(CN>5,5,CN),weighted = CN*size) %>% 
-      group_by(ID) %>% mutate(average=sum(weighted)/sum(size)) %>% 
+    seg_data = mutate(seg_data,size=end-start,CN=ifelse(CN>5,5,CN),weighted = CN*size) %>%
+      group_by(ID) %>% mutate(average=sum(weighted)/sum(size)) %>%
       mutate(CN=round(CN-average+2))
   }
 
@@ -235,7 +235,7 @@ segmented_data_to_cn_matrix = function(seg_data,
     }else{
       stop(paste("Unsupported genome_build:",genome_build))
     }
-    
+
     colnames(regions_bed) = c("chromosome_name", "start_position", "end_position", "name", "dunno")
     if(use_cytoband_name){
       regions_bed = mutate(regions_bed, region_name = paste0(str_remove(chromosome_name, pattern = "chr"), name))
@@ -249,22 +249,26 @@ segmented_data_to_cn_matrix = function(seg_data,
     #use the cytobands from the circlize package (currently hg19 but can extend to hg38 once GAMBLR handles it) Has this been updated?
   }else if(strategy=="auto_split"){
     if(genome_build=="grch37"){
-      length_df = GAMBLR.data::cytobands_grch37 %>% group_by(cb.chromosome) %>% slice_max(cb.end) 
+      length_df = GAMBLR.data::cytobands_grch37 %>%
+        mutate(cb.chromosome = factor(cb.chromosome,levels=unique(cb.chromosome))) %>%
+        group_by(cb.chromosome) %>% slice_max(cb.end)
       all_lengths = pull(length_df,cb.end)
       names(all_lengths) = pull(length_df,cb.chromosome)
-      
+
       bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_lengths)
-      
+
     }else if(genome_build=="hg38"){
-      length_df = GAMBLR.data::cytobands_hg38 %>% group_by(cb.chromosome) %>% slice_max(cb.end) 
+      length_df = GAMBLR.data::cytobands_hg38 %>%
+        mutate(cb.chromosome = factor(cb.chromosome,levels=unique(cb.chromosome))) %>%
+        group_by(cb.chromosome) %>% slice_max(cb.end)
       all_lengths = pull(length_df,cb.end)
       names(all_lengths) = pull(length_df,cb.chromosome)
       bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_lengths)
-      
+
     }else{
       stop(paste("genome build not supported or not specified:",genome_build))
     }
-    
+
     regions = apply(bin_df, 1, bed2region)
     region_names = regions
 
@@ -281,7 +285,7 @@ segmented_data_to_cn_matrix = function(seg_data,
       }
 
     }
-    
+
   }
   if(strategy != "cytobands"){
     if(!is.null(names(regions))){
@@ -290,19 +294,19 @@ segmented_data_to_cn_matrix = function(seg_data,
   }
   if(!missing(these_samples_metadata)){
       #subset to the samples in the provided
-      seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id) 
+      seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id)
   }
 
   region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data,fill_missing_with = fill_missing_with)})
 
-  
+
   tibbled_data = tibble(region_segs, region_name = region_names)
   unnested_df = tibbled_data %>%
     unnest_longer(region_segs)
 
   seg_df = data.frame(ID = unnested_df$region_segs$ID, CN = unnested_df$region_segs$CN,region_name = unnested_df$region_name)
-  
-  seg_df = dplyr::rename(seg_df,sample_id=ID) 
+
+  seg_df = dplyr::rename(seg_df,sample_id=ID)
 
 
   eg = expand_grid(sample_id = unique(seg_data$ID), region_name = as.character(unique(seg_df$region_name)))
