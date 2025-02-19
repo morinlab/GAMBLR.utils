@@ -48,7 +48,7 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
                                       as_binary = TRUE,
                                       scale_by_sample = TRUE,
                                       peak_names_from = "coordinates",
-                                      fill_missing_with = "diploid",
+                                      fill_missing_with = "avg_ploidy",
                                       generate_heatmaps = TRUE,
                                       genome_build) {
 
@@ -187,12 +187,16 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
       gambl_cn_matrix = gistic_peaks_wide,
       gistic_cn_matrix = lesions_values,
       gambl_heatmap = hh,
-      gistic_heatmap = gh
+      gistic_heatmap = gh,
+      peaks = peak,
+      lesions = lesions_regions
     ))
   }else{
     return(list(
       gambl_cn_matrix = gistic_peaks_wide,
-      gistic_cn_matrix = lesions_values
+      gistic_cn_matrix = lesions_values,
+      peaks = peak,
+      lesions = lesions_regions
     ))
   }
 }
