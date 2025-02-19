@@ -12,9 +12,11 @@ segmented_data_to_cn_matrix(
   n_bins_split = 1000,
   use_cytoband_name = FALSE,
   fill_missing_with = "diploid",
+  max_CN_allowed = 6,
   adjust_for_ploidy = FALSE,
   genome_build,
-  gistic_lesions_file
+  gistic_lesions_file,
+  verbose = FALSE
 )
 }
 \arguments{

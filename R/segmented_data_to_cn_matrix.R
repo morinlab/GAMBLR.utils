@@ -33,7 +33,9 @@ process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
                                          weighted_average=TRUE,
-                                         fill_missing_with="diploid"){
+                                         filler_values){
+
+
   region = gsub(",", "", region)
   split_chunks = unlist(strsplit(region, ":"))
   chromosome = split_chunks[1]
@@ -42,18 +44,7 @@ process_cn_segments_by_region = function(seg_data,
   qend = as.numeric(startend[2])
 
 
-  if (fill_missing_with=="diploid") {
-    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
-  } else if  (fill_missing_with=="avg_ploidy") {
-    avg_ploidy = seg_data %>%
-      group_by(ID) %>%
-      summarise(mean = mean(CN)) #changed to ensure the ID and mean(CN) are in the right order
-    dummy_df = data.frame(ID=avg_ploidy$ID,
-                          CN=avg_ploidy$mean) %>%
-                          mutate(log.ratio=log(CN/2)) #log.ratio must match CN. log.ratio is log2(CN/2)
-  }else{
-    stop("Error: Either 'diploid' or 'avg_ploidy' must be specified for parameter 'fill_missing_with'")
-  }
+  
 
   all_segs =
     dplyr::filter(seg_data, (chrom == chromosome & start >= qstart & start <= qend)|
@@ -70,29 +61,24 @@ process_cn_segments_by_region = function(seg_data,
                 CN = sum(CN_L)/sum(length)) %>% ungroup()
 
   }else{
-    all_segs = dplyr::mutate(all_segs, CN = round(2*2^log.ratio))
+    all_segs = dplyr::mutate(all_segs, CN = 2*2^log.ratio)
   }
-  if(fill_missing_with=="avg_ploidy"){
-  dummy_df = dplyr::filter(dummy_df,!ID %in% all_segs$ID)
-     all_segs = bind_rows(dummy_df,all_segs)
+  if(!missing(filler_values)){
+    filler_values$chrom = chromosome
+    filler_values$start = qstart
+    filler_values$end = qend
+    filler_values = dplyr::filter(filler_values,!ID %in% all_segs$ID)
+    all_segs = bind_rows(filler_values,all_segs)
   }
+  
 
 
-  #clean up NaN values
+
+  #check for NaN values
   n_sample_nan = nrow(all_segs %>% filter(is.nan(CN)))
   if (n_sample_nan>0) {
-    message(n_sample_nan, " samples have NaN value in CN column.")
-    if (missing_data_as_diploid) {
-      all_segs = mutate(all_segs,
-                      CN=ifelse(is.nan(CN),2,CN), # replace NaN with CN=2
-                      log.ratio=ifelse(is.nan(log.ratio),0,log.ratio))
-    } else if (missing_data_as_avg_ploidy) {
-      all_segs = all_segs %>%
-        left_join(avg_ploidy %>% select(ID, CN_avg = mean), by = "ID") %>%
-        mutate(CN = ifelse(is.nan(CN), CN_avg, CN), # replace NaN with CN=avg_ploidy
-               log.ratio = ifelse(is.nan(log.ratio), 0, log.ratio)) %>%
-        select(-CN_avg)
-    }
+    stop("NAN values found")
+    
   }
 
   if(!streamlined){
@@ -166,9 +152,14 @@ segmented_data_to_cn_matrix = function(seg_data,
                             n_bins_split=1000,
                             use_cytoband_name = FALSE,
                             fill_missing_with = "diploid",
+                            max_CN_allowed = 6,
                             adjust_for_ploidy=FALSE,
                             genome_build,
-                            gistic_lesions_file){
+                            gistic_lesions_file,
+                            verbose = FALSE){
+  if(!is.numeric(max_CN_allowed)){
+    stop("max_CN_allowed must be a numeric value")
+  }
   if(missing(these_samples_metadata)){
     print("missing these_samples_metadata")
   }
@@ -179,8 +170,35 @@ segmented_data_to_cn_matrix = function(seg_data,
       stop("specify genome_build or provide a seg_data object")
     }
   }
+  if (fill_missing_with=="diploid") {
+    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
+    print(head(dummy_df))
+  } else if  (fill_missing_with=="avg_ploidy") {
+    if(!"dummy_segment" %in% colnames(seg_data)){
+      stop("avg_ploidy mode only available when there's a dummy_segment column")
+    }
+    dummy_df = seg_data %>% 
+      mutate(
+          length = end - start + 1,
+          CN_seg = CN * length,
+          logr_seg = log.ratio * length
+        ) %>%
+        group_by(ID) %>%
+        summarise(
+          CN = sum(CN_seg) / sum(length),
+          log.ratio = sum(logr_seg) / sum(length)
+        ) # actual average per base
+    print(head(dummy_df))
+  }else if(fill_missing_with == "nothing"){
+    #do nothing
+    print("NOT filling gaps")
+  }else{
+    stop("fill_missing_with must be 'nothing', 'diploid' or 'avg_ploidy'")
+  }
   if(strategy=="GISTIC"){
     # extract the regions from the GISTIC file and ignore the data from the samples GISTIC was run on
+    # The matrix returned is 0/1 based on the direction (gain peak or loss peak) so cannot be used directly 
+    # as a CN state matrix in this application
     gistic_processed = gistic_to_cn_state_matrix(seg_data=seg_data,
                                     gistic_lesions_file=gistic_lesions_file,
                                     wide_peaks=TRUE,
@@ -203,7 +221,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          regions = regions_bed,
                                          fill_missing_with = fill_missing_with,
                                          adjust_for_ploidy = adjust_for_ploidy,
-                                         these_samples_metadata = these_samples_metadata,
+                                         these = these_samples_metadata,
                                          genome_build = genome_build)
     return(filled)
   }
@@ -217,9 +235,14 @@ segmented_data_to_cn_matrix = function(seg_data,
   }
 
   if(adjust_for_ploidy){
-    seg_data = mutate(seg_data,size=end-start,CN=ifelse(CN>5,5,CN),weighted = CN*size) %>%
-      group_by(ID) %>% mutate(average=sum(weighted)/sum(size)) %>%
-      mutate(CN=round(CN-average+2))
+    seg_data = mutate(seg_data,
+      size=end-start,
+      CN=ifelse(CN>max_CN_allowed,
+              max_CN_allowed,CN),
+              weighted = CN*size) %>%
+      group_by(ID) %>% 
+      mutate(average=sum(weighted)/sum(size)) %>%
+      mutate(CN=2+CN-average)
   }
 
   #retrieve the CN value for this region for every segment that overlaps it
@@ -227,7 +250,9 @@ segmented_data_to_cn_matrix = function(seg_data,
     paste0(x[1], ":", as.integer(x[2]), "-", as.integer(x[3]))
   }
   if(all_cytobands){
-    message(paste("Working with cytobands for", genome_build,"This will take awhile but it does work, trust me!"))
+    message(paste("Working with cytobands for",
+                 genome_build,
+                 "This will take awhile but it does work, trust me!"))
     if(genome_build=="grch37"){
       regions_bed = GAMBLR.data::cytobands_grch37
     }else if(genome_build=="hg38"){
@@ -238,10 +263,16 @@ segmented_data_to_cn_matrix = function(seg_data,
 
     colnames(regions_bed) = c("chromosome_name", "start_position", "end_position", "name", "dunno")
     if(use_cytoband_name){
-      regions_bed = mutate(regions_bed, region_name = paste0(str_remove(chromosome_name, pattern = "chr"), name))
+      regions_bed = mutate(regions_bed,
+                           region_name = paste0(str_remove(chromosome_name,
+                                                           pattern = "chr"),
+                                                           name))
       region_names = pull(regions_bed, region_name)
     }else{
-      regions_bed = mutate(regions_bed, region_name = paste0(chromosome_name,":",as.integer(start_position),"-",as.integer(end_position)))
+      regions_bed = mutate(regions_bed,
+                          region_name = paste0(chromosome_name,":",
+                                               as.integer(start_position),
+                                               "-",as.integer(end_position)))
       region_names = pull(regions_bed, region_name)
     }
     regions = apply(regions_bed, 1, bed2region)
@@ -250,25 +281,31 @@ segmented_data_to_cn_matrix = function(seg_data,
   }else if(strategy=="auto_split"){
     if(genome_build=="grch37"){
       length_df = GAMBLR.data::cytobands_grch37 %>%
-        mutate(cb.chromosome = factor(cb.chromosome,levels=unique(cb.chromosome))) %>%
+        mutate(cb.chromosome = factor(cb.chromosome,
+                                     levels=unique(cb.chromosome))) %>%
         group_by(cb.chromosome) %>% slice_max(cb.end)
       all_lengths = pull(length_df,cb.end)
       names(all_lengths) = pull(length_df,cb.chromosome)
 
-      bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_lengths)
+      bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,
+                                               chromSizes=all_lengths)
 
     }else if(genome_build=="hg38"){
       length_df = GAMBLR.data::cytobands_hg38 %>%
-        mutate(cb.chromosome = factor(cb.chromosome,levels=unique(cb.chromosome))) %>%
+        mutate(cb.chromosome = factor(cb.chromosome,
+                                      levels=unique(cb.chromosome))) %>%
         group_by(cb.chromosome) %>% slice_max(cb.end)
       all_lengths = pull(length_df,cb.end)
       names(all_lengths) = pull(length_df,cb.chromosome)
-      bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,chromSizes=all_lengths)
+      bin_df = GenomicDistributions::binChroms(binCount = n_bins_split,
+                                               chromSizes=all_lengths)
 
     }else{
       stop(paste("genome build not supported or not specified:",genome_build))
     }
-
+    if(verbose){
+      print(paste("created",nrow(bin_df),"bins"))
+    }
     regions = apply(bin_df, 1, bed2region)
     region_names = regions
 
@@ -296,42 +333,96 @@ segmented_data_to_cn_matrix = function(seg_data,
       #subset to the samples in the provided
       seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id)
   }
-
-  region_segs = lapply(regions,function(x){process_cn_segments_by_region(region = x, streamlined = TRUE, weighted_average = T, seg_data = seg_data,fill_missing_with = fill_missing_with)})
+  if(fill_missing_with=="nothing"){
+    region_segs = lapply(regions,
+                       function(x){
+                        process_cn_segments_by_region(region = x,
+                                                      streamlined = TRUE,
+                                                      weighted_average = T,
+                                                      seg_data = seg_data)})
+  }else{
+    region_segs = lapply(regions,
+                       function(x){
+                        process_cn_segments_by_region(region = x,
+                                                      streamlined = TRUE,
+                                                      weighted_average = T,
+                                                      seg_data = seg_data,
+                                                      filler_values = dummy_df)})
+  }
+  
 
 
   tibbled_data = tibble(region_segs, region_name = region_names)
   unnested_df = tibbled_data %>%
     unnest_longer(region_segs)
 
-  seg_df = data.frame(ID = unnested_df$region_segs$ID, CN = unnested_df$region_segs$CN,region_name = unnested_df$region_name)
+  seg_df = data.frame(ID = unnested_df$region_segs$ID,
+                      CN = unnested_df$region_segs$CN,
+                      region_name = unnested_df$region_name)
 
   seg_df = dplyr::rename(seg_df,sample_id=ID)
 
 
-  eg = expand_grid(sample_id = unique(seg_data$ID), region_name = as.character(unique(seg_df$region_name)))
+  eg = expand_grid(sample_id = unique(seg_data$ID),
+                   region_name = as.character(unique(seg_df$region_name)))
 
-  all_cn = left_join(eg, seg_df, by = c("sample_id" = "sample_id", "region_name" = "region_name"))
-
+  all_cn = left_join(eg,
+                     seg_df,
+                     by = c("sample_id" = "sample_id",
+                            "region_name" = "region_name"))
+  n_na = dplyr::filter(all_cn,is.na(CN)) %>% nrow()
+  print(paste(n_na,"rows with NA values"))
   #fill in any sample/region combinations with missing data as diploid
-  if(fill_missing_with=="diploid"){
-    all_cn = mutate(all_cn, CN = replace_na(CN, 2))
-  }else{
-    #TODO: fix this!
-    all_cn = mutate(all_cn, CN = replace_na(CN, 2))
-  }
+  #if(fill_missing_with=="diploid"){
+  #  all_cn = mutate(all_cn, CN = replace_na(CN, 2))
+  #}else if(fill_missing_with == "nothing"){
+  #  #leave NA values
+  #  print("matrix will include NA values!")
+  #}else if(fill_missing_with == "avg_ploidy"){
+  #  #Helper function to fill in NA values with the average value for the same sample
+  #  fill_na_with_cn <- function(large_df, small_df) {
+  #    # Check that both data frames have the same row names
+  #    if (!identical(rownames(large_df), rownames(small_df))) {
+  #      not_in_dummy = rownames(large_df)[!rownames(large_df) %in% rownames(small_df)]
+  #      nnot = length(not_in_dummy)
+  #      print(paste(nnot,head(not_in_dummy)))
+  #      stop("The row names of the two data frames do not match.")
+  #    }
+  #    # Loop over each row
+  #    for (r in rownames(large_df)) {
+  #      # Find which elements in the current row are NA
+  #      na_idx <- is.na(large_df[r, ])
+  #  
+  #      # If any NA exists, replace them with the CN value from small_df
+  #      if (any(na_idx)) {
+  #        large_df[r, na_idx] <- small_df[r, "CN"]
+  #      }
+  #    }  
+  #  return(large_df)
+  #  }
+  #  print(head(all_cn))
+  #  x = dplyr::filter(all_cn,is.na(CN)) %>% head()
+  #  print(x)
+  #  all_cn = fill_na_with_cn(all_cn,column_to_rownames(dummy_df,"ID"))
+  #}
 
-  cn_matrix = pivot_wider(all_cn, id_cols = "sample_id", names_from = "region_name", values_from = "CN") %>%
+  cn_matrix = pivot_wider(all_cn,
+                          id_cols = "sample_id",
+                          names_from = "region_name",
+                          values_from = "CN") %>%
     column_to_rownames("sample_id")
-
+  if(verbose){
+    print(paste("regions:",length(region_names)))
+  }
   #order the regions the same way the user provided them for convenience
   if(any(!region_names %in% colnames(cn_matrix))){
     missing = region_names[!region_names %in% colnames(cn_matrix)]
     nmissing = length(missing)
     region_names = region_names[!region_names %in% missing]
-    message(paste("missing data for",nmissing,"regions"))
+    message(paste("missing data in all samples for", nmissing, "regions"))
   }
   cn_matrix = cn_matrix[,region_names, drop=FALSE]
 
-  return(cn_matrix)
+  cn_matrix[cn_matrix>max_CN_allowed]=max_CN_allowed
+  return(round(cn_matrix))
 }
