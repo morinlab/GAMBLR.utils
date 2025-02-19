@@ -15,7 +15,7 @@
 #' prepare_gistic_inputs(BL_meta,"hg38","/Users/rmorin/Desktop/GISTIC2/BL/","battenberg")
 #'
 #'
-#' FL_meta = get_gambl_metadata() %>% dplyr::filter(pathology=="FL")
+#' FL_meta = get_gambl_metadata() %>% dplyr::filter(pathology=="FL",seq_type!="mrna")
 #' prepare_gistic_inputs(FL_meta,"grch37","/Users/rmorin/Desktop/GISTIC2/FL/","battenberg")
 prepare_gistic_inputs <- function(these_samples_metadata,
                                   projection = "grch37",
