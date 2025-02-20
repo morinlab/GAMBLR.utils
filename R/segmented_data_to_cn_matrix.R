@@ -33,7 +33,8 @@ process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
                                          weighted_average=TRUE,
-                                         filler_values){
+                                         filler_values,
+                                         verbose=FALSE){
 
 
   region = gsub(",", "", region)
@@ -43,7 +44,9 @@ process_cn_segments_by_region = function(seg_data,
   qstart = as.numeric(startend[1])
   qend = as.numeric(startend[2])
 
-
+  if(verbose){
+    print(region)
+  }
   
 
   all_segs =
@@ -51,14 +54,26 @@ process_cn_segments_by_region = function(seg_data,
                     (chrom == chromosome & end > qstart & end <= qend)|
                     (chrom == chromosome & end > qend & start <= qstart)) %>%
     mutate(start=ifelse(start < qstart,qstart,start),end=ifelse(end>qend,qend,end)) %>%
-    mutate(length=end-start)
-
+    mutate(length=end-start) %>% 
+    dplyr::filter(length>0)
+  if(nrow(all_segs)==0){
+    if(verbose){
+      print(paste("NO values found for",region))
+    }
+    #there is no data from any patients within this region!
+    dummy_full = mutate(filler_values,
+      chrom=chromosome,start=qstart,end=qend)
+    return(dummy_full)
+  }
   all_segs = all_segs %>% mutate(CN_L = length * CN,logr_L = length*log.ratio)
   if(weighted_average){
     all_segs = all_segs %>%
       group_by(ID) %>%
       summarise(total_L = sum(length), log.ratio = sum(logr_L)/sum(length),
                 CN = sum(CN_L)/sum(length)) %>% ungroup()
+    if(verbose){
+      print(head(all_segs))
+    }
 
   }else{
     all_segs = dplyr::mutate(all_segs, CN = 2*2^log.ratio)
@@ -114,7 +129,10 @@ process_cn_segments_by_region = function(seg_data,
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param fill_missing_with Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")
 #' @param adjust_for_ploidy Whether to adjust for high ploidy
+#' @param max_cn_allowed CN values higher than this will be set to this value. Default 6.
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
+#' @param rounded Set to FALSE if you want the raw averaged copy number values per region
+#' @param verbose Set to TRUE for more messages
 #' @param genome_build Specify the genome build (usually not required)
 #'
 #' @return Copy number matrix with sample_id as rows and regions as columns.
@@ -156,6 +174,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                             adjust_for_ploidy=FALSE,
                             genome_build,
                             gistic_lesions_file,
+                            rounded = TRUE,
                             verbose = FALSE){
   if(!is.numeric(max_CN_allowed)){
     stop("max_CN_allowed must be a numeric value")
@@ -171,8 +190,13 @@ segmented_data_to_cn_matrix = function(seg_data,
     }
   }
   if (fill_missing_with=="diploid") {
+    
+    
     dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
-    print(head(dummy_df))
+    if(verbose){
+        print("Fill with diploid")
+        print(head(dummy_df))
+    }
   } else if  (fill_missing_with=="avg_ploidy") {
     if(!"dummy_segment" %in% colnames(seg_data)){
       stop("avg_ploidy mode only available when there's a dummy_segment column")
@@ -222,7 +246,8 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          fill_missing_with = fill_missing_with,
                                          adjust_for_ploidy = adjust_for_ploidy,
                                          these = these_samples_metadata,
-                                         genome_build = genome_build)
+                                         genome_build = genome_build,
+                                         verbose=verbose)
     return(filled)
   }
   if(any(missing(seg_data))){
@@ -276,7 +301,12 @@ segmented_data_to_cn_matrix = function(seg_data,
       region_names = pull(regions_bed, region_name)
     }
     regions = apply(regions_bed, 1, bed2region)
-    #region_names = regions
+    
+    names(regions) = region_names
+    if(verbose){
+      print(head(regions))
+
+    }
     #use the cytobands from the circlize package (currently hg19 but can extend to hg38 once GAMBLR handles it) Has this been updated?
   }else if(strategy=="auto_split"){
     if(genome_build=="grch37"){
@@ -339,15 +369,20 @@ segmented_data_to_cn_matrix = function(seg_data,
                         process_cn_segments_by_region(region = x,
                                                       streamlined = TRUE,
                                                       weighted_average = T,
-                                                      seg_data = seg_data)})
+                                                      seg_data = seg_data,
+                                                      verbose=verbose)})
   }else{
+    if(verbose){
+      print("running process_cn_segments_by_region")
+    }
     region_segs = lapply(regions,
                        function(x){
                         process_cn_segments_by_region(region = x,
                                                       streamlined = TRUE,
                                                       weighted_average = T,
                                                       seg_data = seg_data,
-                                                      filler_values = dummy_df)})
+                                                      filler_values = dummy_df,
+                                                      verbose=verbose)})
   }
   
 
@@ -424,5 +459,8 @@ segmented_data_to_cn_matrix = function(seg_data,
   cn_matrix = cn_matrix[,region_names, drop=FALSE]
 
   cn_matrix[cn_matrix>max_CN_allowed]=max_CN_allowed
-  return(round(cn_matrix))
+  if(rounded){
+    cn_matrix = round(cn_matrix)
+  }
+  return(cn_matrix)
 }

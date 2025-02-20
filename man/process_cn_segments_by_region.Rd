@@ -9,7 +9,8 @@ process_cn_segments_by_region(
   region,
   streamlined = FALSE,
   weighted_average = TRUE,
-  filler_values
+  filler_values,
+  verbose = FALSE
 )
 }
 \arguments{
