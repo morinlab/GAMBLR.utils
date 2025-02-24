@@ -9,7 +9,8 @@ process_cn_segments_by_region(
   region,
   streamlined = FALSE,
   weighted_average = TRUE,
-  fill_missing_with = "diploid"
+  filler_values,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -39,8 +40,8 @@ or a streamlined format with only the ID and CN columns
 
 region_segs = process_cn_segments_by_region(
        region = "chrX:1-1000000",
-       streamlined = FALSE, 
-       weighted_average = T, 
+       streamlined = FALSE,
+       weighted_average = T,
        seg_data = seg_data)
 
 }

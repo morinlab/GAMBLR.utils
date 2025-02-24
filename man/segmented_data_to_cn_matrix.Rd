@@ -12,9 +12,12 @@ segmented_data_to_cn_matrix(
   n_bins_split = 1000,
   use_cytoband_name = FALSE,
   fill_missing_with = "diploid",
+  max_CN_allowed = 6,
   adjust_for_ploidy = FALSE,
   genome_build,
-  gistic_lesions_file
+  gistic_lesions_file,
+  rounded = TRUE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -37,6 +40,12 @@ segmented_data_to_cn_matrix(
 \item{genome_build}{Specify the genome build (usually not required)}
 
 \item{gistic_lesions_file}{Path to gistic lesions file (only needed if strategy="GISTIC")}
+
+\item{rounded}{Set to FALSE if you want the raw averaged copy number values per region}
+
+\item{verbose}{Set to TRUE for more messages}
+
+\item{max_cn_allowed}{CN values higher than this will be set to this value. Default 6.}
 }
 \value{
 Copy number matrix with sample_id as rows and regions as columns.
