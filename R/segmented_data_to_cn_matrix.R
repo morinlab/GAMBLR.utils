@@ -174,6 +174,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                             adjust_for_ploidy=FALSE,
                             genome_build,
                             gistic_lesions_file,
+                            match_peak_direction = TRUE,
                             rounded = TRUE,
                             verbose = FALSE){
   if(!is.numeric(max_CN_allowed)){
@@ -248,6 +249,19 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          these = these_samples_metadata,
                                          genome_build = genome_build,
                                          verbose=verbose)
+
+    if(match_peak_direction){
+      print("dropping irrelevant CNVs")
+      # ensure gains only reported for GISTIC gain peaks and
+      # deletions for deletion peaks
+      colnames(gistic_processed$gambl_cn_matrix) = gsub(
+        "chr","",colnames(gistic_processed$gambl_cn_matrix)
+      )
+      gistic_mat = gistic_processed$gambl_cn_matrix[,colnames(filled)]
+      print(dim(gistic_mat))
+      original = filled
+      filled[gistic_mat==0]=2
+    }
     return(filled)
   }
   if(any(missing(seg_data))){

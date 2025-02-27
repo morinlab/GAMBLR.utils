@@ -163,8 +163,7 @@ fread_maf = function(maf_file_path,
   }
   maf_df = read_tsv(
     file = maf_file_path,
-    col_types = colClasses,
-    progress = FALSE
+    col_types = colClasses
     ) %>%
     dplyr::select(any_of(select_cols))
 

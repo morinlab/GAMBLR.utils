@@ -16,7 +16,8 @@ gistic_to_cn_state_matrix(
   peak_names_from = "coordinates",
   fill_missing_with = "avg_ploidy",
   generate_heatmaps = TRUE,
-  genome_build
+  genome_build,
+  verbose = FALSE
 )
 }
 \arguments{

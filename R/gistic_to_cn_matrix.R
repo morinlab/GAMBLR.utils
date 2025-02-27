@@ -16,6 +16,7 @@
 #' @param peak_names_from Specify how the columns for the peaks will be named in the result: either "coordinates" or "GISTIC"
 #' @param generate_heatmaps Optionally generate heatmaps. Default is TRUE.
 #' @param genome_build Specify the genome build if necessary
+#' @param verbose Set to TRUE for debugging messages
 #'
 #' @returns a list of data frames
 #' @export
@@ -50,7 +51,8 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
                                       peak_names_from = "coordinates",
                                       fill_missing_with = "avg_ploidy",
                                       generate_heatmaps = TRUE,
-                                      genome_build) {
+                                      genome_build,
+                                      verbose = FALSE) {
 
   process_peaks <- function(lesions_regions, peak_type) {
     
@@ -75,7 +77,9 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
   
   peak_limits_column <- if (wide_peaks ) "Wide Peak Limits" else "Peak Limits"
   peak <- process_peaks(lesions_regions, peak_limits_column)
-  
+  if(verbose){
+    print(head(lesions_regions))
+  }
   lesions_values <- lesions %>%
     select(1, 10:(ncol(lesions) - 1)) %>%
     left_join(lesions_regions,., by = "Unique Name") %>%
@@ -112,28 +116,33 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
   lesions_values <- lesions_values %>%
     pivot_wider(id_cols = "sample_id",names_from = "region", values_from = "CN") %>%
    column_to_rownames("sample_id")
-  if(generate_heatmaps){
-    gh <- Heatmap(lesions_values, cluster_columns = TRUE)
-  }
+  
   
 
   regions_bed <- select(peak, chrom, start, end, `Unique Name`) %>%
-    arrange(chrom, start)
+    mutate(chrom_num = gsub("chr","",chrom)) %>%
+    mutate(chrom_num=as.numeric(chrom_num)) %>%
+    arrange(chrom_num, start) %>%
+    select(-chrom_num)
   if(peak_names_from == "coordinates"){
     regions_bed = mutate(regions_bed,name = paste0(chrom,":",start,"-",end)) %>%
     select(-`Unique Name`)
 
   }
 
+
   regions_bed = create_bed_data(regions_bed,genome_build = genome_build)
-  
+  if(verbose){
+    print(head(regions_bed,20))
+  }
   if (!missing(these_samples_metadata)) {
     gistic_peaks_binned <- segmented_data_to_cn_matrix(
       regions = regions_bed,
       strategy = "custom_regions",
       fill_missing_with = fill_missing_with,
       seg_data = seg_data,
-      these_samples_metadata = these_samples_metadata
+      these_samples_metadata = these_samples_metadata,
+      adjust_for_ploidy = scale_by_sample
     )
   } else {
     gistic_peaks_binned <- segmented_data_to_cn_matrix(
@@ -157,8 +166,13 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
   }else{
     peak = dplyr::rename(peak,name=`Unique Name`)
   }
-
-  gistic_peaks_long <- left_join(gistic_peaks_long, select(peak, chrom, start, end, type, name), by = c("chrom", "start", "end"))
+  if(verbose){
+    print(head(peak))
+    print(head(gistic_peaks_long))
+  }
+  gistic_peaks_long <- left_join(gistic_peaks_long,
+    select(peak, chrom, start, end, type, name),
+    by = c("chrom", "start", "end"))
 
   if (drop_inconsistent) {
     gistic_peaks_long <- mutate(gistic_peaks_long, CN = case_when(
@@ -175,28 +189,39 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
     select(-chrom,-start,-end,-type) %>% 
     pivot_wider(id_cols="sample_id",names_from = "name", values_from = "CN") %>%
     column_to_rownames("sample_id")
+#synchronize the column order
+lesions_values = lesions_values[,regions_bed$name]
+gistic_peaks_wide = gistic_peaks_wide[,regions_bed$name]
+if(verbose){
+  print(regions_bed$name)
+}
 
-  if (peak_names_from == "coordinates") {
-    colnames(gistic_peaks_wide) <- colnames(lesions_values)
-  } else {
-    colnames(lesions_values) <- colnames(gistic_peaks_wide)
-  }
+  #if (peak_names_from == "coordinates") {
+  # NOTE: This was scrambling the column orders
+  #  colnames(gistic_peaks_wide) <- colnames(lesions_values)
+  #} else {
+  #  colnames(lesions_values) <- colnames(gistic_peaks_wide)
+  #}
   if(generate_heatmaps){
-    hh <- Heatmap(gistic_peaks_wide, cluster_columns = TRUE)
+    
+    gh <- Heatmap(lesions_values, cluster_columns = FALSE,cluster_rows = FALSE)
+    hh <- Heatmap(gistic_peaks_wide ,  cluster_columns = FALSE,cluster_rows = FALSE)
     return(list(
       gambl_cn_matrix = gistic_peaks_wide,
       gistic_cn_matrix = lesions_values,
       gambl_heatmap = hh,
       gistic_heatmap = gh,
       peaks = peak,
-      lesions = lesions_regions
+      lesions = lesions_regions,
+      binned = gistic_peaks_binned
     ))
   }else{
     return(list(
       gambl_cn_matrix = gistic_peaks_wide,
       gistic_cn_matrix = lesions_values,
       peaks = peak,
-      lesions = lesions_regions
+      lesions = lesions_regions,
+      binned = gistic_peaks_binned
     ))
   }
 }
