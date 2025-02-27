@@ -254,11 +254,15 @@ segmented_data_to_cn_matrix = function(seg_data,
       print("dropping irrelevant CNVs")
       # ensure gains only reported for GISTIC gain peaks and
       # deletions for deletion peaks
-      colnames(gistic_processed$gambl_cn_matrix) = gsub(
-        "chr","",colnames(gistic_processed$gambl_cn_matrix)
-      )
+        # colnames(gistic_processed$gambl_cn_matrix) = gsub(
+        #   "chr","",colnames(gistic_processed$gambl_cn_matrix)
+        # )
+        # colnames(filled) = gsub(
+        #   "chr","",colnames(filled)
+        # )
       gistic_mat = gistic_processed$gambl_cn_matrix[,colnames(filled)]
       print(dim(gistic_mat))
+
       original = filled
       filled[gistic_mat==0]=2
     }
