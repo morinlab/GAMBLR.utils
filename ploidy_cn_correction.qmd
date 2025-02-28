@@ -1,0 +1,683 @@
+---
+title: "battenberg"
+format: html
+editor: visual
+---
+
+## Copy Number: Handling missing/NA regions
+
+```{r}
+library(GAMBLR)
+library(tidyverse)
+```
+
+Get all CN segments with or without any pre-processing
+
+```{r}
+
+batt_meta = get_gambl_metadata() %>% 
+  dplyr::filter(seq_type=="genome",
+                pathology=="DLBCL")
+
+
+
+
+#get everything but drop the dummy segments
+batt_all_nofill = get_cn_segments(flavour="battenberg",
+                                  fill_missing_with = "nothing",
+                                  these_samples_metadata = batt_meta)
+
+#get everything but fill the dummy segments with average ploidy of all other segments in that sample
+
+batt_all_av = get_cn_segments(flavour="battenberg",
+                              fill_missing_with = "avg_ploidy",
+                              these = batt_meta)
+
+#get everything but fill the dummy segments with same CN value of 2
+
+batt_all_dip = get_cn_segments(flavour="battenberg",
+                               fill_missing_with = "diploid",
+                               these = batt_meta)
+
+#drop dummy segments
+
+#batt_all = dplyr::filter(batt_all,dummy_segment == 0)
+
+ggplot(batt_all_nofill,aes(x=CN)) + 
+  geom_histogram() + facet_wrap(~dummy_segment,scales="free_y") + xlim(c(0.5,6))
+
+ggplot(batt_all_av,aes(x=CN)) + 
+  geom_histogram() + facet_wrap(~dummy_segment,scales="free_y") + xlim(c(0.5,6))
+
+ggplot(batt_all_dip,aes(x=CN)) + 
+  geom_histogram() + facet_wrap(~dummy_segment,scales="free_y") + xlim(c(0.5,6))
+
+
+```
+
+\
+Our original paradigm was to set missing segments to diploid. The consequence of this approach is that scaling causes artificially low CN values in all filled regions for high ploidy cases. If we run `segmented_data_to_cn_matrix` with the same setting, this is the result we get.
+
+```{r}
+seg_dipfill = segmented_data_to_cn_matrix(batt_all_dip,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "diploid",
+                                         these_samples_metadata = batt_meta)
+
+
+
+pretty_CN_heatmap(seg_dipfill,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = F)
+
+pretty_CN_heatmap(seg_dipfill,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T)
+
+pretty_CN_heatmap(seg_dipfill,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T,keep_these_chromosomes = "9",
+                  show_column_names = T)
+```
+
+If we drop the dummy segments by giving `get_cn_segments` the argument `fill_missing_with = "nothing"` we can let `segmented_data_to_cn_matrix` handle missing data in a better way. We can also let missing data stay NA by running `segmented_data_to_cn_matrix` with `fill_missing_with = "nothing"`. This reveals that the large deletions that were mostly unique to high ploidy samples indeed represent regions that are missing data (NA) in many patients.
+
+```{r}
+
+
+cn_no_no = segmented_data_to_cn_matrix(batt_all_nofill,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "nothing",
+                                         these_samples_metadata = batt_meta)
+
+pretty_CN_heatmap(cn_no_no,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = F)
+
+pretty_CN_heatmap(cn_no_no,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T)
+
+
+pretty_CN_heatmap(cn_no_no,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,show_column_names=T,
+                  scale_by_sample = T,keep_these_chromosomes = "9")
+
+
+```
+
+In general, if you set a non-default value for `fill_missing_with` then you should use the same value for any subsequent functions that touch these data. If, however, you leave get_cn_segments with the default setting, it forcibly drops all the *dummy* segments that were added in a post-processing step that was applied for GISTIC. Since they've been dropped, this leaves you free to tell `segmented_data_to_cn_matrix` to apply any filling paradigm to the data. In fact, it may only be useful to run `get_cn_segments` in conjunction with `fill_missing_with="avg_ploidy"` when generating inputs for GISTIC.
+
+```{r}
+cn_no_avg = segmented_data_to_cn_matrix(batt_all_nofill,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "avg_ploidy",
+                                         these_samples_metadata = batt_meta)
+
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = F)
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T)
+
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,show_column_names=T,
+                  scale_by_sample = T,keep_these_chromosomes = "9")
+
+
+```
+
+In this example, we can see that following `get_cn_segments(fill_missing_with = "nothing")` with a subsequent call to `segmented_data_to_cn_matrix(fill_missing_with = "diploid")` gives a different result than if we use "diploid" at both steps.
+
+```{r}
+
+
+### The only one that makes a difference is fill_missing_with = "diploid"
+### This is because NA regions are not filled with the average ploidy of the genome
+
+cn_no_dip = segmented_data_to_cn_matrix(batt_all_nofill,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "diploid",
+                                         these_samples_metadata = batt_meta)
+
+
+
+pretty_CN_heatmap(cn_no_dip,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = F)
+
+pretty_CN_heatmap(cn_no_dip,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T)
+
+pretty_CN_heatmap(cn_no_dip,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,show_column_names=T,
+                  scale_by_sample = T,keep_these_chromosomes = "9")
+
+
+```
+
+What if we fill_missing_with "avg_ploidy" at both steps? Is this better or worse than starting with no filling?
+
+```{r}
+
+cn_no_avg = segmented_data_to_cn_matrix(batt_all_av,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "avg_ploidy",
+                                         these_samples_metadata = batt_meta)
+
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = F)
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T)
+
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,show_column_names=T,
+                  scale_by_sample = T,keep_these_chromosomes = "9")
+
+
+
+```
+
+Why does this matter? What causes the difference?
+
+Here are the segments if we apply the averaging up-front
+
+```{r}
+
+dplyr::filter(batt_all_av,chrom=="9", CN < 6) %>% 
+#  ,
+#              (start < 37380026 & end > 74760050) |
+#                                      (end > 37380026 &  end < 74760050) |
+#                                      (start > 37380026 & start < 74760050)|
+#                                      (end < 74760050 & start > 37380026)) %>%
+ggplot(aes(xmin=start,xmax=end,ymin=CN-0.1,ymax=CN+0.1)) + geom_rect(alpha=0.1) +
+  theme_Morons()
+
+
+
+
+
+```
+
+Here are the segments if we skip that step.
+
+```{r}
+dplyr::filter(batt_all_nofill,chrom=="9", CN < 6) %>%
+           #   (start < 37380026 & end > 74760050) |
+          #                            (end > 37380026 &  end < 74760050) |
+          #                            (start > 37380026 & start < 74760050)|
+          #      (end < 74760050 & start > 37380026)) %>%
+ggplot(aes(xmin=start,xmax=end,ymin=CN-0.1,ymax=CN+0.1)) + 
+  geom_rect(alpha=0.1) + theme_Morons() 
+
+
+```
+
+GISTIC results from an analysis that started with diploid-filled segments
+
+```{r}
+
+#get order based on PGA
+cn_ord = pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,show_column_names=T,return_data = T,
+                  scale_by_sample = T,keep_these_chromosomes = "9")
+row_ord = rownames(cn_ord$row_anno)
+
+
+gistic_lesions_file = "all_lesions.DLBCL.grch37.txt" 
+gistic_all = gistic_to_cn_state_matrix(seg_data=batt_all_nofill,
+                                    gistic_lesions_file=gistic_lesions_file,
+                                    wide_peaks=TRUE,
+                                    drop_inconsistent=TRUE,
+                                    scale_by_sample=FALSE,
+                                    fill_missing_with="avg_ploidy",
+                                    these_samples_metadata = batt_meta,
+                                    peak_names_from = "coordinates",
+                                    generate_heatmaps = FALSE)
+peak_details = gistic_all$peaks
+
+del_peaks = dplyr::filter(peak_details,type=="Deletion") %>% 
+  mutate(name= str_remove(name,"chr")) %>%
+  pull(name)
+peak_regions = colnames(gistic_all$gistic_cn_matrix)
+
+    region_processed = process_regions(regions_list=peak_regions,
+                               projection = "grch37",sort=T)
+    
+    regions_bed=region_processed$regions_bed
+    filled_av_T = segmented_data_to_cn_matrix(seg_data = batt_all_av,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         fill_missing_with = "avg_ploidy",
+                                         adjust_for_ploidy = TRUE,
+                                         these = batt_meta,
+                                         genome_build = "grch37")
+    filled_av_F = segmented_data_to_cn_matrix(seg_data = batt_all_av,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         fill_missing_with = "avg_ploidy",
+                                         adjust_for_ploidy = FALSE,
+                                         these = batt_meta,
+                                         genome_build = "grch37")
+
+    Heatmap(filled_av[row_ord,],cluster_columns = F,cluster_rows = F,show_row_names = F)
+    
+    filled_dip_T = segmented_data_to_cn_matrix(seg_data = batt_all_dip,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         fill_missing_with = "diploid",
+                                         adjust_for_ploidy = TRUE,
+                                         these = batt_meta,
+                                         genome_build = "grch37")
+    
+        filled_dip_F = segmented_data_to_cn_matrix(seg_data = batt_all_dip,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         fill_missing_with = "diploid",
+                                         adjust_for_ploidy = FALSE,
+                                         these = batt_meta,
+                                         genome_build = "grch37")
+    Heatmap(filled_dip[row_ord,],cluster_columns = F,cluster_rows=F)
+    
+    filled_no_T = segmented_data_to_cn_matrix(seg_data = batt_all_av,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         fill_missing_with = "nothing",
+                                         adjust_for_ploidy = TRUE,
+                                         these = batt_meta,
+                                         genome_build = "grch37")
+    filled_no_F = segmented_data_to_cn_matrix(seg_data = batt_all_av,
+                                         strategy = "custom_regions",
+                                         regions = regions_bed,
+                                         fill_missing_with = "nothing",
+                                         adjust_for_ploidy = FALSE,
+                                         these = batt_meta,
+                                         genome_build = "grch37")
+
+Heatmap(filled_no[row_ord,],cluster_columns = F,cluster_rows = F,show_row_names = F)
+
+
+col_counts = apply(filled_no,2,function(x){sum(is.na(x))})
+
+sort(col_counts)
+worst_peaks = c("1:1-763089","2:242985697-243199373","12:1-188196","17:79997967-81195210","10:135232099-135534747","8:1-159177","20:1-20015105"
+                )
+
+ pheatmap(filled_no_T[row_ord,del_peaks],cluster_cols = F,cluster_rows = F,show_rownames = F)
+ pheatmap(filled_no_F[row_ord,del_peaks],cluster_cols = F,cluster_rows = F,show_rownames = F)
+ 
+pheatmap(filled_dip_T[row_ord,del_peaks],cluster_cols = F,cluster_rows=F,show_rownames = F)
+   
+pheatmap(filled_dip_F[row_ord,del_peaks],cluster_cols = F,cluster_rows=F,show_rownames = F)  
+
+
+pheatmap(filled_av_T[row_ord,del_peaks],cluster_cols = F,cluster_rows=F,show_rownames = F)
+pheatmap(filled_av_F[row_ord,del_peaks],cluster_cols = F,cluster_rows=F,show_rownames = F)
+ 
+```
+
+Getting inputs for GISTIC
+
+```{r}
+
+dlbcl_meta = get_gambl_metadata() %>% dplyr::filter(seq_type!="mrna",pathology=="DLBCL")
+seg_for_gistic = get_cn_segments(fill_missing_with = "avg_ploidy",
+                                 these_samples_metadata = dlbcl_meta,flavour = "battenberg")
+
+
+cn_mat = segmented_data_to_cn_matrix(seg_for_gistic,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "avg_ploidy",
+                                         these_samples_metadata = dlbcl_meta)
+
+pretty_CN_heatmap(cn_mat,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=dlbcl_meta,
+                  scale_by_sample = T)
+
+
+
+```
+
+```{r}
+
+
+# Remove possible overlaps -------------------
+  
+  check_overlap = function(seg) {
+      highest_end = 0
+      overlap <- c()
+      region_sizes <- c()
+      for (i in 1:nrow(seg)) {
+          if (i>1 && seg$ID[i] == seg$ID[i-1] && seg$chrom[i] == seg$chrom[i-1]) {
+              if (seg$start[i] >= highest_end) {
+                  overlap[i] = "NOToverlap"
+                  region_sizes[i] = "FALSE"
+              }else{
+                  overlap[i] = "overlap"
+                  region_sizes[i] = (seg$end[i] - seg$start[i])
+              }
+              if (seg$end[i] > highest_end) {
+                  highest_end = seg$end[i]
+              }
+          } else {
+              highest_end = seg$end[i]
+              overlap[i] = "NA"
+              region_sizes[i] = (seg$end[i] - seg$start[i])
+          }
+      }
+      seg <- seg %>% mutate(overlap_status = overlap, region_size = region_sizes)
+      return(seg)
+  }
+  
+  solve_overlap = function(seg) {
+      num_overlap = which(seg$overlap_status == "overlap")
+      num_pre_overlap_sorted = (unique(sort(c(num_overlap-1,num_overlap))))
+      non_overlap = seg[-num_pre_overlap_sorted,]
+      seg <- seg[num_pre_overlap_sorted,]
+      for (i in 1:nrow(seg)) {
+        if (seg$overlap_status[i] == "overlap") {
+            if (seg$end[i] < seg$end[i-1]){
+                new_row1 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$start[i-1],
+                                        end = seg$start[i],
+                                        LOH_flag = seg$LOH_flag[i-1],
+                                        log.ratio = seg$log.ratio[i-1],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                new_row2 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$end[i],
+                                        end = seg$end[i-1],
+                                        LOH_flag = seg$LOH_flag[i-1],
+                                        log.ratio = seg$log.ratio[i-1],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                seg <- seg[-(i-1), ]
+                seg <- rbind(seg, new_row1, new_row2)
+            } else if (seg$start[i-1] == seg$start[i]) {
+                new_row  <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$end[i-1],
+                                        end = seg$end[i],
+                                        LOH_flag = seg$LOH_flag[i],
+                                        log.ratio = seg$log.ratio[i],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                seg <- seg[-(i), ]
+                seg <- rbind(seg, new_row)
+            } else if (seg$region_size[i] < seg$region_size[i-1]) {
+                new_row1 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$start[i-1],
+                                        end = seg$start[i],
+                                        LOH_flag = seg$LOH_flag[i-1],
+                                        log.ratio = seg$log.ratio[i-1],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                new_row2 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$start[i],
+                                        end = seg$end[i-1],
+                                        LOH_flag = seg$LOH_flag[i],
+                                        log.ratio = seg$log.ratio[i],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                new_row3 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$end[i-1],
+                                        end = seg$end[i],
+                                        LOH_flag = seg$LOH_flag[i],
+                                        log.ratio = seg$log.ratio[i],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                seg <- seg[-c(i, i-1), ]
+                seg <- rbind(seg, new_row1, new_row2, new_row3)
+            } else if (seg$region_size[i] > seg$region_size[i-1]) {
+                new_row1 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$start[i-1],
+                                        end = seg$start[i],
+                                        LOH_flag = seg$LOH_flag[i-1],
+                                        log.ratio = seg$log.ratio[i-1],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                new_row2 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$start[i],
+                                        end = seg$end[i-1],
+                                        LOH_flag = seg$LOH_flag[i-1],
+                                        log.ratio = seg$log.ratio[i-1],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                new_row3 <- data.frame(ID = seg$ID[i],
+                                        chrom = seg$chrom[i],
+                                        start = seg$end[i-1],
+                                        end = seg$end[i],
+                                        LOH_flag = seg$LOH_flag[i],
+                                        log.ratio = seg$log.ratio[i],
+                                        overlap_status = "NOToverlap",
+                                        region_size = "FALSE")
+                seg <- seg[-c(i, i-1), ]
+                seg <- rbind(seg, new_row1, new_row2, new_row3)
+            }
+        }
+        seg <- seg %>%
+        arrange(ID, chrom, start, end)
+      }
+      seg = seg %>% arrange(ID, chrom, start, end)
+      seg = check_overlap(seg)
+      while("overlap" %in% seg$overlap_status){
+          seg = check_overlap(solve_overlap(seg))
+      }
+      seg = rbind(non_overlap, seg) %>%
+        arrange(ID, chrom, start, end) %>%
+        select(-overlap_status, -region_size) %>%
+        filter(!start == end)
+      return(seg)
+  }
+
+
+prepare_gistic_inputs = function(these_samples_metadata,
+                                 genome_build="grch37",
+                                 output_dir="/Users/rmorin/Desktop/GISTIC/"){
+  seg_for_gistic = get_cn_segments(fill_missing_with = "avg_ploidy",
+                                 these_samples_metadata = dlbcl_meta,
+                                 flavour = "battenberg",
+                                 projection=genome_build)
+  seg_for_gistic = seg_for_gistic %>%
+    dplyr::select(ID:log.ratio) %>%
+    mutate(LOH_flag=ifelse(LOH_flag==99,0,LOH_flag))
+  
+  seg_for_gistic = check_overlap(seg_for_gistic)
+  
+  if ("overlap" %in% seg_for_gistic$overlap_status) {
+    seg_for_gistic <- solve_overlap(seg_for_gistic)
+  } else {
+    subset_input <- seg_for_gistic %>%
+    select(-overlap_status, -region_size)
+  }
+
+  
+  # write to disk and make markers file
+  out_seg = paste0(output_dir,"all.seg")
+  write_tsv(seg_for_gistic,file=out_seg)
+  temp_markers = paste0(output_dir,"temp_markers")
+  markers = paste0(output_dir,"markers")
+  
+  cmd = paste("sed '1d'",out_seg,"| cut -f2,3 > ",temp_markers)
+  system(cmd)
+  cmd = paste("sed '1d'",out_seg,"| cut -f2,4 >> ",temp_markers)
+  system(cmd)
+  cmd = paste("sort -V -k1,1 -k2,2nr",temp_markers,"|uniq | nl > ",markers)
+  system(cmd)
+# sed '1d' {input.seg} | cut -f2,3 > {output.temp_markers}
+# sed '1d' {input.seg} | cut -f2,4 >> {output.temp_markers}
+# sort -V -k1,1 -k2,2nr {output.temp_markers} | uniq | nl > {output.markers}
+  #Running gistic:
+  # conda activate /projects/rmorin_scratch/conda_environments/30ee048690c736b4964ed302c88be45f_
+  # gistic2 -b /projects/rmorin/projects/gambl-repos/gambl-rmorin/gistic_test -seg ./inputs/all.seg -mk inputs/markers -refgene ref/grch37.refgene.mat -genegistic 1 -broad 1 -savegene 1 -conf 0.9 -v 30 -saveseg 0 -savedata 0
+}
+
+
+new_peaks = read_tsv("/Users/rmorin/Desktop/GISTIC/new_peaks.tsv") %>% 
+  mutate(version="Feb2025") %>%
+  mutate(type=str_remove(`Unique Name`,"\\s+.+"))
+old_peaks = read_tsv("/Users/rmorin/Desktop/GISTIC/old_peaks.tsv") %>% 
+  mutate(version="June2024") %>%
+  mutate(type=str_remove(`Unique Name`,"\\s+.+"))
+
+
+all_peaks = full_join(old_peaks,new_peaks,by=c("Descriptor","type"))
+
+
+lost = filter(all_peaks,is.na(`Unique Name.y`)) %>% select(2,4)
+gained = filter(all_peaks,is.na(`Unique Name.x`)) %>% select(2,4)
+
+```
+
+```{r}
+#611 genomes, 1992 exomes
+seg_orig  = get_cn_segments(fill_missing_with = "avg_ploidy",
+                                 these_samples_metadata = dlbcl_meta,
+                            flavour = "battenberg")
+
+gist_out_new = gistic_to_cn_state_matrix("Feb2025.all_lesions.conf_90.grch37.txt",
+                          these_samples_metadata = dlbcl_meta,
+                          seg_data = seg_orig,wide_peaks = T,
+                          genome_build = "grch37")
+
+
+gistic_mat_new = segmented_data_to_cn_matrix(seg_data=seg_orig,these_samples_metadata = dlbcl_meta,
+                            fill_missing_with = "avg_ploidy",adjust_for_ploidy = T,
+                            strategy = "GISTIC",
+                            gistic_lesions_file = "Feb2025.all_lesions.conf_90.grch37.txt",
+                            
+                            )
+
+
+gistic_mat_old = segmented_data_to_cn_matrix(seg_data=seg_orig,these_samples_metadata = dlbcl_meta,
+                            fill_missing_with = "avg_ploidy",
+                            adjust_for_ploidy = T,
+                            strategy = "GISTIC",
+                            gistic_lesions_file = "all_lesions.DLBCL.grch37.txt",
+                            
+                            )
+
+
+Heatmap(gistic_mat_new,cluster_columns = F,show_row_names = F)
+
+Heatmap(gistic_mat_old,cluster_columns = F,show_row_names = F)
+
+
+
+
+```
+
+```{r}
+cytobands_amp = dplyr::filter(gist_out_new$lesions,grepl("Ampli",`Unique Name`)) %>% pull(Descriptor)
+cytobands_del = dplyr::filter(gist_out_new$lesions,grepl("Dele",`Unique Name`)) %>% pull(Descriptor)
+
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T,
+                  labelTheseCytobands = cytobands_show)
+
+
+pretty_CN_heatmap(cn_no_avg,
+                  sortByPGA = T,
+                  cluster_rows = F,
+                  these=batt_meta,
+                  scale_by_sample = T,
+                  labelTheseCytobands = cytobands_del)
+
+genes = c("MYC","FCGR2B","TNFRSF14","FAS","PTEN","B2M","RB1","TCL1A","CD70","BCL2","KLHL14","TCF4","REL","BCL6","HIST1H1C","SMARCA4","CDKN2A","RHOA","TNFAIP3","TP53","CDK14","RELN","ETS1","MDM1","MIR17HG","CD58","HNRNPD","TOX","PRAME","CD38")
+#genes = c("TNFRSF14","MYC")
+gene_bed = select(grch37_gene_coordinates,-1) %>%
+  dplyr::filter(
+                  hugo_symbol %in% genes) %>% 
+  mutate(length = end - start,mid = start + length/2) %>%
+  mutate(start = mid,end=start+1) %>%
+  unique() %>%
+  create_bed_data(genome_build = "grch37")
+
+
+prettyChromoplot("~/Desktop/GISTIC/scores.gistic",
+                 cutoff = 0.9,
+                 labels_bed = gene_bed,
+               label_size=2,adjust_amps = 0.5,adjust_dels = 0.8)
+
+
+```
+
+```{r}
+batt_segs_all = get_cn_segments(flavour="battenberg")
+batt_segs_nothing = get_cn_segments(flavour="battenberg",fill_missing_with = "nothing")
+
+cn_nothing= segmented_data_to_cn_matrix(batt_segs_nothing,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "nothing",
+                                         these_samples_metadata = batt_meta)
+
+pretty_CN_heatmap(cn_nothing,
+                  scale_by_sample = T,
+                  these=batt_meta,sortByPGA = T)
+
+cn_no_dip = segmented_data_to_cn_matrix(batt_segs_all,
+                                         n_bins_split=1500,
+                                         fill_missing_with = "avg_ploidy",
+                                         these_samples_metadata = batt_meta)
+
+
+pretty_CN_heatmap(cn_no_dip,
+                  scale_by_sample = T,
+                  these=batt_meta,sortByPGA = T)
+
+```
