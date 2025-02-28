@@ -204,7 +204,7 @@ if(verbose){
   #}
   peak_regions = colnames(lesions_values)
   name_map = lesions_regions$Descriptor
-  names(name_map) = gistic_processed$peaks$name
+  names(name_map) = peaks$name
     
   if(generate_heatmaps){
     
