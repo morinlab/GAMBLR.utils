@@ -206,7 +206,6 @@ if(verbose){
   name_map = lesions_regions$Descriptor
   names(name_map) = gistic_processed$peaks$name
     
-  print(name_map)
   if(generate_heatmaps){
     
     gh <- Heatmap(lesions_values, cluster_columns = FALSE,cluster_rows = FALSE)
