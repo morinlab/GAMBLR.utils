@@ -202,6 +202,11 @@ if(verbose){
   #} else {
   #  colnames(lesions_values) <- colnames(gistic_peaks_wide)
   #}
+  peak_regions = colnames(lesions_values)
+  name_map = lesions_regions$Descriptor
+  names(name_map) = gistic_processed$peaks$name
+    
+  print(name_map)
   if(generate_heatmaps){
     
     gh <- Heatmap(lesions_values, cluster_columns = FALSE,cluster_rows = FALSE)
@@ -213,7 +218,8 @@ if(verbose){
       gistic_heatmap = gh,
       peaks = peak,
       lesions = lesions_regions,
-      binned = gistic_peaks_binned
+      binned = gistic_peaks_binned,
+      name_map = name_map
     ))
   }else{
     return(list(
@@ -221,7 +227,8 @@ if(verbose){
       gistic_cn_matrix = lesions_values,
       peaks = peak,
       lesions = lesions_regions,
-      binned = gistic_peaks_binned
+      binned = gistic_peaks_binned,
+      name_map = name_map
     ))
   }
 }

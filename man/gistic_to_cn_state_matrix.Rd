@@ -44,6 +44,8 @@ gistic_to_cn_state_matrix(
 \item{generate_heatmaps}{Optionally generate heatmaps. Default is TRUE.}
 
 \item{genome_build}{Specify the genome build if necessary}
+
+\item{verbose}{Set to TRUE for debugging messages}
 }
 \value{
 a list of data frames
