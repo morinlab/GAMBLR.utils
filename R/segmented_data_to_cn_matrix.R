@@ -183,7 +183,10 @@ segmented_data_to_cn_matrix = function(seg_data,
     stop("max_CN_allowed must be a numeric value")
   }
   if(missing(these_samples_metadata)){
-    print("missing these_samples_metadata")
+    if(verbose){
+      print("missing these_samples_metadata")
+    }
+    
   }
   if(missing(genome_build)){
     if (inherits(seg_data, "seg_data")) {
@@ -446,7 +449,10 @@ segmented_data_to_cn_matrix = function(seg_data,
                      by = c("sample_id" = "sample_id",
                             "region_name" = "region_name"))
   n_na = dplyr::filter(all_cn,is.na(CN)) %>% nrow()
-  print(paste(n_na,"rows with NA values"))
+  if(verbose){
+    print(paste(n_na,"rows with NA values"))
+  }
+  
   #fill in any sample/region combinations with missing data as diploid
   #if(fill_missing_with=="diploid"){
   #  all_cn = mutate(all_cn, CN = replace_na(CN, 2))
