@@ -11,11 +11,13 @@ segmented_data_to_cn_matrix(
   these_samples_metadata,
   n_bins_split = 1000,
   use_cytoband_name = FALSE,
+  use_gistic_name = FALSE,
   fill_missing_with = "diploid",
   max_CN_allowed = 6,
   adjust_for_ploidy = FALSE,
   genome_build,
   gistic_lesions_file,
+  match_peak_direction = TRUE,
   rounded = TRUE,
   verbose = FALSE
 )
@@ -32,6 +34,8 @@ segmented_data_to_cn_matrix(
 \item{n_bins_split}{Split genome into N equally sized bins}
 
 \item{use_cytoband_name}{Use cytoband names instead of region names, e.g p36.33.}
+
+\item{use_gistic_name}{When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates}
 
 \item{fill_missing_with}{Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")}
 

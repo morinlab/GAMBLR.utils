@@ -127,6 +127,7 @@ process_cn_segments_by_region = function(seg_data,
 #' @param these_samples_metadata Optional metadata table to auto-subset the data to samples in that table before returning. If missing, the result will include a row for every sample in seg_data.
 #' @param n_bins_split Split genome into N equally sized bins
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
+#' @param use_gistic_name When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates
 #' @param fill_missing_with Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")
 #' @param adjust_for_ploidy Whether to adjust for high ploidy
 #' @param max_cn_allowed CN values higher than this will be set to this value. Default 6.
@@ -169,11 +170,13 @@ segmented_data_to_cn_matrix = function(seg_data,
                             these_samples_metadata,
                             n_bins_split=1000,
                             use_cytoband_name = FALSE,
+                            use_gistic_name = FALSE,
                             fill_missing_with = "diploid",
                             max_CN_allowed = 6,
                             adjust_for_ploidy=FALSE,
                             genome_build,
                             gistic_lesions_file,
+                            match_peak_direction = TRUE,
                             rounded = TRUE,
                             verbose = FALSE){
   if(!is.numeric(max_CN_allowed)){
@@ -198,9 +201,9 @@ segmented_data_to_cn_matrix = function(seg_data,
         print(head(dummy_df))
     }
   } else if  (fill_missing_with=="avg_ploidy") {
-    if(!"dummy_segment" %in% colnames(seg_data)){
-      stop("avg_ploidy mode only available when there's a dummy_segment column")
-    }
+    #if(!"dummy_segment" %in% colnames(seg_data)){
+    #  stop("avg_ploidy mode only available when there's a dummy_segment column")
+    #}
     dummy_df = seg_data %>% 
       mutate(
           length = end - start + 1,
@@ -212,10 +215,16 @@ segmented_data_to_cn_matrix = function(seg_data,
           CN = sum(CN_seg) / sum(length),
           log.ratio = sum(logr_seg) / sum(length)
         ) # actual average per base
-    print(head(dummy_df))
+    if(verbose){
+      print(head(dummy_df))
+    }
+    
   }else if(fill_missing_with == "nothing"){
     #do nothing
-    print("NOT filling gaps")
+    if(verbose){
+      print("NOT filling gaps")
+    }
+    
   }else{
     stop("fill_missing_with must be 'nothing', 'diploid' or 'avg_ploidy'")
   }
@@ -235,7 +244,13 @@ segmented_data_to_cn_matrix = function(seg_data,
     #fill values for these regions using the data provided to the function
 
     peak_regions = colnames(gistic_processed$gistic_cn_matrix)
-
+    name_map = gistic_processed$name_map
+    if(genome_build=="grch37"){
+      names(name_map) = gsub("chr","",names(name_map))
+    }
+    #strip chr prefix 
+    
+                          
     region_processed = process_regions(regions_list=peak_regions,
                                projection = genome_build,sort=T)
 
@@ -248,6 +263,31 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          these = these_samples_metadata,
                                          genome_build = genome_build,
                                          verbose=verbose)
+
+    if(match_peak_direction){
+      if(verbose){
+        print("dropping irrelevant CNVs")
+      }
+      
+      # ensure gains only reported for GISTIC gain peaks and
+      # deletions for deletion peaks
+      if(genome_build=="grch37"){
+        colnames(gistic_processed$gambl_cn_matrix) = gsub(
+          "chr","",colnames(gistic_processed$gambl_cn_matrix)
+          )
+      }
+      
+      gistic_mat = gistic_processed$gambl_cn_matrix[,colnames(filled)]
+
+      original = filled
+      filled[gistic_mat==0]=2
+    }
+    if(use_gistic_name){
+      #substitute chr:start-end with the arm names assigned by GISTIC
+
+      colnames(filled) = unname(name_map[colnames(filled)])
+
+    }
     return(filled)
   }
   if(any(missing(seg_data))){
