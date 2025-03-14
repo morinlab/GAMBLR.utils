@@ -203,6 +203,8 @@ if(verbose){
   #  colnames(lesions_values) <- colnames(gistic_peaks_wide)
   #}
   peak_regions = colnames(lesions_values)
+  lesions_regions = mutate(lesions_regions,type=stringr::str_extract(`Unique Name`, "^.{3}"))
+  lesions_regions = mutate(lesions_regions,Descriptor = paste0(Descriptor,"_",type))
   name_map = lesions_regions$Descriptor
   names(name_map) = peak$name
     
