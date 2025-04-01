@@ -25,6 +25,7 @@
 #' @export 
 #'
 #' @examples
+#' \dontrun{
 #' metadata = get_gambl_metadata() %>% filter(pathology == "DLBCL")
 #' cn_state_matrix = get_cn_states(n_bins_split=5000,
 #'                                 missing_data_as_diploid = TRUE, # if FALSE, missing data will be NA
@@ -36,7 +37,7 @@
 #'                            auto_calc_cutoff=FALSE,
 #'                            cutoff_gain_custom = 0.05,
 #'                            cutoff_loss_custom = 0.005)
-
+#'}
 ######################################################################################
 ###################                 MAIN FUNCTION                  ###################
 ######################################################################################
