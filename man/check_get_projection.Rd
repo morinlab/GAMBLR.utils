@@ -29,6 +29,7 @@ objects have conflicting genome builds, or if no genome build can be inferred an
 no \code{suggested} value is provided, the function stops with an error.
 }
 \examples{
+\dontrun{
 # Example 1: When genomic data objects all have the same genome build.
 # Assuming maf_data and seg_data both have a genome build of "hg38":
 genomic_data <- list(maf_data = maf_data, seg_data = seg_data)
@@ -38,5 +39,5 @@ projection <- check_get_projection(genomic_data, suggested = "hg38")
 # This will throw an error:
 genomic_data <- list(maf_data = maf_data, seg_data = seg_data_with_different_build)
 projection <- check_get_projection(genomic_data, suggested = "hg38")
-
+}
 }

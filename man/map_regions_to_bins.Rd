@@ -14,6 +14,9 @@ map_regions_to_bins(
 \arguments{
 \item{first}{}
 }
+\value{
+a named list
+}
 \description{
 Map region to bins
 }

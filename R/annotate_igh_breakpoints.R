@@ -14,7 +14,8 @@
 #' @export
 #'
 #' @examples
-#' library(GAMBLR.data)
+#' \dontrun{
+#' library(GAMBLR.open)
 #' 
 #' # Get Manta SVs
 #' my_meta = get_gambl_metadata()
@@ -25,7 +26,7 @@
 #' # Annotate IGH breakpoints
 #' all_annotated = annotate_sv(sv_data = manta_sv)
 #' ig_annotated = annotate_igh_breakpoints(all_annotated)
-#'
+#'}
 annotate_igh_breakpoints = function(annotated_df,
                                     genome_build = "grch37"){
 

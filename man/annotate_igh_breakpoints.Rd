@@ -22,7 +22,8 @@ Returns a modified bedpe with additional columns.
 The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and label (NA if unmatched, otherwise one of Emu, Smu, one of the J segments or switch regions).
 }
 \examples{
-library(GAMBLR.data)
+\dontrun{
+library(GAMBLR.open)
 
 # Get Manta SVs
 my_meta = get_gambl_metadata()
@@ -33,5 +34,5 @@ manta_sv = get_manta_sv(these_samples_metadata = my_meta,
 # Annotate IGH breakpoints
 all_annotated = annotate_sv(sv_data = manta_sv)
 ig_annotated = annotate_igh_breakpoints(all_annotated)
-
+}
 }

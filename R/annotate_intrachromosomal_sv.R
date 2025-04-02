@@ -20,9 +20,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' sv_df = get_manta_sv(verbose = FALSE)
 #' annotated = annotate_intrachromosomal_sv(sv_data = sv_df)
-#'
+#'}
 annotate_intrachromosomal_sv = function(
     sv_data,
     return_as = "bedpe",

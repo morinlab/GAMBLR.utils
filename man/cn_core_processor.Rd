@@ -49,6 +49,7 @@ An object of S4 class \code{all} containing:
 The primary purpose is to extract statistics from \code{pretty_CN_heatmap} with customized modifications, such as filtering and normalization of copy number (CN) state data and calculating Copy Number Alteration Ratios (CNARs).
 }
 \examples{
+\dontrun{
 metadata = get_gambl_metadata() \%>\% filter(pathology == "DLBCL")
 cn_state_matrix = get_cn_states(n_bins_split=5000,
                                 missing_data_as_diploid = TRUE, # if FALSE, missing data will be NA
@@ -60,4 +61,5 @@ result = cn_core_processor(cn_state_matrix,
                            auto_calc_cutoff=FALSE,
                            cutoff_gain_custom = 0.05,
                            cutoff_loss_custom = 0.005)
+}
 }

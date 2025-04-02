@@ -21,8 +21,8 @@ This function will not allow you to combine maf_data objects that have different
 An error will also be thrown if the same sample id is found in more than one of the inputs (if check_id is TRUE).
 }
 \examples{
-
+\dontrun{
 merged_maf = bind_genomic_data(maf1, maf2,check_id=FALSE)
-
+}
 }
 \keyword{internal}

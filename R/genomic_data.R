@@ -184,9 +184,9 @@ ungroup.genomic_data <- function(x, ...) {
 #' @export
 #'
 #' @examples
-#'
+#'\dontrun{
 #' merged_maf = bind_genomic_data(maf1, maf2,check_id=FALSE)
-#'
+#'}
 #' @keywords internal
 bind_genomic_data <- function(..., check_id = TRUE) {
   
@@ -288,6 +288,7 @@ strip_genomic_classes <- function(x, classes = c("genomic_data", "maf_data", "be
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' # Example 1: When genomic data objects all have the same genome build.
 #' # Assuming maf_data and seg_data both have a genome build of "hg38":
 #' genomic_data <- list(maf_data = maf_data, seg_data = seg_data)
@@ -297,7 +298,7 @@ strip_genomic_classes <- function(x, classes = c("genomic_data", "maf_data", "be
 #' # This will throw an error:
 #' genomic_data <- list(maf_data = maf_data, seg_data = seg_data_with_different_build)
 #' projection <- check_get_projection(genomic_data, suggested = "hg38")
-#'
+#'}
 check_get_projection <- function(genomic_data_list, suggested, custom_error) {
   # Extract genome builds from each genomic data object
   builds <- sapply(genomic_data_list, get_genome_build)

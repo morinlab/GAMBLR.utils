@@ -40,7 +40,8 @@ Annotate the intrachromosomal events in a data frame of SV breakpoints.
 Specify a data frame with SVs (preferably the output from get_manta_sv() to the \code{sv_data} parameter and get back the same data frame with SV annotations.
 }
 \examples{
+\dontrun{
 sv_df = get_manta_sv(verbose = FALSE)
 annotated = annotate_intrachromosomal_sv(sv_data = sv_df)
-
+}
 }
