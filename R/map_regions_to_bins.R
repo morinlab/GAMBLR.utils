@@ -8,13 +8,23 @@
 #' @export
 #'
 #' @examples
-#'
+#' \dontrun{
 #' gene_region <- gene_to_region("TP53")
+#'
+#' cn_state_matrix <- data.frame(
+#' `1:1-1240053` = c(2, 2, 2, 2, 2),
+#' `1:1240054-2480106` = c(2, 2, 2, 2, 2),
+#' `1:2480107-3720159` = c(2, 2, 2, 2, 2),
+#' `1:3720160-4960211` = c(2, 2, 2, 2, 2),
+#' `17:7381384-8611613` = c(2, 2, 2, 2, 2),
+#' row.names = c("sample_A", "sample_B", "sample_C", "sample_D", "sample_E"),
+#' check.names = FALSE
+#' ) 
 #'
 #' all_bins <- colnames(cn_state_matrix)
 #'
-#' TP53_bin <- map_region_to_bins(gene_region, all_bins, first = TRUE)
-#'
+#' TP53_bin <- map_regions_to_bins(gene_region, all_bins, first = TRUE)
+#' }
 map_regions_to_bins <- function(query_regions,
                                regions,
                                query_type = "region",
