@@ -13,7 +13,8 @@
 #' @param streamlined If TRUE, only return the ID and CN columns (default is FALSE)
 #' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
 #' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
-#' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
+#' @param filler_values Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
+#' @param verbose Optionally toggle verbosity of the output
 #'
 #' @return data.frame
 #'
