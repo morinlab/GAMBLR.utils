@@ -23,7 +23,9 @@ process_cn_segments_by_region(
 \item{weighted_average}{If TRUE, calculate the CN value as a weighted average of the segments
 that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)}
 
-\item{fill_missing_with}{Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"}
+\item{filler_values}{Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"}
+
+\item{verbose}{Optionally toggle verbosity of the output}
 }
 \value{
 data.frame

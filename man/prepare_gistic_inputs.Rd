@@ -13,7 +13,18 @@ prepare_gistic_inputs(
 )
 }
 \arguments{
-\item{overwrite}{}
+\item{these_samples_metadata}{A data frame with metadata.}
+
+\item{projection}{The projection to operate on. Default is grch37.}
+
+\item{output_dir}{The path to the directory to write outputs.}
+
+\item{flavour}{Additional argument.}
+
+\item{overwrite}{Whether to overwrite the existing outputs. Default is FALSE.}
+}
+\value{
+nothing
 }
 \description{
 Prepare GISTIC input files

@@ -13,7 +13,8 @@
 #' @param streamlined If TRUE, only return the ID and CN columns (default is FALSE)
 #' @param weighted_average If TRUE, calculate the CN value as a weighted average of the segments
 #' that overlap the region. Otherwise, use the CN value of the first segment that overlaps the region (default is TRUE)
-#' @param fill_missing_with Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
+#' @param filler_values Specify how the value will be assigned to any region not covered by a segment: Options: "diploid" or "avg_ploidy"
+#' @param verbose Optionally toggle verbosity of the output
 #'
 #' @return data.frame
 #'
@@ -130,8 +131,9 @@ process_cn_segments_by_region = function(seg_data,
 #' @param use_gistic_name When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates
 #' @param fill_missing_with Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")
 #' @param adjust_for_ploidy Whether to adjust for high ploidy
-#' @param max_cn_allowed CN values higher than this will be set to this value. Default 6.
+#' @param max_CN_allowed CN values higher than this will be set to this value. Default 6.
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
+#' @param match_peak_direction Additional argument. TODO
 #' @param rounded Set to FALSE if you want the raw averaged copy number values per region
 #' @param verbose Set to TRUE for more messages
 #' @param genome_build Specify the genome build (usually not required)

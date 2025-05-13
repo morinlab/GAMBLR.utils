@@ -12,7 +12,13 @@ map_regions_to_bins(
 )
 }
 \arguments{
-\item{first}{}
+\item{query_regions}{Argument to specify. TODO}
+
+\item{regions}{Additional argument. TODO}
+
+\item{query_type}{Additional argument. TODO}
+
+\item{first}{Additional argument. TODO}
 }
 \value{
 a named list
