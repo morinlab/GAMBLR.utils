@@ -133,6 +133,7 @@ process_cn_segments_by_region = function(seg_data,
 #' @param adjust_for_ploidy Whether to adjust for high ploidy
 #' @param max_CN_allowed CN values higher than this will be set to this value. Default 6.
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
+#' @param match_peak_direction Additional argument. TODO
 #' @param rounded Set to FALSE if you want the raw averaged copy number values per region
 #' @param verbose Set to TRUE for more messages
 #' @param genome_build Specify the genome build (usually not required)
