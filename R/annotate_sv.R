@@ -35,6 +35,7 @@
 #' @return A data frame with annotated SVs (gene symbol and entrez ID).
 #' 
 #' @import tidyr dplyr GAMBLR.helpers
+#' @rawNamespace import(data.table, except = c("last", "first", "between", "transpose"))
 #' @export
 #'
 #' @examples
@@ -138,57 +139,41 @@ annotate_sv = function(sv_data,
     oncogene_regions = oncogene_bed
   }
 
-  y = as.data.frame(oncogene_regions)
+  y = data.table::as.data.table(oncogene_regions)
+  data.table::setkey(y, chrom, start, end)
   
-  #use overlaps to get oncogene SVs
-  a = as.data.frame(bedpe1)
-  a.onco = cool_overlaps(a, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
-  b = as.data.frame(bedpe2)
-  b.onco = cool_overlaps(b, y, columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE) #oncogene-annotated bedpe for the first breakpoints
+  #use foverlaps to get oncogene SVs
+  a = data.table::as.data.table(bedpe1)
+  a.onco = data.table::foverlaps(a, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
+
+  b = data.table::as.data.table(bedpe2)
+  b.onco = data.table::foverlaps(b, y, type = "any", mult = "first") #oncogene-annotated bedpe for the first breakpoints
 
   #insist oncogene breakpoints are anchored in an IG or superenhancer region (currently just IG or BCL6)
   #other end of breakpoint
-  a.onco.break = a.onco[which(!is.na(a.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
-  b.onco.break = b.onco[which(!is.na(b.onco$start.y)), c("chrom", "start", "end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
-  
-  a.partner = b[which(!is.na(a.onco$start.y)),]
-  b.partner = a[which(!is.na(b.onco$start.y)),]
-  
-  y = as.data.frame(ig_regions)
-  
-  a.ig = cool_overlaps(a.partner, y, type = "any", columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE)
-  b.ig = cool_overlaps(b.partner, y, type = "any", columns1 = c("chrom", "start", "end"), columns2 = c("chrom", "start", "end"), nomatch = TRUE)
+  a.onco.break = a.onco[which(!is.na(a.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand1")]
+  b.onco.break = b.onco[which(!is.na(b.onco$start)), c("chrom", "i.start", "i.end", "tumour_sample_id", "gene", "entrez", "score", "strand2")]
 
-  a.ig <- a.ig %>%
-    mutate(row_id = row_number()) %>% # make sure the order is consistent
-    group_by(chrom, start, end, tumour_sample_id, score, ID) %>%
-    slice_head() %>%
-    ungroup %>%
-    arrange(row_id) %>%
-    as.data.frame() %>%
-    select(-row_id)
+  a.partner = b[which(!is.na(a.onco$start)),]
+  b.partner = a[which(!is.na(b.onco$start)),]
+  
 
-  b.ig <- b.ig %>%
-    mutate(row_id = row_number()) %>% # make sure the order is consistent
-    group_by(chrom, start, end, tumour_sample_id, score, ID) %>%
-    slice_head() %>%
-    ungroup %>%
-    arrange(row_id) %>%
-    as.data.frame() %>%
-    select(-row_id)
+  y = data.table::as.data.table(ig_regions)
+  data.table::setkey(y, chrom, start, end)
+
+  a.ig = data.table::foverlaps(a.partner, y, type = "any", mult = "first")
+  b.ig = data.table::foverlaps(b.partner, y, type = "any", mult = "first")
 
   a.ig = a.ig[,c("chrom", "start", "end", "strand2", "gene")]
   b.ig = b.ig[,c("chrom", "start", "end", "strand1", "gene")]
 
-  a.annotated.both = bind_cols(a.onco.break, a.ig)
+  a.annotated.both = cbind(a.onco.break, a.ig)
   colnames(a.annotated.both) = c("chrom1", "start1", "end1", "tumour_sample_id", "gene", "entrez", "score", "strand1", "chrom2", "start2", "end2", "strand2", "partner")
 
   b.annotated.both = cbind(b.onco.break, b.ig)
   colnames(b.annotated.both) = c("chrom2", "start2", "end2", "tumour_sample_id", "gene", "entrez", "score", "strand2", "chrom1", "start1", "end1", "strand1", "partner")
 
-  all.annotated = rbind(a.annotated.both, b.annotated.both) %>%
-    as.data.frame %>%
-    `rownames<-`(NULL)
+  all.annotated = rbind(a.annotated.both, b.annotated.both)
 
   all.annotated$fusion = dplyr::pull(tidyr::unite(all.annotated, fusion, partner, gene, sep = "-"), fusion)
   all.annotated = dplyr::filter(all.annotated, !fusion %in% c("BCL6-BCL6", "CIITA-CIITA", "FOXP1-FOXP1","PAX5-PAX5"))
