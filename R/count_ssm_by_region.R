@@ -35,8 +35,6 @@ count_ssm_by_region = function(region,
 
   if(missing(these_samples_metadata)){
     these_samples_metadata = GAMBLR.helpers::handle_metadata(this_seq_type = seq_type)
-  }else{
-    these_samples_metadata = dplyr::filter(these_samples_metadata, seq_type %in% seq_type)
   }
   
   if(!missing(all_mutations_in_these_regions)){
@@ -48,12 +46,10 @@ count_ssm_by_region = function(region,
     region_muts = get_ssm_by_region(chromosome = chromosome,
                                     qstart = start,
                                     qend = end,
-                                    streamlined = TRUE,
-                                    these_samples_metadata = these_samples_metadata)
+                                    streamlined = TRUE)
   }else{
     region_muts = get_ssm_by_region(region = region, 
-                                    streamlined = TRUE,
-                                    these_samples_metadata = these_samples_metadata)
+                                    streamlined = TRUE)
   }
   
   keep_muts = dplyr::filter(region_muts,Tumor_Sample_Barcode %in% these_samples_metadata$Tumor_Sample_Barcode)
