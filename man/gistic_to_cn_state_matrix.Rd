@@ -56,18 +56,18 @@ Make a binary CN matrix in GISTIC regions using segmented data
 \examples{
 
 all_segments = get_cn_segments()
-dlbcl_genomes_meta = get_gambl_metadata() \%>\% 
+dlbcl_genomes_meta = get_gambl_metadata() \%>\%
     dplyr::filter(pathology=="DLBCL",seq_type=="genome")
-    
+
 all_out = gistic_to_cn_state_matrix("all_lesions.conf_90.txt",
                               dlbcl_genomes_meta,
                               all_segments,
                               as_binary = T,
                               scale_by_sample = T)
-                              
+
 gambl_cn_matrix_gistic_peaks = all_out$gambl_cn_matrix \%>\% rownames_to_column("sample_id")
 
-prettyForestPlot(mutmat=gambl_cn_matrix_gistic_peaks, 
+prettyForestPlot(mutmat=gambl_cn_matrix_gistic_peaks,
                         metadata=dlbcl_genomes_meta,
                         comparison_column = "COO_consensus",
                         comparison_values = c("GCB","ABC"))

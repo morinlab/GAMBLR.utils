@@ -5,7 +5,7 @@
 #' Make a binary CN matrix in GISTIC regions using segmented data
 #'
 #' @param gistic_lesions_file The all_lesions output file from GISTIC from the same pathology you are working on
-#' @param these_samples_metadata Optional metadata that will be used to subset your segment data to only overlapping samples 
+#' @param these_samples_metadata Optional metadata that will be used to subset your segment data to only overlapping samples
 #' @param seg_data Data frame containing segmented copy number data (i.e. seg format)
 #' @param wide_peaks Whether to use wide peaks instead of narrow peaks (FALSE)
 #' @param max_CN Maximum value where CN will be truncated to limit the range
@@ -22,24 +22,24 @@
 #' @export
 #'
 #' @examples
-#' 
+#'
 #' all_segments = get_cn_segments()
-#' dlbcl_genomes_meta = get_gambl_metadata() %>% 
+#' dlbcl_genomes_meta = get_gambl_metadata() %>%
 #'     dplyr::filter(pathology=="DLBCL",seq_type=="genome")
-#'     
+#'
 #' all_out = gistic_to_cn_state_matrix("all_lesions.conf_90.txt",
 #'                               dlbcl_genomes_meta,
 #'                               all_segments,
 #'                               as_binary = T,
 #'                               scale_by_sample = T)
-#'                               
+#'
 #' gambl_cn_matrix_gistic_peaks = all_out$gambl_cn_matrix %>% rownames_to_column("sample_id")
-#' 
-#' prettyForestPlot(mutmat=gambl_cn_matrix_gistic_peaks, 
+#'
+#' prettyForestPlot(mutmat=gambl_cn_matrix_gistic_peaks,
 #'                         metadata=dlbcl_genomes_meta,
 #'                         comparison_column = "COO_consensus",
 #'                         comparison_values = c("GCB","ABC"))
-#' 
+#'
 gistic_to_cn_state_matrix <- function(gistic_lesions_file,
                                       these_samples_metadata,
                                       seg_data,
@@ -55,33 +55,53 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
                                       verbose = FALSE) {
 
   process_peaks <- function(lesions_regions, peak_type) {
-    
-    peaks <- select(lesions_regions, 1, !!sym(peak_limits_column)) %>%
+    print("processing")
+    print(lesions_regions)
+    print(peak_type)
+    peaks <- select(lesions_regions, `Unique Name`, !!sym(peak_limits_column)) %>%
       mutate(sep_region = str_remove(!!sym(peak_limits_column), "\\(.+")) %>%
-      mutate(region=sep_region) %>% 
+      mutate(region=sep_region) %>%
       separate(sep_region, into = c("chrom", "start", "end"), convert = TRUE) %>%
       mutate(type = str_extract(`Unique Name`, "\\S+")) %>%
       mutate(region = str_remove(region, "\\(.+")) %>%
       select(-!!sym(peak_limits_column))
+    print("DONE")
     return(peaks)
   }
-
-  lesions <- suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE)) %>%
-    filter(!grepl("CN", `Unique Name`))
+  if("data.frame" %in% class(gistic_lesions_file)){
+    print("data frame")
+    lesions = gistic_lesions_file
+  }else{
+    print("loading")
+    lesions <- suppressMessages(read_tsv(gistic_lesions_file, col_names = TRUE))
+  }
+  lesions = lesions %>%
+    filter(!grepl("CN", `Unique Name`),!is.na(`Unique Name`))
   lesions_regions <- select(lesions, 1:6)
-
-  if (missing(genome_build)) {
-    genome_build <- get_genome_build(seg_data)
+  if(verbose){
+    print(head(lesions_regions))
   }
 
-  
+
+  if (missing(genome_build)) {
+    if(!missing(seg_data)){
+      genome_build <- get_genome_build(seg_data)
+    }else{
+      stop("genome_build is required when seg_data is not provided")
+    }
+
+  }
+
+
   peak_limits_column <- if (wide_peaks ) "Wide Peak Limits" else "Peak Limits"
   peak <- process_peaks(lesions_regions, peak_limits_column)
   if(verbose){
     print(head(lesions_regions))
   }
+  print("zxx")
+  print(head(lesions))
   lesions_values <- lesions %>%
-    select(1, 10:(ncol(lesions) - 1)) %>%
+    select(`Unique Name`, 10:(ncol(lesions) - 1)) %>%
     left_join(lesions_regions,., by = "Unique Name") %>%
     mutate(region = str_remove(!!sym(peak_limits_column), "\\(.+")) %>%
     select(-1:-6)
@@ -89,7 +109,7 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
   lesions_values = lesions_values %>%
     pivot_longer(cols = -region, names_to = "sample_id", values_to = "magnitude")
 
-  
+
   if (as_binary) {
     lesions_values <- lesions_values %>%
       left_join(peak, by = "region")  %>%
@@ -116,8 +136,8 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
   lesions_values <- lesions_values %>%
     pivot_wider(id_cols = "sample_id",names_from = "region", values_from = "CN") %>%
    column_to_rownames("sample_id")
-  
-  
+
+
 
   regions_bed <- select(peak, chrom, start, end, `Unique Name`) %>%
     mutate(chrom_num = gsub("chr","",chrom)) %>%
@@ -129,7 +149,10 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
     select(-`Unique Name`)
 
   }
-
+  if(missing(seg_data)){
+    print("seg_data was not provided. Returning only the results from the GISTIC lesions file.")
+    return(lesions_values)
+  }
 
   regions_bed = create_bed_data(regions_bed,genome_build = genome_build)
   if(verbose){
@@ -160,7 +183,7 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
     separate(region, into = c("chrom", "startend"), sep = ":") %>%
     separate(startend, into = c("start", "end"), sep = "-", convert = TRUE) %>%
     mutate(CN = pmin(round(CN), max_CN))
-  
+
   if(peak_names_from=="coordinates"){
     peak = mutate(peak,name=region)
   }else{
@@ -186,7 +209,7 @@ gistic_to_cn_state_matrix <- function(gistic_lesions_file,
   }
 
   gistic_peaks_wide <- gistic_peaks_long %>%
-    select(-chrom,-start,-end,-type) %>% 
+    select(-chrom,-start,-end,-type) %>%
     pivot_wider(id_cols="sample_id",names_from = "name", values_from = "CN") %>%
     column_to_rownames("sample_id")
 #synchronize the column order
@@ -202,14 +225,16 @@ if(verbose){
   #} else {
   #  colnames(lesions_values) <- colnames(gistic_peaks_wide)
   #}
+print("--====")
+  print(head(lesions_regions))
   peak_regions = colnames(lesions_values)
   lesions_regions = mutate(lesions_regions,type=stringr::str_extract(`Unique Name`, "^.{3}"))
   lesions_regions = mutate(lesions_regions,Descriptor = paste0(Descriptor,"_",type))
   name_map = lesions_regions$Descriptor
   names(name_map) = peak$name
-    
+
   if(generate_heatmaps){
-    
+
     gh <- Heatmap(lesions_values, cluster_columns = FALSE,cluster_rows = FALSE)
     hh <- Heatmap(gistic_peaks_wide ,  cluster_columns = FALSE,cluster_rows = FALSE)
     return(list(
