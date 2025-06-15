@@ -1,8 +1,9 @@
 #' Map region to bins
 #'
-#' @param query_region
-#' @param regions
-#' @param first
+#' @param query_regions Argument to specify. TODO
+#' @param regions Additional argument. TODO
+#' @param query_type Additional argument. TODO
+#' @param first Additional argument. TODO
 #'
 #' @return a named list
 #' @export

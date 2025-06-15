@@ -1,12 +1,12 @@
 #' Prepare GISTIC input files
 #'
-#' @param these_samples_metadata
-#' @param projection
-#' @param output_dir
-#' @param flavour
-#' @param overwrite
+#' @param these_samples_metadata A data frame with metadata.
+#' @param projection The projection to operate on. Default is grch37.
+#' @param output_dir The path to the directory to write outputs.
+#' @param flavour Additional argument.
+#' @param overwrite Whether to overwrite the existing outputs. Default is FALSE.
 #'
-#' @return
+#' @return nothing
 #' @export
 #'
 #' @examples
