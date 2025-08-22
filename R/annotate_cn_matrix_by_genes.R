@@ -2,8 +2,6 @@
 #' 
 #' @description Annotates a copy number matrix using user-provided gene names 
 #' 
-#' @param these_samples_metadata The metadata for samples of interest to be included in the returned matrix.
-#'   Can be created with `get_gambl_metadata` function.
 #' @param gene_ids The "gene_id" column stores gene symbols (characters).
 #' @param cn_matrix User can provide a matrix of CN values for the samples in the metadata.
 #' See [GAMBLR.utils::segmented_data_to_cn_matrix] for more information on how to create this matrix.
@@ -31,21 +29,14 @@
 #'    adjust_for_ploidy=TRUE
 #' )
 #' 
-#' annotate_cn_matrix_by_genes (these_samples_metadata = dlbcl_meta,
-#'                              gene_ids = gene_symbols,
+#' annotate_cn_matrix_by_genes (gene_ids = gene_symbols,
 #'                              cn_matrix = cn_matrix
 #' )
 #' }
 
-annotate_cn_matrix_by_genes = function(these_samples_metadata,
-                                       gene_ids,
+annotate_cn_matrix_by_genes = function(gene_ids,
                                        cn_matrix){
   
-  if(missing(these_samples_metadata)){
-    if(verbose){
-      print("missing these_samples_metadata")
-    }
-  }
   
   gene_bins = unlist(map_regions_to_bins(
     query_regions = gene_ids,
@@ -54,7 +45,7 @@ annotate_cn_matrix_by_genes = function(these_samples_metadata,
     first = TRUE
   ))
   
-  cn_matrix = cn_matrix[these_samples_metadata$sample_id,gene_bins,drop = FALSE] %>% as.data.frame()
+  cn_matrix = cn_matrix[,gene_bins,drop = FALSE] %>% as.data.frame()
   
   colnames(cn_matrix) = names(gene_bins)
   

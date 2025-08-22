@@ -4,12 +4,9 @@
 \alias{annotate_cn_matrix_by_genes}
 \title{Annotate copy number matrix by gene names}
 \usage{
-annotate_cn_matrix_by_genes(these_samples_metadata, gene_ids, cn_matrix)
+annotate_cn_matrix_by_genes(gene_ids, cn_matrix)
 }
 \arguments{
-\item{these_samples_metadata}{The metadata for samples of interest to be included in the returned matrix.
-Can be created with \code{get_gambl_metadata} function.}
-
 \item{gene_ids}{The "gene_id" column stores gene symbols (characters).}
 
 \item{cn_matrix}{User can provide a matrix of CN values for the samples in the metadata.
@@ -39,8 +36,7 @@ cn_matrix = segmented_data_to_cn_matrix(
    adjust_for_ploidy=TRUE
 )
 
-annotate_cn_matrix_by_genes (these_samples_metadata = dlbcl_meta,
-                             gene_ids = gene_symbols,
+annotate_cn_matrix_by_genes (gene_ids = gene_symbols,
                              cn_matrix = cn_matrix
 )
 }
