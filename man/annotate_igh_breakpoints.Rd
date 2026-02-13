@@ -26,7 +26,7 @@ The most useful columns that are added are mechanism (one of CSR, AID, VDJ) and 
 library(GAMBLR.open)
 
 # Get Manta SVs
-my_meta = get_gambl_metadata()
+my_meta = GAMBLR.open::get_gambl_metadata()
 my_samples = my_meta$sample_id
 manta_sv = get_manta_sv(these_samples_metadata = my_meta,
                         these_sample_ids = my_samples, verbose = FALSE)

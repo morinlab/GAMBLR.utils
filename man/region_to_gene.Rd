@@ -45,17 +45,20 @@ genes_of_interest = gene_to_region(gene_symbol = c("MYC", "BCL2"),
 
 #Example 1 - Use a data frame with 1 region:
 in_my_region = region_to_gene(region = genes_of_interest)
+print(in_my_region)
                         
+\dontrun{
 #Example 2 - Use a region specified as a vector of characters:
 in_my_region = region_to_gene(region = "chr8:127735433-127742951", 
                               projection = "hg38", 
                               gene_format = "ensembl", 
                               verbose = TRUE)
+print(in_my_region)
                               
 #Example 3 - Use a region with no genes in it, and return the empty data frame anyway:
 in_my_region = region_to_gene(region = "chr14:105862865-105863058",
                               projection = "hg38", 
                               verbose = TRUE, 
                               return_empty = TRUE)
-
+}
 }

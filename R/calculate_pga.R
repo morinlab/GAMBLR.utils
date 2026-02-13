@@ -37,6 +37,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' seg <- get_sample_cn_segments(
 #'     these_sample_ids = c(
 #'         "14-36022T",
@@ -50,6 +51,7 @@
 #'      this_seg = seg,
 #'      per_chromosome = TRUE
 #' )
+#' }
 #'
 calculate_pga = function(this_seg,
                          seg_path,

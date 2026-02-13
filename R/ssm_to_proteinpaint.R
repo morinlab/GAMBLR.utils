@@ -46,6 +46,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #' 
 #' # define same somples
@@ -61,7 +62,7 @@
 #' # convert only coding mutations to ProteinPaint format
 #' pp_df = ssm_to_proteinpaint(maf_data = my_maf, this_seq_type = "genome",
 #'                             coding_only = TRUE)
-#' 
+#' }
 ssm_to_proteinpaint = function(maf_data,
                                these_sample_ids = NULL,
                                these_samples_metadata = NULL,

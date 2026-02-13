@@ -31,6 +31,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #'
 #' #get segs for comparison
@@ -40,7 +41,7 @@
 #'                      these_sample_ids = c("02-13135T", "04-28140T"),
 #'                      genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP","GNA13"),
 #'                      show_x_labels = FALSE)
-#'
+#'}
 cnvKompare = function(patient_id,
                       these_sample_ids,
                       this_seg,

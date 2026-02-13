@@ -49,6 +49,7 @@ The data type can be specified with the \code{mode} argument, which accepts one 
 Other formats are not supported yet.
 }
 \examples{
+
 bed <- grch37_ashm_regions
 
 test <- liftover(
@@ -57,9 +58,8 @@ test <- liftover(
     target_build = "hg38"
 )
 
-maf <- get_coding_ssm(
-     these_sample_ids = "DOHH-2"
-)
+maf <- GAMBLR.open::get_coding_ssm() \%>\%
+    dplyr::filter(Tumor_Sample_Barcode=="DOHH-2")
 
 test <- liftover(
     data_df = maf,
@@ -67,14 +67,13 @@ test <- liftover(
     target_build = "hg38"
 )
 
-bedpe <- get_manta_sv(
-     these_sample_ids = "DOHH-2"
-)
-
+# retrieve all the SV that were produced from hg38 alignments
+bedpe <- GAMBLR.open::get_manta_sv(projection="hg38") 
+# lift them to grch37
 test <- liftover(
     data_df = bedpe,
     mode = "bedpe",
-    target_build = "hg38"
+    target_build = "grch37"
 )
 
 }

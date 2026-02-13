@@ -1,0 +1,12 @@
+gene	alias	type	chrom	start	end	strand
+CREBBP	CREBBP_KAT	missense,inframe	chr16	3734999	3740999	-
+CREBBP	CREBBP_trunc	trunc	chr16	1	300000000	-
+EZH2	EZH2_SET	missense	chr7	148809146	148811672	-
+NOTCH1	NOTCH1_PEST	trunc	chr9	1	136497003	-
+NOTCH2	NOTCH2_PEST	trunc	chr1	1	119916527	-
+CD79B	CD79B_trunc	trunc	chr17	1	300000000	-
+CD79B	CD79B_ITAM	missense,inframe	chr17	1	63929772	-
+FOXO1	FOXO1_Nterm	missense,inframe,startloss,trunc	chr13	40666135	40666214	-
+FOXO1	FOXO1_DBD	missense,inframe,trunc	chr13	41134886	41239920	-
+MYD88	MYD88_L265P	missense	chr3	38141150	38141150	+
+STAT6	STAT6_DBD	missense,inframe	chr12	57102867	57104557 	-

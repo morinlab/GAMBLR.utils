@@ -38,6 +38,7 @@ sv_to_custom_track = function(sv_bedpe,
                               sv_name = "all"){
 
   if(is_annotated){
+    annotated_sv=sv_bedpe
     #reduce to a bed-like format
     sv_data1 = mutate(annotated_sv, annotation = paste0(chrom1, ":", start1, "_", fusion)) %>%
       dplyr::select(chrom2, start2, end2, tumour_sample_id, annotation, fusion)
@@ -68,19 +69,20 @@ sv_to_custom_track = function(sv_bedpe,
     sv_data[,1] = unlist(lapply(sv_data[,1], function(x){paste0("chr", x)}))
   }
 
-  coo_cols = GAMBLR.helpers::get_gambl_colours("COO")
+  lg_cols = GAMBLR.helpers::get_gambl_colours("lymphgen")
   path_cols = GAMBLR.helpers::get_gambl_colours("pathology")
-  all_cols = c(coo_cols, path_cols)
-  colour_df = data.frame(coo = names(all_cols), colour = all_cols)
+  all_cols = c(lg_cols, path_cols)
+  colour_df = data.frame(lymphgen = names(all_cols), colour = all_cols)
 
   rgb_df = data.frame(t(col2rgb(all_cols))) %>%
-    mutate(consensus_coo_dhitsig = names(all_cols)) %>%
+    mutate(lymphgen = names(all_cols)) %>%
     unite(col = "rgb", red, green, blue, sep = ",")
 
   meta = GAMBLR.helpers::handle_metadata() %>%
-    dplyr::select(sample_id, "consensus_coo_dhitsig", pathology) %>%
-    mutate(consensus_coo_dhitsig = if_else(consensus_coo_dhitsig == "NA", pathology, consensus_coo_dhitsig))
-
+    dplyr::select(sample_id, lymphgen, pathology) %>%
+    mutate(lymphgen = if_else(lymphgen == "NA", pathology, lymphgen))
+  print(head(meta))
+  print(head(rgb_df))
   samples_coloured = left_join(meta, rgb_df)
   sv_bed_coloured = left_join(sv_data, samples_coloured) %>%
     arrange(pathology)

@@ -22,7 +22,7 @@
 #' @export
 #'
 #' @examples
-#'
+#'\dontrun{
 #' all_segments = get_cn_segments()
 #' dlbcl_genomes_meta = get_gambl_metadata() %>%
 #'     dplyr::filter(pathology=="DLBCL",seq_type=="genome")
@@ -39,7 +39,7 @@
 #'                         metadata=dlbcl_genomes_meta,
 #'                         comparison_column = "COO_consensus",
 #'                         comparison_values = c("GCB","ABC"))
-#'
+#'}
 gistic_to_cn_state_matrix <- function(gistic_lesions_file,
                                       these_samples_metadata,
                                       seg_data,

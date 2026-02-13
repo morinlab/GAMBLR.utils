@@ -19,6 +19,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #'
 #' #get all ssm in the MYC aSHM region
@@ -30,7 +31,7 @@
 #' #get mutations covered in WEX with no padding
 #' maf = genome_to_exome(maf = myc_ashm_maf,
 #'                 padding = 0)
-#'
+#'}
 genome_to_exome = function(maf,
                            custom_bed,
                            genome_build = "grch37",

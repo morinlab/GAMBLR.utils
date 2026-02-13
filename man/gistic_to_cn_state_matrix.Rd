@@ -54,7 +54,7 @@ a list of data frames
 Make a binary CN matrix in GISTIC regions using segmented data
 }
 \examples{
-
+\dontrun{
 all_segments = get_cn_segments()
 dlbcl_genomes_meta = get_gambl_metadata() \%>\%
     dplyr::filter(pathology=="DLBCL",seq_type=="genome")
@@ -71,5 +71,5 @@ prettyForestPlot(mutmat=gambl_cn_matrix_gistic_peaks,
                         metadata=dlbcl_genomes_meta,
                         comparison_column = "COO_consensus",
                         comparison_values = c("GCB","ABC"))
-
+}
 }

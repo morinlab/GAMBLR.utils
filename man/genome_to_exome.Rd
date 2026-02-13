@@ -36,6 +36,7 @@ Pass the incoming MAF (genome) to the \code{maf} parameter as the only required 
 Refer to parameter descriptions for more information on how to use the available parameters.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 #get all ssm in the MYC aSHM region
@@ -47,5 +48,5 @@ maf = genome_to_exome(maf = myc_ashm_maf)
 #get mutations covered in WEX with no padding
 maf = genome_to_exome(maf = myc_ashm_maf,
                 padding = 0)
-
+}
 }

@@ -3,7 +3,7 @@
 #'
 #' @description Assign the copy number value to a region based on the segment(s) that overlap it
 #'
-#' @details This function returns CN states for a single region specified in the format "chromosome:start-end"
+#' @details This function returns CN states ford a single region specified in the format "chromosome:start-end"
 #' using segmented copy number data (seg_data). It will either return a segment in the standard format (all original columns)
 #' or a streamlined format with only the ID and CN columns
 #'
@@ -23,13 +23,13 @@
 #' @export
 #'
 #' @examples
-#'
+#'\dontrun{
 #' region_segs = process_cn_segments_by_region(
 #'        region = "chrX:1-1000000",
 #'        streamlined = FALSE,
 #'        weighted_average = T,
 #'        seg_data = seg_data)
-#'
+#'}
 process_cn_segments_by_region = function(seg_data,
                                          region,
                                          streamlined=FALSE,
@@ -53,10 +53,14 @@ process_cn_segments_by_region = function(seg_data,
   all_segs =
     dplyr::filter(seg_data, (chrom == chromosome & start >= qstart & start <= qend)|
                     (chrom == chromosome & end > qstart & end <= qend)|
-                    (chrom == chromosome & end > qend & start <= qstart)) %>%
+                    (chrom == chromosome & start < qstart & end >= qend)) %>%
     mutate(start=ifelse(start < qstart,qstart,start),end=ifelse(end>qend,qend,end)) %>%
     mutate(length=end-start) %>% 
     dplyr::filter(length>0)
+  if(verbose){
+    print(paste(chromosome,qstart,qend))
+    print(all_segs)
+  }
   if(nrow(all_segs)==0){
     if(verbose){
       print(paste("NO values found for",region))
@@ -70,8 +74,10 @@ process_cn_segments_by_region = function(seg_data,
   if(weighted_average){
     all_segs = all_segs %>%
       group_by(ID) %>%
-      summarise(total_L = sum(length), log.ratio = sum(logr_L)/sum(length),
-                CN = sum(CN_L)/sum(length)) %>% ungroup()
+      summarise(total_L = sum(length),
+                CN = sum(CN_L)/sum(length)) %>% 
+                ungroup() %>%
+                mutate(log.ratio = log(CN/2,2))
     if(verbose){
       print(head(all_segs))
     }
@@ -145,7 +151,7 @@ process_cn_segments_by_region = function(seg_data,
 #'
 #' @examples
 #'
-#'
+#'\dontrun{
 #' dlbcl_genome_meta = get_gambl_metadata() %>%
 #'     filter(pathology=="DLBCL",
 #'     seq_type=="genome")
@@ -164,7 +170,7 @@ process_cn_segments_by_region = function(seg_data,
 #'                              seg_data=all_segments,
 #'                              strategy="GISTIC",
 #'                              gistic_lesions_file="all_lesions.conf_90.txt")
-#'
+#'}
 #'
 segmented_data_to_cn_matrix = function(seg_data,
                             strategy="auto_split",

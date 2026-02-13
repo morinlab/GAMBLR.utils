@@ -1,21 +1,35 @@
-#' Map region to bins
+#' Map regions to bins
 #'
-#' @param query_regions Argument to specify. TODO
-#' @param regions Additional argument. TODO
-#' @param query_type Additional argument. TODO
-#' @param first Additional argument. TODO
+#' Given query gene or regions, return the overlapping bin(s)
+#' from a candidate set of regions. Overlap is assessed by chromosome match and
+#' whether the query region starts inside a candidate region or fully contains it.
 #'
-#' @return a named list
+#' @param query_regions Character vector of genomic regions (e.g. "chr17:777-999")
+#'   or gene symbols if `query_type = "gene"`.
+#' @param regions Character vector of candidate regions (bins) to match against.
+#' @param query_type One of `c("region", "gene")`. If `"gene"`, `query_regions`
+#'   is interpreted as gene symbols and converted to regions via
+#'   `gene_to_region()`.
+#' @param first Logical; if `TRUE`, return only the first match per query region.
+#'   If `FALSE`, return all matches.
+#'
+#' @return A named list keyed by query region name with value(s) of matched
+#'   region(s). When `first = TRUE`, each element is a single region string; when
+#'   `first = FALSE`, each element is a character vector of all matches.
 #' @export
 #'
 #' @examples
-#'
+#' \dontrun{
 #' gene_region <- gene_to_region("TP53")
-#'
+#' 
 #' all_bins <- colnames(cn_state_matrix)
+#' 
+#' TP53_bin <- map_regions_to_bins(gene_region, all_bins, first = TRUE)
 #'
-#' TP53_bin <- map_region_to_bins(gene_region, all_bins, first = TRUE)
-#'
+#' # multiple regions
+#' my_regions <- c("chr17:7500000-7600000", "chr1:100000-120000")
+#' region_bins <- map_regions_to_bins(my_regions, all_bins, first = FALSE)
+#'}
 map_regions_to_bins <- function(query_regions,
                                regions,
                                query_type = "region",

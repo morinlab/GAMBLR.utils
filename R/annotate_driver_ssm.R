@@ -19,8 +19,8 @@
 #' library(GAMBLR.data)
 #' 
 #' # Get MAF-format data frame 
-#' my_meta <- get_gambl_metadata()
-#' my_maf <- get_ssm_by_samples(
+#' my_meta <- GAMBLR.open::get_gambl_metadata()
+#' my_maf <- GAMBLR.open::get_coding_ssm(
 #'   these_samples_metadata = my_meta,
 #'   projection = "grch37"
 #' )

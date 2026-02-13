@@ -41,14 +41,14 @@
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
-#' sv_df = get_manta_sv(verbose = FALSE)
+#' \dontrun{
+#' sv_df = GAMBLR.open::get_manta_sv(verbose = FALSE)
 #' annotated_entrez = annotate_sv(sv_data = sv_df,
 #'                                with_chr_prefix = FALSE,
 #'                                collapse_redundant = FALSE,
 #'                                return_as = "bedpe_entrez", 
 #'                                genome_build = "grch37")
-#'
+#'}
 annotate_sv = function(sv_data,
                        partner_bed,
                        with_chr_prefix = FALSE,
