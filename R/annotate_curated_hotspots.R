@@ -14,9 +14,17 @@
 #' \code{mutation_alias}, and \code{mutation_annotation}.
 #' @param genes_coding Optional character vector of genes to include in the
 #' coding summary. Defaults to Tier 1 lymphoma genes.
+#' @param genes_noncoding Optional character vector of genes to include for
+#' non-coding mutation summaries. If NULL, non-coding mutations are not included.
 #' @param driver_report_genes Optional character vector of genes to include in
 #' the driver summary. If NULL, genes with at least one \code{_driver}
 #' annotation are used.
+#' @param coding_value Numeric value used for coding mutation indicators
+#' (default 2).
+#' @param noncoding_value Numeric value used for non-coding mutation indicators
+#' when \code{genes_noncoding} is provided (default 1).
+#' @param driver_value Numeric value used for driver mutation indicators
+#' (default 1).
 #' @param granular_report_genes Optional character vector of genes for which
 #' to include granular hotspot aliases (default \code{c("FOXO1","CD79B")}).
 #'
@@ -46,10 +54,25 @@
 #' )
 #' }
 #'
+#' \dontrun{
+#' # Include selected non-coding genes and custom indicator values
+#' maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm(include_silent=TRUE))
+#' summary_mat = summarise_mutation_status(
+#'   maf_anno,
+#'   genes_noncoding = c("PIM1","SOCS1"),
+#'   coding_value = 2,
+#'   noncoding_value = 1,
+#'   driver_value = 1
+#' )
+#' }
+#'
 summarise_mutation_status = function(annotated_maf,
                                      genes_coding = NULL,
                                      genes_noncoding = NULL,
                                      driver_report_genes = NULL,
+                                     coding_value = 2,
+                                     noncoding_value =1,
+                                     driver_value = 1,
                                      granular_report_genes = c("FOXO1","CD79B")){
   if(is.null(genes_coding)){
     genes_coding = lymphoma_genes %>%
@@ -74,7 +97,7 @@ summarise_mutation_status = function(annotated_maf,
       mutate(Variant=paste0(Hugo_Symbol,"_noncoding")) %>%
       ungroup() %>%
       dplyr::select(-Hugo_Symbol) %>%
-      mutate(mutated=1) # will fill missing with 0 at the join stage
+      mutate(mutated=noncoding_value) # will fill missing with 0 at the join stage
     print(head(noncoding_count))
   }
 
@@ -100,7 +123,7 @@ summarise_mutation_status = function(annotated_maf,
     mutate(Variant=paste0(Hugo_Symbol,"_coding")) %>%
     ungroup() %>%
     dplyr::select(-Hugo_Symbol) %>%
-    mutate(mutated=1) # will fill missing with 0 at the join stage
+    mutate(mutated=coding_value) # will fill missing with 0 at the join stage
 
   detailed_driver_count = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% granular_report_genes) %>%
@@ -121,7 +144,7 @@ summarise_mutation_status = function(annotated_maf,
     group_by(mutation_annotation, Tumor_Sample_Barcode) %>%
     unique() %>%
     rename(Variant=mutation_annotation) %>%
-    mutate(mutated=1) # will fill missing with 0 at the join stage
+    mutate(mutated=driver_value) # will fill missing with 0 at the join stage
   if(!is.null(genes_noncoding)){
     long = bind_rows(
       noncoding_count,

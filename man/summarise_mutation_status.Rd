@@ -6,8 +6,12 @@
 \usage{
 summarise_mutation_status(
   annotated_maf,
-  genes_coding,
+  genes_coding = NULL,
+  genes_noncoding = NULL,
   driver_report_genes = NULL,
+  coding_value = 2,
+  noncoding_value = 1,
+  driver_value = 1,
   granular_report_genes = c("FOXO1", "CD79B")
 )
 }
@@ -19,9 +23,21 @@ summarise_mutation_status(
 \item{genes_coding}{Optional character vector of genes to include in the
 coding summary. Defaults to Tier 1 lymphoma genes.}
 
+\item{genes_noncoding}{Optional character vector of genes to include for
+non-coding mutation summaries. If NULL, non-coding mutations are not included.}
+
 \item{driver_report_genes}{Optional character vector of genes to include in
 the driver summary. If NULL, genes with at least one \code{_driver}
 annotation are used.}
+
+\item{coding_value}{Numeric value used for coding mutation indicators
+(default 2).}
+
+\item{noncoding_value}{Numeric value used for non-coding mutation indicators
+when \code{genes_noncoding} is provided (default 1).}
+
+\item{driver_value}{Numeric value used for driver mutation indicators
+(default 1).}
 
 \item{granular_report_genes}{Optional character vector of genes for which
 to include granular hotspot aliases (default \code{c("FOXO1","CD79B")}).}
@@ -47,17 +63,29 @@ maf = GAMBLR.open::get_coding_ssm(
   these_samples_metadata = GAMBLR.open::get_gambl_metadata(),
   this_seq_type = "capture"
 )
-maf_anno = annotate_curated_hotspots(maf)
-summary_mat = summarize_mutation_status(maf_anno)
+maf_anno = annotate_curated_drivers(maf)
+summary_mat = summarise_mutation_status(maf_anno)
 summary_mat[1:5, 1:5]
 }
 
 \dontrun{
-maf_anno = annotate_curated_hotspots(GAMBLR.open::get_coding_ssm())
-summary_mat = summarize_mutation_status(
+maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm())
+summary_mat = summarise_mutation_status(
   maf_anno,
   genes_coding = c("MYD88","NOTCH1","FOXO1"),
   granular_report_genes = c("FOXO1")
+)
+}
+
+\dontrun{
+# Include selected non-coding genes and custom indicator values
+maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm(include_silent=TRUE))
+summary_mat = summarise_mutation_status(
+  maf_anno,
+  genes_noncoding = c("PIM1","SOCS1"),
+  coding_value = 2,
+  noncoding_value = 1,
+  driver_value = 1
 )
 }
 

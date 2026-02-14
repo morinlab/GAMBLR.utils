@@ -57,11 +57,11 @@ coding_capture_maf_anno = annotate_curated_drivers(coding_capture_maf)
 
 dplyr::filter(coding_capture_maf_anno, hot_spot==TRUE) \%>\%
   dplyr::select(Hugo_Symbol,Start_Position, HGVSp_Short, mutation_alias, mutation_annotation) \%>\%
-  as.data.frame() \%>\% 
+  as.data.frame() \%>\%
   unique()
 
 # How does this look for FOXO1?
-dplyr::filter(coding_capture_maf_anno, Hugo_Symbol=="FOXO1")  \%>\% 
+dplyr::filter(coding_capture_maf_anno, Hugo_Symbol=="FOXO1")  \%>\%
   dplyr::group_by(mutation_alias) \%>\% dplyr::count()
 
 }
