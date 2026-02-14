@@ -37,7 +37,8 @@ Annotate MAF-like data frame with a hot_spot column indicating recurrent mutatio
 \details{
 This function annotates a MAF-like data frame and will create or overwrite the
 "hot_spot" column based on curated hotspot rules. Genes for hotspot review are supplied
-with the \code{genes_of_interest} parameter.
+with the \code{genes_of_interest} parameter. Overlap is determined using a fuzzy interval
+match so any overlap between a mutation and a hotspot region is considered a match.
 Currently only a few sets of genes are supported, see parameter description for more information and limitations.
 The desired genome build can be specified with \code{genome_build} parameter (useful if you loaded the MAF from disk).
 Obviously, you need to specify the same genome_build as the coordinate system used in the incoming MAF.

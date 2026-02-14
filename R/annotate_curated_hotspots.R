@@ -4,7 +4,8 @@
 #'
 #' @details This function annotates a MAF-like data frame and will create or overwrite the
 #' "hot_spot" column based on curated hotspot rules. Genes for hotspot review are supplied
-#' with the `genes_of_interest` parameter.
+#' with the `genes_of_interest` parameter. Overlap is determined using a fuzzy interval
+#' match so any overlap between a mutation and a hotspot region is considered a match.
 #' Currently only a few sets of genes are supported, see parameter description for more information and limitations.
 #' The desired genome build can be specified with `genome_build` parameter (useful if you loaded the MAF from disk).
 #' Obviously, you need to specify the same genome_build as the coordinate system used in the incoming MAF.
@@ -185,7 +186,7 @@ annotate_curated_hotspots = function(maf_data,
     coordinates,
     columns1 = c("Hugo_Symbol", "Chromosome", "Start_Position", "End_Position"),
     columns2 = c("Hugo_Symbol", "chrom", "start", "end"),
-    type = "any",
+    type = "fuzzy",
     nomatch = TRUE
   )
 
