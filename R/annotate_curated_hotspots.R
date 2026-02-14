@@ -1,5 +1,159 @@
-#' @title Annotate curated hotspots
-#' 
+#' @title Summarize mutation status
+#'
+#' @description Create a wide sample-by-variant matrix summarizing coding,
+#' driver, and hotspot-level mutation status from an annotated MAF.
+#'
+#' @details This function expects output from \code{annotate_curated_hotspots()}
+#' (or equivalent) with \code{mutation_alias} and \code{mutation_annotation}
+#' columns. It produces a wide matrix with 0/1 indicators for each
+#' sample-variant combination, including per-gene coding status, driver status,
+#' and granular hotspot aliases.
+#'
+#' @param annotated_maf A data frame in MAF format that includes
+#' \code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
+#' \code{mutation_alias}, and \code{mutation_annotation}.
+#' @param genes_coding Optional character vector of genes to include in the
+#' coding summary. Defaults to Tier 1 lymphoma genes.
+#' @param driver_report_genes Optional character vector of genes to include in
+#' the driver summary. If NULL, genes with at least one \code{_driver}
+#' annotation are used.
+#' @param granular_report_genes Optional character vector of genes for which
+#' to include granular hotspot aliases (default \code{c("FOXO1","CD79B")}).
+#'
+#' @return A wide data frame (matrix-like) with rows as samples and columns as
+#' variant categories, containing 0/1 indicators.
+#'
+#' @import dplyr tidyr
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' maf = GAMBLR.open::get_coding_ssm(
+#'   these_samples_metadata = GAMBLR.open::get_gambl_metadata(),
+#'   this_seq_type = "capture"
+#' )
+#' maf_anno = annotate_curated_drivers(maf)
+#' summary_mat = summarise_mutation_status(maf_anno)
+#' summary_mat[1:5, 1:5]
+#' }
+#'
+#' \dontrun{
+#' maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm())
+#' summary_mat = summarise_mutation_status(
+#'   maf_anno,
+#'   genes_coding = c("MYD88","NOTCH1","FOXO1"),
+#'   granular_report_genes = c("FOXO1")
+#' )
+#' }
+#'
+summarise_mutation_status = function(annotated_maf,
+                                     genes_coding = NULL,
+                                     genes_noncoding = NULL,
+                                     driver_report_genes = NULL,
+                                     granular_report_genes = c("FOXO1","CD79B")){
+  if(is.null(genes_coding)){
+    genes_coding = lymphoma_genes %>%
+    dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
+    pull(Gene)
+  }
+
+  # TODO similarly fill in counts for aSHM genes (should restrict to aSHM coordinates)
+
+
+
+  #expects the output of Annotate curated drivers
+  #drop Silent and hang onto them for later
+  if(!is.null(genes_noncoding)){
+    #print("including non-coding")
+    noncoding_maf = dplyr::filter(annotated_maf, ! Variant_Classification %in% vc_nonSynonymous,Hugo_Symbol %in% genes_noncoding)
+    #print(nrow(noncoding_maf))
+    noncoding_count = noncoding_maf %>%
+      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+      group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+      unique() %>%
+      mutate(Variant=paste0(Hugo_Symbol,"_noncoding")) %>%
+      ungroup() %>%
+      dplyr::select(-Hugo_Symbol) %>%
+      mutate(mutated=1) # will fill missing with 0 at the join stage
+    print(head(noncoding_count))
+  }
+
+  coding_maf = dplyr::filter(annotated_maf, Variant_Classification %in% vc_nonSynonymous)
+  if(is.null(driver_report_genes)){
+    driver_report_genes = dplyr::filter(annotated_maf,grepl("driver",mutation_annotation))  %>%
+    pull(Hugo_Symbol) %>% unique()
+  }
+  #separately count:
+  # - coding variants
+  # - drivers
+  # - non-drivers
+  # - each distinct hotspot
+
+  coding_maf = coding_maf %>%
+    dplyr::filter(Hugo_Symbol %in% genes_coding) %>%
+    strip_genomic_classes()
+
+  coding_count = coding_maf %>%
+    dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+    group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+    unique() %>%
+    mutate(Variant=paste0(Hugo_Symbol,"_coding")) %>%
+    ungroup() %>%
+    dplyr::select(-Hugo_Symbol) %>%
+    mutate(mutated=1) # will fill missing with 0 at the join stage
+
+  detailed_driver_count = coding_maf %>%
+    dplyr::filter(Hugo_Symbol %in% granular_report_genes) %>%
+    dplyr::select(mutation_alias, Tumor_Sample_Barcode) %>%
+    group_by(mutation_alias, Tumor_Sample_Barcode) %>%
+    unique() %>%
+    rename(Variant=mutation_alias) %>%
+    mutate(mutated=1) # will fill missing with 0 at the join stage
+  if(is.null(driver_report_genes)){
+    # use all genes that have at least one annotated in the MAF (column mutation_annotation)
+    driver_report_genes = dplyr::filter(coding_maf,grepl("_driver",mutation_annotation)) %>%
+      pull(Hugo_Symbol) %>%
+      unique()
+  }
+  driver_count = coding_maf %>%
+    dplyr::filter(Hugo_Symbol %in% driver_report_genes) %>%
+    dplyr::select(mutation_annotation, Tumor_Sample_Barcode) %>%
+    group_by(mutation_annotation, Tumor_Sample_Barcode) %>%
+    unique() %>%
+    rename(Variant=mutation_annotation) %>%
+    mutate(mutated=1) # will fill missing with 0 at the join stage
+  if(!is.null(genes_noncoding)){
+    long = bind_rows(
+      noncoding_count,
+      coding_count,
+      detailed_driver_count,
+      driver_count
+    )
+  }else{
+    long = bind_rows(
+      coding_count,
+      detailed_driver_count,
+      driver_count
+    )
+  }
+
+
+  all_samples = distinct(coding_maf, Tumor_Sample_Barcode)
+  all_variants = distinct(long, Variant)
+
+  wide = long %>%
+    tidyr::complete(all_samples, all_variants, fill = list(mutated = 0)) %>%
+    tidyr::pivot_wider(names_from = Variant, values_from = mutated, values_fill = 0) %>%
+    column_to_rownames("Tumor_Sample_Barcode")
+
+  return(wide)
+
+}
+
+
+
+#' @title Annotate curated drivers
+#'
 #' @description Annotate MAF-like data frame with a hot_spot column indicating recurrent mutations.
 #'
 #' @details This function annotates a MAF-like data frame and will create or overwrite the
@@ -13,41 +167,44 @@
 #' @param annotated_maf A maf_data object or data frame in MAF format that has hotspots annotated using the function annotate_hotspots().
 #' @param genes_of_interest An optional vector of genes for hotspot annotation. By default, the genes present in the curated hotspot tables are supported.
 #' @param genome_build Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.
-#' @param custom_coordinates A data frame with custom coordinates for the hot spots. 
+#' @param custom_coordinates A data frame with custom coordinates for the hot spots.
 #' All mutations in any of the regions specified in the data frame will be marked as hot spots.
 #' The data frame must have the following columns: "Hugo_Symbol", "chrom", "start", and "end".
 #' Optional columns are: "classes" (regex for Variant_Classification) and "alias" (identifier for the hotspot).
+#' The "type" column can include tokens such as missense, inframe, trunc, startloss,
+#' stoploss, splicesite, and spliceregion (comma-separated).
 #' @param existing_values_action Character. How to handle existing columns.
 #' Use "clobber" (default) to always reset "hot_spot" and "mutation_alias"
 #' before re-annotating. Use "update" to only fill missing values.
-#' @return The same data frame (as given to the `annotated_maf` parameter) with the reviewed columns "hot_spot" and "mutation_alias".
+#' @return The same data frame (as given to the `annotated_maf` parameter) with the reviewed columns
+#' "hot_spot", "mutation_alias", and "mutation_annotation".
 #'
 #' @import dplyr
 #' @export
 #'
 #' @examples
-#' 
+#'
 #' coding_capture_maf = GAMBLR.open::get_coding_ssm(
 #'   these_samples_metadata = GAMBLR.open::get_gambl_metadata() %>%
 #'     dplyr::filter(cohort=="dlbcl_reddy"),
 #'   this_seq_type = "capture")
 #' ## annotate all supported hotspots
-#' coding_capture_maf_anno = annotate_curated_hotspots(coding_capture_maf)
-#' 
+#' coding_capture_maf_anno = annotate_curated_drivers(coding_capture_maf)
+#'
 #' dplyr::filter(coding_capture_maf_anno, hot_spot==TRUE) %>%
-#'   dplyr::select(Hugo_Symbol,Start_Position, HGVSp_Short, mutation_alias) %>%
-#'   as.data.frame() %>% 
+#'   dplyr::select(Hugo_Symbol,Start_Position, HGVSp_Short, mutation_alias, mutation_annotation) %>%
+#'   as.data.frame() %>%
 #'   unique()
-#' 
+#'
 #' # How does this look for FOXO1?
-#' dplyr::filter(coding_capture_maf_anno, Hugo_Symbol=="FOXO1")  %>% 
+#' dplyr::filter(coding_capture_maf_anno, Hugo_Symbol=="FOXO1")  %>%
 #'   dplyr::group_by(mutation_alias) %>% dplyr::count()
-#' 
+#'
 
 
 
-annotate_curated_hotspots = function(maf_data,
-                           genes_of_interest = c("FOXO1", "MYD88", "CREBBP", "NOTCH1", "NOTCH2", "CD79B", "EZH2"),
+annotate_curated_drivers = function(maf_data,
+                           genes_of_interest = c("MYD88", "NOTCH1", "NOTCH2"),
                            genome_build,
                            custom_coordinates,
                            existing_values_action = "clobber"){
@@ -55,7 +212,8 @@ annotate_curated_hotspots = function(maf_data,
   if(missing(genome_build)){
     if("maf_data" %in% class(maf_data)){
       genome_build = get_genome_build(maf_data)
-      #drop our S3 classes because these additional attributes seem to cause some problems when the data is subsequently munged.
+      # drop our S3 classes because these additional attributes seem to
+      # cause some problems when the data is subsequently munged.
       annotated_maf = strip_genomic_classes(maf_data)
     }else{
       if("genome_build" %in% colnames(maf_data)){
@@ -114,10 +272,6 @@ annotate_curated_hotspots = function(maf_data,
       annotated_maf = annotated_maf %>%
         dplyr::mutate(hot_spot = "FALSE")
     }
-    if(!"mutation_alias" %in% colnames(annotated_maf) && "hotspot_alias" %in% colnames(annotated_maf)){
-      annotated_maf = annotated_maf %>%
-        dplyr::mutate(mutation_alias = hotspot_alias)
-    }
     if(!"mutation_alias" %in% colnames(annotated_maf)){
       annotated_maf = annotated_maf %>%
         dplyr::mutate(mutation_alias = paste0(Hugo_Symbol, "_other"))
@@ -133,10 +287,7 @@ annotate_curated_hotspots = function(maf_data,
         )
       )
   }
-  if("hotspot_alias" %in% colnames(annotated_maf)){
-    annotated_maf = annotated_maf %>%
-      dplyr::select(-hotspot_alias)
-  }
+
   if(!".row_id" %in% colnames(annotated_maf)){
     annotated_maf = annotated_maf %>%
       dplyr::mutate(.row_id = dplyr::row_number())
@@ -218,6 +369,15 @@ annotate_curated_hotspots = function(maf_data,
       dplyr::select(-.row_id)
   }
 
+  reviewed_maf = reviewed_maf %>%
+    dplyr::mutate(
+      mutation_annotation = ifelse(
+        mutation_alias == paste0(Hugo_Symbol, "_other"),
+        paste0(Hugo_Symbol, "_unknown"),
+        paste0(Hugo_Symbol, "_driver")
+      )
+    )
+
   if(original_has_maf_class && exists("create_maf_data", mode = "function")){
     reviewed_maf = create_maf_data(reviewed_maf, genome_build)
   }
@@ -286,6 +446,12 @@ get_hotspot_coordinates = function(genome_build){
     if("startloss" %in% tokens){
       classes = c(classes, "Translation_Start_Site")
     }
+    if("splicesite" %in% tokens){
+      classes = c(classes, "Splice_Site")
+    }
+    if("spliceregion" %in% tokens){
+      classes = c(classes, "Splice_Region")
+    }
     if(length(classes) == 0){
       classes = vc_nonSynonymous
     }
@@ -294,7 +460,7 @@ get_hotspot_coordinates = function(genome_build){
 
   coordinates = coordinates %>%
     dplyr::mutate(classes = vapply(type, type_to_classes, character(1)))
-  
+
   return(coordinates)
-  
+
 }
