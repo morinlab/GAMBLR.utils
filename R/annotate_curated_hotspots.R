@@ -16,17 +16,18 @@
 #' coding summary. Defaults to Tier 1 lymphoma genes.
 #' @param genes_noncoding Optional character vector of genes to include for
 #' non-coding mutation summaries. If NULL, non-coding mutations are not included.
-#' @param driver_report_genes Optional character vector of genes to include in
-#' the driver summary. If NULL, genes with at least one \code{_driver}
-#' annotation are used.
-#' @param coding_value Numeric value used for coding mutation indicators
-#' (default 2).
-#' @param noncoding_value Numeric value used for non-coding mutation indicators
-#' when \code{genes_noncoding} is provided (default 1).
-#' @param driver_value Numeric value used for driver mutation indicators
-#' (default 1).
-#' @param granular_report_genes Optional character vector of genes for which
+#' @param genes_granular_report Optional character vector of genes for which
 #' to include granular hotspot aliases (default \code{c("FOXO1","CD79B")}).
+#' @param genes_drop_unannotated Optional character vector of genes for which
+#' catch-all columns (e.g. \code{GENE_other} or \code{GENE_unknown}) should
+#' be dropped from the output. Mutually exclusive with \code{gene_drop_policy}.
+#' @param gene_drop_policy Optional named list defining gene drop policies, e.g.
+#' \code{list(all = c("IGLL5"), unannotated = c("KMT2D"))}. Valid keys are
+#' \code{all} (drop all columns for those genes) and \code{unannotated} (drop only
+#' catch-all columns). Mutually exclusive with \code{genes_drop_unannotated}.
+#' @param encoding_policy Named list controlling the numeric values used for
+#' coding, non-coding, and driver indicators. Default is
+#' \code{list(coding = 2, noncoding = 1, driver = 1)}.
 #'
 #' @return A wide data frame (matrix-like) with rows as samples and columns as
 #' variant categories, containing 0/1 indicators.
@@ -50,7 +51,8 @@
 #' summary_mat = summarise_mutation_status(
 #'   maf_anno,
 #'   genes_coding = c("MYD88","NOTCH1","FOXO1"),
-#'   granular_report_genes = c("FOXO1")
+#'   genes_granular_report = c("FOXO1"),
+#'   genes_drop_unannotated = c("NOTCH1")
 #' )
 #' }
 #'
@@ -60,20 +62,17 @@
 #' summary_mat = summarise_mutation_status(
 #'   maf_anno,
 #'   genes_noncoding = c("PIM1","SOCS1"),
-#'   coding_value = 2,
-#'   noncoding_value = 1,
-#'   driver_value = 1
+#'   encoding_policy = list(coding = 2, noncoding = 1, driver = 1)
 #' )
 #' }
 #'
 summarise_mutation_status = function(annotated_maf,
                                      genes_coding = NULL,
                                      genes_noncoding = NULL,
-                                     driver_report_genes = NULL,
-                                     coding_value = 2,
-                                     noncoding_value =1,
-                                     driver_value = 1,
-                                     granular_report_genes = c("FOXO1","CD79B")){
+                                     genes_granular_report = c("FOXO1","CD79B"),
+                                     genes_drop_unannotated = NULL,
+                                     gene_drop_policy = NULL,
+                                     encoding_policy = list(coding = 2, noncoding = 1, driver = 1)){
   if(is.null(genes_coding)){
     genes_coding = lymphoma_genes %>%
     dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
@@ -82,6 +81,22 @@ summarise_mutation_status = function(annotated_maf,
 
   # TODO similarly fill in counts for aSHM genes (should restrict to aSHM coordinates)
 
+
+  if(!is.null(genes_drop_unannotated) && !is.null(gene_drop_policy)){
+    stop("Provide only one of genes_drop_unannotated or gene_drop_policy")
+  }
+  if(is.null(gene_drop_policy) && !is.null(genes_drop_unannotated)){
+    gene_drop_policy = list(unannotated = genes_drop_unannotated)
+  }
+  if(is.null(gene_drop_policy)){
+    gene_drop_policy = list()
+  }
+  if(!is.null(gene_drop_policy$all) && !is.null(gene_drop_policy$unannotated)){
+    overlap = intersect(gene_drop_policy$all, gene_drop_policy$unannotated)
+    if(length(overlap) > 0){
+      stop(paste0("Genes cannot be in both gene_drop_policy$all and $unannotated: ", paste(overlap, collapse=", ")))
+    }
+  }
 
 
   #expects the output of Annotate curated drivers
@@ -97,15 +112,13 @@ summarise_mutation_status = function(annotated_maf,
       mutate(Variant=paste0(Hugo_Symbol,"_noncoding")) %>%
       ungroup() %>%
       dplyr::select(-Hugo_Symbol) %>%
-      mutate(mutated=noncoding_value) # will fill missing with 0 at the join stage
+      mutate(mutated = encoding_policy$noncoding) # will fill missing with 0 at the join stage
     print(head(noncoding_count))
   }
 
+
   coding_maf = dplyr::filter(annotated_maf, Variant_Classification %in% vc_nonSynonymous)
-  if(is.null(driver_report_genes)){
-    driver_report_genes = dplyr::filter(annotated_maf,grepl("driver",mutation_annotation))  %>%
-    pull(Hugo_Symbol) %>% unique()
-  }
+
   #separately count:
   # - coding variants
   # - drivers
@@ -116,27 +129,21 @@ summarise_mutation_status = function(annotated_maf,
     dplyr::filter(Hugo_Symbol %in% genes_coding) %>%
     strip_genomic_classes()
 
-  coding_count = coding_maf %>%
-    dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    unique() %>%
-    mutate(Variant=paste0(Hugo_Symbol,"_coding")) %>%
-    ungroup() %>%
-    dplyr::select(-Hugo_Symbol) %>%
-    mutate(mutated=coding_value) # will fill missing with 0 at the join stage
+  
 
   detailed_driver_count = coding_maf %>%
-    dplyr::filter(Hugo_Symbol %in% granular_report_genes) %>%
+    dplyr::filter(Hugo_Symbol %in% genes_granular_report) %>%
     dplyr::select(mutation_alias, Tumor_Sample_Barcode) %>%
     group_by(mutation_alias, Tumor_Sample_Barcode) %>%
     unique() %>%
     rename(Variant=mutation_alias) %>%
-    mutate(mutated=1) # will fill missing with 0 at the join stage
-  if(is.null(driver_report_genes)){
-    # use all genes that have at least one annotated in the MAF (column mutation_annotation)
-    driver_report_genes = dplyr::filter(coding_maf,grepl("_driver",mutation_annotation)) %>%
-      pull(Hugo_Symbol) %>%
-      unique()
+    mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
+  driver_report_genes = dplyr::filter(coding_maf, grepl("_driver", mutation_annotation)) %>%
+    pull(Hugo_Symbol) %>%
+    unique()
+  if(!is.null(genes_granular_report)){
+    #remove these from driver_report_genes to avoid redundancy
+    driver_report_genes = setdiff(driver_report_genes, genes_granular_report)
   }
   driver_count = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% driver_report_genes) %>%
@@ -144,7 +151,19 @@ summarise_mutation_status = function(annotated_maf,
     group_by(mutation_annotation, Tumor_Sample_Barcode) %>%
     unique() %>%
     rename(Variant=mutation_annotation) %>%
-    mutate(mutated=driver_value) # will fill missing with 0 at the join stage
+    mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
+  
+  skip_genes_coding = union(driver_report_genes,genes_granular_report)
+  coding_count = coding_maf %>%
+    dplyr::filter(!Hugo_Symbol %in% skip_genes_coding) %>%
+    dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+    group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+    unique() %>%
+    mutate(Variant=paste0(Hugo_Symbol,"_coding")) %>%
+    ungroup() %>%
+    dplyr::select(-Hugo_Symbol) %>%
+    mutate(mutated = encoding_policy$coding) # will fill missing with 0 at the join stage
+  
   if(!is.null(genes_noncoding)){
     long = bind_rows(
       noncoding_count,
@@ -168,6 +187,23 @@ summarise_mutation_status = function(annotated_maf,
     tidyr::complete(all_samples, all_variants, fill = list(mutated = 0)) %>%
     tidyr::pivot_wider(names_from = Variant, values_from = mutated, values_fill = 0) %>%
     column_to_rownames("Tumor_Sample_Barcode")
+
+  if(length(gene_drop_policy) > 0){
+    drop_cols = character(0)
+    if(!is.null(gene_drop_policy$unannotated)){
+      drop_cols = c(drop_cols, unlist(lapply(gene_drop_policy$unannotated, function(g){
+        c(paste0(g, "_other"), paste0(g, "_unknown"))
+      })))
+    }
+    if(!is.null(gene_drop_policy$all)){
+      drop_cols = c(drop_cols, unlist(lapply(gene_drop_policy$all, function(g){
+        grep(paste0("^", g, "_"), colnames(wide), value = TRUE)
+      })))
+    }
+    if(length(drop_cols) > 0){
+      wide = wide[, setdiff(colnames(wide), unique(drop_cols)), drop = FALSE]
+    }
+  }
 
   return(wide)
 
