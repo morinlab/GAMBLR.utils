@@ -48,20 +48,23 @@ Obviously, you need to specify the same genome_build as the coordinate system us
 }
 \examples{
 
-coding_capture_maf = GAMBLR.open::get_coding_ssm(
-  these_samples_metadata = GAMBLR.open::get_gambl_metadata() \%>\%
-    dplyr::filter(cohort=="dlbcl_reddy"),
-  this_seq_type = "capture")
-## annotate all supported hotspots
-coding_capture_maf_anno = annotate_curated_drivers(coding_capture_maf)
+# Get metadata for all DLBCLs available
+dlbcl_meta = GAMBLR.open::get_gambl_metadata() \%>\% 
+   dplyr::filter(pathology == "DLBCL")
+# get mutations (as maf_data) for all these samples including non-coding (silent) for DLBCLone
+dlbcl_coding = GAMBLR.open::get_all_coding_ssm(
+                                   dlbcl_meta,
+                                   include_silent=TRUE)
 
-dplyr::filter(coding_capture_maf_anno, hot_spot==TRUE) \%>\%
-  dplyr::select(Hugo_Symbol,Start_Position, HGVSp_Short, mutation_alias, mutation_annotation) \%>\%
-  as.data.frame() \%>\%
-  unique()
+# annotate known driver mutations using bundled annotations
+# WARNING: currently hg38 annotations are out of sync with grch37
+# Stick with grch37 for now
+dlbcl_coding = annotate_curated_drivers(maf_data=dlbcl_coding)
 
-# How does this look for FOXO1?
-dplyr::filter(coding_capture_maf_anno, Hugo_Symbol=="FOXO1")  \%>\%
-  dplyr::group_by(mutation_alias) \%>\% dplyr::count()
+#look at the new columns we have
+dplyr::filter(dlbcl_coding,
+             !grepl("other",mutation_alias)) \%>\%
+ dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,mutation_annotation)
+
 
 }

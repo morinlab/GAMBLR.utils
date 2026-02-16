@@ -8,11 +8,11 @@ summarise_mutation_status(
   annotated_maf,
   genes_coding = NULL,
   genes_noncoding = NULL,
-  driver_report_genes = NULL,
-  coding_value = 2,
-  noncoding_value = 1,
-  driver_value = 1,
-  granular_report_genes = c("FOXO1", "CD79B")
+  gene_reporting_policy = NULL,
+  genes_drop_unannotated = NULL,
+  gene_drop_policy = NULL,
+  encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -26,21 +26,25 @@ coding summary. Defaults to Tier 1 lymphoma genes.}
 \item{genes_noncoding}{Optional character vector of genes to include for
 non-coding mutation summaries. If NULL, non-coding mutations are not included.}
 
-\item{driver_report_genes}{Optional character vector of genes to include in
-the driver summary. If NULL, genes with at least one \code{_driver}
-annotation are used.}
+\item{gene_reporting_policy}{Optional named list defining per-gene reporting
+mode. Valid keys are \code{detailed} (granular alias columns) and \code{coding}
+(keep only \code{GENE_coding}). Genes not listed default to driver/unknown.}
 
-\item{coding_value}{Numeric value used for coding mutation indicators
-(default 2).}
+\item{genes_drop_unannotated}{Optional character vector of genes for which
+catch-all columns (e.g. \code{GENE_other} or \code{GENE_unknown}) should
+be dropped from the output. Mutually exclusive with \code{gene_drop_policy}.}
 
-\item{noncoding_value}{Numeric value used for non-coding mutation indicators
-when \code{genes_noncoding} is provided (default 1).}
+\item{gene_drop_policy}{Optional named list defining gene drop policies, e.g.
+\code{list(all = c("IGLL5"), unannotated = c("KMT2D"))}. Valid keys are
+\code{all} (drop all columns for those genes) and \code{unannotated} (drop only
+catch-all columns). Mutually exclusive with \code{genes_drop_unannotated}.}
 
-\item{driver_value}{Numeric value used for driver mutation indicators
-(default 1).}
+\item{encoding_policy}{Named list controlling the numeric values used for
+coding, non-coding, and driver indicators. Default is
+\code{list(coding = 2, noncoding = 1, driver = 1)}.}
 
-\item{granular_report_genes}{Optional character vector of genes for which
-to include granular hotspot aliases (default \code{c("FOXO1","CD79B")}).}
+\item{verbose}{Logical. If TRUE, prints messages describing which columns
+will be dropped based on reporting and drop policies.}
 }
 \value{
 A wide data frame (matrix-like) with rows as samples and columns as
@@ -55,7 +59,9 @@ This function expects output from \code{annotate_curated_hotspots()}
 (or equivalent) with \code{mutation_alias} and \code{mutation_annotation}
 columns. It produces a wide matrix with 0/1 indicators for each
 sample-variant combination, including per-gene coding status, driver status,
-and granular hotspot aliases.
+and granular hotspot aliases. If you want to collapse multiple columns for a
+gene into a single summary column (e.g., \code{MYC_any}), see
+\code{collapse_columns_by_regex()}.
 }
 \examples{
 \dontrun{
@@ -73,7 +79,8 @@ maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm())
 summary_mat = summarise_mutation_status(
   maf_anno,
   genes_coding = c("MYD88","NOTCH1","FOXO1"),
-  granular_report_genes = c("FOXO1")
+  gene_reporting_policy = list(detailed = c("FOXO1"), coding = c("EZH2")),
+  genes_drop_unannotated = c("NOTCH1")
 )
 }
 
@@ -83,9 +90,7 @@ maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm(include_silent=T
 summary_mat = summarise_mutation_status(
   maf_anno,
   genes_noncoding = c("PIM1","SOCS1"),
-  coding_value = 2,
-  noncoding_value = 1,
-  driver_value = 1
+  encoding_policy = list(coding = 2, noncoding = 1, driver = 1)
 )
 }
 

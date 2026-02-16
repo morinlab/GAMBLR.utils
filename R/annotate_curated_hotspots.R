@@ -7,7 +7,9 @@
 #' (or equivalent) with \code{mutation_alias} and \code{mutation_annotation}
 #' columns. It produces a wide matrix with 0/1 indicators for each
 #' sample-variant combination, including per-gene coding status, driver status,
-#' and granular hotspot aliases.
+#' and granular hotspot aliases. If you want to collapse multiple columns for a
+#' gene into a single summary column (e.g., \code{MYC_any}), see
+#' \code{collapse_columns_by_regex()}.
 #'
 #' @param annotated_maf A data frame in MAF format that includes
 #' \code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
@@ -16,8 +18,9 @@
 #' coding summary. Defaults to Tier 1 lymphoma genes.
 #' @param genes_noncoding Optional character vector of genes to include for
 #' non-coding mutation summaries. If NULL, non-coding mutations are not included.
-#' @param genes_granular_report Optional character vector of genes for which
-#' to include granular hotspot aliases (default \code{c("FOXO1","CD79B")}).
+#' @param gene_reporting_policy Optional named list defining per-gene reporting
+#' mode. Valid keys are \code{detailed} (granular alias columns) and \code{coding}
+#' (keep only \code{GENE_coding}). Genes not listed default to driver/unknown.
 #' @param genes_drop_unannotated Optional character vector of genes for which
 #' catch-all columns (e.g. \code{GENE_other} or \code{GENE_unknown}) should
 #' be dropped from the output. Mutually exclusive with \code{gene_drop_policy}.
@@ -28,6 +31,8 @@
 #' @param encoding_policy Named list controlling the numeric values used for
 #' coding, non-coding, and driver indicators. Default is
 #' \code{list(coding = 2, noncoding = 1, driver = 1)}.
+#' @param verbose Logical. If TRUE, prints messages describing which columns
+#' will be dropped based on reporting and drop policies.
 #'
 #' @return A wide data frame (matrix-like) with rows as samples and columns as
 #' variant categories, containing 0/1 indicators.
@@ -51,7 +56,7 @@
 #' summary_mat = summarise_mutation_status(
 #'   maf_anno,
 #'   genes_coding = c("MYD88","NOTCH1","FOXO1"),
-#'   genes_granular_report = c("FOXO1"),
+#'   gene_reporting_policy = list(detailed = c("FOXO1"), coding = c("EZH2")),
 #'   genes_drop_unannotated = c("NOTCH1")
 #' )
 #' }
@@ -69,10 +74,11 @@
 summarise_mutation_status = function(annotated_maf,
                                      genes_coding = NULL,
                                      genes_noncoding = NULL,
-                                     genes_granular_report = c("FOXO1","CD79B"),
+                                     gene_reporting_policy = NULL,
                                      genes_drop_unannotated = NULL,
                                      gene_drop_policy = NULL,
-                                     encoding_policy = list(coding = 2, noncoding = 1, driver = 1)){
+                                     encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+                                     verbose = FALSE){
   if(is.null(genes_coding)){
     genes_coding = lymphoma_genes %>%
     dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
@@ -80,6 +86,32 @@ summarise_mutation_status = function(annotated_maf,
   }
 
   # TODO similarly fill in counts for aSHM genes (should restrict to aSHM coordinates)
+
+  if(is.null(gene_reporting_policy)){
+    gene_reporting_policy = list()
+  }
+  detailed_genes = gene_reporting_policy$detailed
+  if(is.null(detailed_genes)){
+    detailed_genes = character(0)
+  }
+  coding_policy_genes = gene_reporting_policy$coding
+  if(is.null(coding_policy_genes)){
+    coding_policy_genes = character(0)
+  }
+  overlap = intersect(detailed_genes, coding_policy_genes)
+  if(length(overlap) > 0){
+    stop(paste0("Genes cannot be in both gene_reporting_policy$detailed and $coding: ", paste(overlap, collapse=", ")))
+  }
+
+  if(verbose){
+    if(length(detailed_genes) > 0){
+      message("Will keep detailed (alias-level) columns for genes: ", paste(detailed_genes, collapse = ", "))
+      message("Will drop _driver/_unknown columns for genes: ", paste(detailed_genes, collapse = ", "))
+    }
+    if(length(coding_policy_genes) > 0){
+      message("Will keep _coding columns (and drop driver/unknown and detailed) for genes: ", paste(coding_policy_genes, collapse = ", "))
+    }
+  }
 
 
   if(!is.null(genes_drop_unannotated) && !is.null(gene_drop_policy)){
@@ -102,9 +134,9 @@ summarise_mutation_status = function(annotated_maf,
   #expects the output of Annotate curated drivers
   #drop Silent and hang onto them for later
   if(!is.null(genes_noncoding)){
-    #print("including non-coding")
+
     noncoding_maf = dplyr::filter(annotated_maf, ! Variant_Classification %in% vc_nonSynonymous,Hugo_Symbol %in% genes_noncoding)
-    #print(nrow(noncoding_maf))
+
     noncoding_count = noncoding_maf %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
       group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
@@ -113,7 +145,7 @@ summarise_mutation_status = function(annotated_maf,
       ungroup() %>%
       dplyr::select(-Hugo_Symbol) %>%
       mutate(mutated = encoding_policy$noncoding) # will fill missing with 0 at the join stage
-    print(head(noncoding_count))
+
   }
 
 
@@ -132,7 +164,7 @@ summarise_mutation_status = function(annotated_maf,
   
 
   detailed_driver_count = coding_maf %>%
-    dplyr::filter(Hugo_Symbol %in% genes_granular_report) %>%
+    dplyr::filter(Hugo_Symbol %in% detailed_genes) %>%
     dplyr::select(mutation_alias, Tumor_Sample_Barcode) %>%
     group_by(mutation_alias, Tumor_Sample_Barcode) %>%
     unique() %>%
@@ -141,9 +173,11 @@ summarise_mutation_status = function(annotated_maf,
   driver_report_genes = dplyr::filter(coding_maf, grepl("_driver", mutation_annotation)) %>%
     pull(Hugo_Symbol) %>%
     unique()
-  if(!is.null(genes_granular_report)){
-    #remove these from driver_report_genes to avoid redundancy
-    driver_report_genes = setdiff(driver_report_genes, genes_granular_report)
+  if(length(detailed_genes) > 0){
+    driver_report_genes = setdiff(driver_report_genes, detailed_genes)
+  }
+  if(length(coding_policy_genes) > 0){
+    driver_report_genes = setdiff(driver_report_genes, coding_policy_genes)
   }
   driver_count = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% driver_report_genes) %>%
@@ -153,7 +187,7 @@ summarise_mutation_status = function(annotated_maf,
     rename(Variant=mutation_annotation) %>%
     mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
   
-  skip_genes_coding = union(driver_report_genes,genes_granular_report)
+  skip_genes_coding = union(driver_report_genes, detailed_genes)
   coding_count = coding_maf %>%
     dplyr::filter(!Hugo_Symbol %in% skip_genes_coding) %>%
     dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
@@ -194,11 +228,17 @@ summarise_mutation_status = function(annotated_maf,
       drop_cols = c(drop_cols, unlist(lapply(gene_drop_policy$unannotated, function(g){
         c(paste0(g, "_other"), paste0(g, "_unknown"))
       })))
+      if(verbose && length(gene_drop_policy$unannotated) > 0){
+        message("Will drop _other/_unknown columns for genes: ", paste(gene_drop_policy$unannotated, collapse = ", "))
+      }
     }
     if(!is.null(gene_drop_policy$all)){
       drop_cols = c(drop_cols, unlist(lapply(gene_drop_policy$all, function(g){
         grep(paste0("^", g, "_"), colnames(wide), value = TRUE)
       })))
+      if(verbose && length(gene_drop_policy$all) > 0){
+        message("Will drop all columns for genes: ", paste(gene_drop_policy$all, collapse = ", "))
+      }
     }
     if(length(drop_cols) > 0){
       wide = wide[, setdiff(colnames(wide), unique(drop_cols)), drop = FALSE]
@@ -210,6 +250,186 @@ summarise_mutation_status = function(annotated_maf,
 }
 
 
+
+
+
+#' @title Add binary status columns from metadata
+#'
+#' @description Add one or more indicator columns to a matrix/data frame based on
+#' metadata fields (e.g., BCL2/BCL6/MYC rearrangement status).
+#'
+#' @param mat A matrix or data frame with sample IDs as row names.
+#' @param metadata A data frame containing sample-level metadata.
+#' @param mapping Named character vector or list mapping new column names to
+#' metadata field names. For example, \code{c(BCL6_SV = "bcl6_ba")}.
+#' @param positive_values Vector of values in the metadata field that indicate
+#' a positive status (default \code{"POS"}).
+#' @param encoding_policy Named list controlling the numeric values used for
+#' positive and negative samples. Default is
+#' \code{list(positive = 2, negative = 0)}.
+#' @param sample_id_col Column name in \code{metadata} containing sample IDs
+#' (default \code{"sample_id"}).
+#' @param debug Logical. If TRUE, prints matching diagnostics.
+#'
+#' @return The input \code{mat} with new columns appended.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' dlbcl_mat = encode_sv_status(
+#'   dlbcl_mat,
+#'   dlbcl_meta,
+#'   mapping = c(BCL6_SV = "bcl6_ba", BCL2_SV = "bcl2_ba", MYC_SV = "myc_ba"),
+#'   positive_values = "POS",
+#'   encoding_policy = list(positive = 2, negative = 0)
+#' )
+#' }
+#'
+encode_sv_status = function(mat,
+                                            metadata,
+                                            mapping = c(BCL6_SV = "bcl6_ba", BCL2_SV = "bcl2_ba", MYC_SV = "myc_ba"),
+                                            positive_values = "POS",
+                                            encoding_policy = list(positive = 2, negative = 0),
+                                            sample_id_col = "sample_id",
+                                            debug = FALSE){
+  if(is.null(rownames(mat))){
+    stop("mat must have row names corresponding to sample IDs")
+  }
+  if(is.null(mapping) || length(mapping) == 0){
+    stop("mapping must be a named vector or list")
+  }
+  if(is.list(mapping) && is.null(names(mapping))){
+    stop("mapping must be a named vector or named list")
+  }
+  if(!sample_id_col %in% colnames(metadata)){
+    stop(paste0("metadata must contain column: ", sample_id_col))
+  }
+
+  mat_df = as.data.frame(mat)
+  sample_ids = rownames(mat_df)
+
+  if(debug){
+    message("encode_sv_status: rows in mat = ", length(sample_ids))
+    message("encode_sv_status: rows in metadata = ", nrow(metadata))
+    message("encode_sv_status: unique sample ids in metadata = ", length(unique(metadata[[sample_id_col]])))
+    message("encode_sv_status: overlap with mat rownames = ", length(base::intersect(sample_ids, metadata[[sample_id_col]])))
+  }
+
+  for(new_col in names(mapping)){
+    field = mapping[[new_col]]
+    if(!field %in% colnames(metadata)){
+      stop(paste0("metadata missing field: ", field))
+    }
+    pos_ids = metadata[[sample_id_col]][metadata[[field]] %in% positive_values]
+    pos_ids = as.character(pos_ids)
+    pos_ids = base::intersect(pos_ids, as.character(sample_ids))
+    if(debug){
+      message("encode_sv_status: ", new_col, " field=", field,
+              " positives in metadata=", sum(metadata[[field]] %in% positive_values, na.rm = TRUE),
+              ", matched=", length(pos_ids))
+    }
+    mat_df[[new_col]] = encoding_policy$negative
+    mat_df[pos_ids, new_col] = encoding_policy$positive
+  }
+
+  return(mat_df)
+}
+
+
+#' @title Collapse columns by regex
+#'
+#' @description Collapse multiple columns into a single column using regex matches.
+#'
+#' @details This helper creates new columns based on regex patterns and computes
+#' an aggregate value (default: row-wise max) across matched source columns.
+#'
+#' @param x A data frame or matrix with columns to collapse.
+#' @param collapse_policy A named list where each name is the new column name and
+#' each value is a character vector of regex patterns used to select source columns.
+#' @param genes Optional character vector of gene symbols to collapse using a
+#' default pattern of \code{^GENE_}. If provided, \code{collapse_policy} is
+#' generated automatically unless explicitly supplied.
+#' @param suffix Suffix for auto-generated columns when \code{genes} is used
+#' (default \code{"any"}, producing columns like \code{GENE_any}).
+#' @param drop_sources Logical. If TRUE (default), matched source columns are dropped
+#' after the new column is created.
+#' @param agg_fn Function to aggregate matched columns per row. Defaults to max.
+#'
+#' @return A data frame with collapsed columns added (and optionally source columns removed).
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # status_df created with a call to summarise_mutation_status
+#' grep("MYC",colnames(status_df),value=T)
+#' grep("BCL2",colnames(status_df),value=T)
+#' 
+#' # each of these genes has multiple columns such as MYC_SV, MYC_noncoding
+#' # that we want combined into one unified column per gene
+#' status_df = collapse_columns_by_regex(
+#'   status_df,
+#'   collapse_policy = list(MYC_any = c("^MYC_"), BCL2_any = c("^BCL2_"))
+#' )
+#' }
+#' # status_df will have a MYC_any and BCL2_any column and the original
+#' # columns matching the regular exprssions will be gone
+#' 
+#' \dontrun{
+#' # Simpler interface by gene list
+#' status_df = collapse_columns_by_regex(
+#'   status_df,
+#'   genes = c("MYC","BCL2","TP53"),
+#'   suffix = "any"
+#' )
+#' }
+collapse_columns_by_regex = function(x,
+                                     collapse_policy = NULL,
+                                     genes = NULL,
+                                     suffix = "any",
+                                     drop_sources = TRUE,
+                                     agg_fn = max){
+  if(is.null(collapse_policy) || length(collapse_policy) == 0){
+    if(!is.null(genes) && length(genes) > 0){
+      collapse_policy = setNames(lapply(genes, function(g){
+        paste0("^", g, "_")
+      }), paste0(genes, "_", suffix))
+    }else{
+      return(x)
+    }
+  }
+  if(is.null(names(collapse_policy)) || any(names(collapse_policy) == "")){
+    stop("collapse_policy must be a named list with new column names")
+  }
+
+  x_df = as.data.frame(x)
+  original_cols = colnames(x_df)
+  drop_cols = character(0)
+
+  for(new_col in names(collapse_policy)){
+    patterns = collapse_policy[[new_col]]
+    if(length(patterns) == 0){
+      next
+    }
+    matched = unique(unlist(lapply(patterns, function(p){
+      grep(p, original_cols, value = TRUE)
+    })))
+    if(length(matched) == 0){
+      next
+    }
+    drop_cols = c(drop_cols, matched)
+    vals = x_df[, matched, drop = FALSE]
+    x_df[[new_col]] = apply(vals, 1, agg_fn, na.rm = TRUE)
+  }
+
+  if(drop_sources && length(drop_cols) > 0){
+    drop_cols = setdiff(unique(drop_cols), names(collapse_policy))
+    x_df = x_df[, setdiff(colnames(x_df), drop_cols), drop = FALSE]
+  }
+
+  return(x_df)
+}
 
 #' @title Annotate curated drivers
 #'
@@ -243,25 +463,25 @@ summarise_mutation_status = function(annotated_maf,
 #'
 #' @examples
 #'
-#' coding_capture_maf = GAMBLR.open::get_coding_ssm(
-#'   these_samples_metadata = GAMBLR.open::get_gambl_metadata() %>%
-#'     dplyr::filter(cohort=="dlbcl_reddy"),
-#'   this_seq_type = "capture")
-#' ## annotate all supported hotspots
-#' coding_capture_maf_anno = annotate_curated_drivers(coding_capture_maf)
+#' # Get metadata for all DLBCLs available
+#' dlbcl_meta = GAMBLR.open::get_gambl_metadata() %>% 
+#'    dplyr::filter(pathology == "DLBCL")
+#' # get mutations (as maf_data) for all these samples including non-coding (silent) for DLBCLone
+#' dlbcl_coding = GAMBLR.open::get_all_coding_ssm(
+#'                                    dlbcl_meta,
+#'                                    include_silent=TRUE)
 #'
-#' dplyr::filter(coding_capture_maf_anno, hot_spot==TRUE) %>%
-#'   dplyr::select(Hugo_Symbol,Start_Position, HGVSp_Short, mutation_alias, mutation_annotation) %>%
-#'   as.data.frame() %>%
-#'   unique()
+#' # annotate known driver mutations using bundled annotations
+#' # WARNING: currently hg38 annotations are out of sync with grch37
+#' # Stick with grch37 for now
+#' dlbcl_coding = annotate_curated_drivers(maf_data=dlbcl_coding)
 #'
-#' # How does this look for FOXO1?
-#' dplyr::filter(coding_capture_maf_anno, Hugo_Symbol=="FOXO1")  %>%
-#'   dplyr::group_by(mutation_alias) %>% dplyr::count()
+#' #look at the new columns we have
+#' dplyr::filter(dlbcl_coding,
+#'              !grepl("other",mutation_alias)) %>%
+#'  dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,mutation_annotation)
 #'
-
-
-
+#'
 annotate_curated_drivers = function(maf_data,
                            genes_of_interest = c("MYD88", "NOTCH1", "NOTCH2"),
                            genome_build,

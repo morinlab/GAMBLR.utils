@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-02-13 15:49:05.691161 ==="
+[1] "=== STARTED AT 2026-02-16 11:12:35.351052 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 44 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
+── Running 47 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
 
 > all_sample_seg = GAMBLR.data::sample_data$grch37$seg
 
@@ -44,185 +44,31 @@
 10 02-13135T 2         11320  90500000        0     0    
 # ℹ 134 more rows
 
-> coding_capture_maf = GAMBLR.open::get_coding_ssm(these_samples_metadata = GAMBLR.open::get_gambl_metadata() %>% 
-+     dplyr::filter(cohort == "dlbcl_reddy"), this_seq_type = "capture")
+> dlbcl_meta = GAMBLR.open::get_gambl_metadata() %>% 
++     dplyr::filter(pathology == "DLBCL")
 
-> coding_capture_maf_anno = annotate_curated_hotspots(coding_capture_maf)
+> dlbcl_coding = GAMBLR.open::get_all_coding_ssm(dlbcl_meta, 
++     include_silent = TRUE)
 
-> dplyr::filter(coding_capture_maf_anno, hot_spot == 
-+     TRUE) %>% dplyr::select(Hugo_Symbol, Start_Position, HGVSp_Short, 
-+     mutation_alias) %>% as.data.frame() %>% unique()
-    Hugo_Symbol Start_Position      HGVSp_Short mutation_alias
-1          EZH2      148508728          p.Y646N       EZH2_SET
-2        CREBBP        3786791         p.C1474R     CREBBP_KAT
-3        CREBBP        3843447          p.R386*   CREBBP_trunc
-4         MYD88       38182641          p.L265P    MYD88_L265P
-5        CREBBP        3781324       p.S1680del     CREBBP_KAT
-9         CD79B       62006798          p.Y197S     CD79B_ITAM
-10        CD79B       62006817          p.M191L     CD79B_ITAM
-14        CD79B       62006799          p.Y197N     CD79B_ITAM
-17        CD79B       62007129    p.X184_splice    CD79B_trunc
-18       CREBBP        3786767         p.Y1482N     CREBBP_KAT
-19         EZH2      148506238          p.V707G       EZH2_SET
-20         EZH2      148508727          p.Y646S       EZH2_SET
-24        CD79B       62006662      p.A206Dfs*5    CD79B_trunc
-27        STAT6       57496668          p.N417Y      STAT6_DBD
-29        CD79B       62006797          p.Y197*    CD79B_trunc
-30       CREBBP        3786704         p.Y1503D     CREBBP_KAT
-32       CREBBP        3788617         p.R1446H     CREBBP_KAT
-33        CD79B       62006799          p.Y197H     CD79B_ITAM
-36         EZH2      148508727          p.Y646F       EZH2_SET
-42       NOTCH2      120458120         p.Q2409*    NOTCH2_PEST
-47         EZH2      148508728          p.Y646H       EZH2_SET
-48        CD79B       62007746     p.X41_splice    CD79B_trunc
-50       CREBBP        3786739         p.Q1491P     CREBBP_KAT
-53       CREBBP        3786704         p.Y1503H     CREBBP_KAT
-57       CREBBP        3788618         p.R1446C     CREBBP_KAT
-58        CD79B       62006799          p.Y197D     CD79B_ITAM
-60       CREBBP        3789628         p.G1411R     CREBBP_KAT
-63        FOXO1       41239874          p.A159V      FOXO1_DBD
-64        FOXO1       41240273           p.P26L    FOXO1_Nterm
-65        FOXO1       41240286           p.S22P    FOXO1_Nterm
-70       NOTCH1      139390649     p.P2514Rfs*4    NOTCH1_PEST
-71        FOXO1       41239735          p.S205R      FOXO1_DBD
-72        FOXO1       41239803          p.L183V      FOXO1_DBD
-80       CREBBP        3786715         p.L1499P     CREBBP_KAT
-84        CD79B       62006680          p.L200Q     CD79B_ITAM
-86        STAT6       57496661          p.D419G      STAT6_DBD
-87       CREBBP        3788656         p.Y1433C     CREBBP_KAT
-89        STAT6       57498330          p.E377K      STAT6_DBD
-91        STAT6       57496662          p.D419N      STAT6_DBD
-92       NOTCH2      120458267         p.Q2360*    NOTCH2_PEST
-99       CREBBP        3807978         p.Y1147*   CREBBP_trunc
-101       FOXO1       41239893          p.S153G      FOXO1_DBD
-102       CD79B       62006662          p.A206V     CD79B_ITAM
-103      CREBBP        3788606         p.Y1450N     CREBBP_KAT
-105      NOTCH2      120458102     p.L2415Dfs*8    NOTCH2_PEST
-106      NOTCH2      120458104    p.Y2414Lfs*10    NOTCH2_PEST
-109      CREBBP        3832709          p.Q517*   CREBBP_trunc
-111       STAT6       57496654          p.N421K      STAT6_DBD
-112       FOXO1       41240288           p.R21H    FOXO1_Nterm
-113      CREBBP        3817884     p.S1030Ffs*4   CREBBP_trunc
-115      CREBBP        3786704         p.Y1503N     CREBBP_KAT
-121      NOTCH2      120458324         p.Q2341*    NOTCH2_PEST
-122      NOTCH2      120458087         p.E2420*    NOTCH2_PEST
-126      CREBBP        3788646         p.S1436R     CREBBP_KAT
-127      CREBBP        3786749         p.P1488T     CREBBP_KAT
-129      CREBBP        3781893         p.K1592*   CREBBP_trunc
-130        EZH2      148508725          p.C647S       EZH2_SET
-132      CREBBP        3786752         p.H1487Y     CREBBP_KAT
-133      CREBBP        3788657         p.Y1433H     CREBBP_KAT
-135       STAT6       57496657          p.N420K      STAT6_DBD
-136      CREBBP        3788605         p.Y1450C     CREBBP_KAT
-140      CREBBP        3788648         p.S1436R     CREBBP_KAT
-141      CREBBP        3786206   p.X1521_splice   CREBBP_trunc
-142      CREBBP        3786703         p.Y1503F     CREBBP_KAT
-145      CREBBP        3790396   p.X1378_splice   CREBBP_trunc
-152      CREBBP        3790496         p.L1346*   CREBBP_trunc
-153      CREBBP        3817832     p.E1047Kfs*9   CREBBP_trunc
-155      CREBBP        3781337         p.W1676*   CREBBP_trunc
-164       FOXO1       41239733          p.S206L      FOXO1_DBD
-168      CREBBP        3900786          p.Q104*   CREBBP_trunc
-170      CREBBP        3842075          p.R413*   CREBBP_trunc
-171      CREBBP        3900810           p.Q96*   CREBBP_trunc
-172      CREBBP        3817753    p.Q1073Lfs*15   CREBBP_trunc
-173      CREBBP        3820897    p.Q850Tfs*117   CREBBP_trunc
-177      NOTCH2      120458147         p.R2400*    NOTCH2_PEST
-178      NOTCH2      120458492         p.Q2285*    NOTCH2_PEST
-181       STAT6       57496661          p.D419A      STAT6_DBD
-185       CD79B       62006798          p.Y197C     CD79B_ITAM
-186      NOTCH2      120458895     p.P2150Rfs*2    NOTCH2_PEST
-189      NOTCH2      120458372         p.Q2325*    NOTCH2_PEST
-191        EZH2      148506437          p.A692V       EZH2_SET
-199      CREBBP        3807808   p.X1203_splice   CREBBP_trunc
-201      CREBBP        3789709         p.E1384*   CREBBP_trunc
-203       FOXO1       41239737          p.S205G      FOXO1_DBD
-204      CREBBP        3823859          p.Q786*   CREBBP_trunc
-205      CREBBP        3786132         p.W1545R     CREBBP_KAT
-208       FOXO1       41134928          p.S234R      FOXO1_DBD
-210       CD79B       62006798          p.Y197F     CD79B_ITAM
-213      CREBBP        3824647          p.Q736*   CREBBP_trunc
-217      CREBBP        3788653         p.L1434R     CREBBP_KAT
-219       FOXO1       41239782          p.M190V      FOXO1_DBD
-220      CREBBP        3842036          p.D426*   CREBBP_trunc
-225      CREBBP        3790458    p.V1359Sfs*17   CREBBP_trunc
-226      CREBBP        3799627   p.X1279_splice   CREBBP_trunc
-230      CREBBP        3786146         p.F1540S     CREBBP_KAT
-239        EZH2      148508741          p.E641D       EZH2_SET
-242      CREBBP        3786137         p.D1543V     CREBBP_KAT
-243      NOTCH2      120458941     p.L2135Efs*2    NOTCH2_PEST
-246       CD79B       62007504          p.Y121*    CD79B_trunc
-250      CREBBP        3807288   p.X1233_splice   CREBBP_trunc
-253       CD79B       62007144     p.L180Cfs*32    CD79B_trunc
-260       STAT6       57498329          p.E377A      STAT6_DBD
-265      NOTCH2      120458255         p.Q2364*    NOTCH2_PEST
-267      CREBBP        3817720     p.I1084Nfs*3   CREBBP_trunc
-272       FOXO1       41239836          p.A172T      FOXO1_DBD
-276      CREBBP        3788618         p.R1446S     CREBBP_KAT
-280       FOXO1       41239797          p.Q185K      FOXO1_DBD
-282      CREBBP        3786725 p.Q1491_K1495del     CREBBP_KAT
-283      CREBBP        3832811          p.R483*   CREBBP_trunc
-285       FOXO1       41239736          p.S205N      FOXO1_DBD
-286      CREBBP        3786789         p.C1474*   CREBBP_trunc
-288      CREBBP        3786703         p.Y1503C     CREBBP_KAT
-289      CREBBP        3900780          p.Q106*   CREBBP_trunc
-292       CD79B       62006606          p.E225Q     CD79B_ITAM
-298       CD79B       62007222          p.Q154*    CD79B_trunc
-300      CREBBP        3786141         p.G1542S     CREBBP_KAT
-304       CD79B       62006674          p.I202T     CD79B_ITAM
-305       CD79B       62006680          p.L200R     CD79B_ITAM
-308       CD79B       62006603          p.H226Y     CD79B_ITAM
-311      CREBBP        3795276   p.X1305_splice   CREBBP_trunc
-320       CD79B       62006822          p.A189V     CD79B_ITAM
-323      CREBBP        3817719   p.X1084_splice   CREBBP_trunc
-324      CREBBP        3790496         p.L1346W     CREBBP_KAT
-326      CREBBP        3788675   p.X1427_splice   CREBBP_trunc
-334      CREBBP        3795277   p.X1305_splice   CREBBP_trunc
-335       FOXO1       41239891          p.S153R      FOXO1_DBD
-338      CREBBP        3817738         p.S1078*   CREBBP_trunc
-339      CREBBP        3786098         p.L1556P     CREBBP_KAT
-349       FOXO1       41134980          p.N216K      FOXO1_DBD
-350       FOXO1       41240279           p.T24N    FOXO1_Nterm
-351       FOXO1       41240281           p.C23W    FOXO1_Nterm
-356      CREBBP        3788666         p.Y1430D     CREBBP_KAT
-361       CD79B       62006826          p.K188*    CD79B_trunc
-364       CD79B       62006837    p.X185_splice    CD79B_trunc
-365       FOXO1       41239762          p.Y196*      FOXO1_DBD
-366      CREBBP        3786117         p.E1550K     CREBBP_KAT
-370       FOXO1       41239759          p.F197L      FOXO1_DBD
-373      CREBBP        3790455         p.R1360*   CREBBP_trunc
-374      NOTCH2      120458169         p.Y2392*    NOTCH2_PEST
-375      NOTCH2      120458435     p.I2304Hfs*9    NOTCH2_PEST
-379       STAT6       57496661          p.D419V      STAT6_DBD
-380      NOTCH1      139390945         p.Q2416*    NOTCH1_PEST
-386      NOTCH2      120459150         p.Y2065*    NOTCH2_PEST
-387      CREBBP        3786767         p.Y1482H     CREBBP_KAT
-388      CREBBP        3790536         p.R1333G     CREBBP_KAT
-390      CREBBP        3786691         p.L1507P     CREBBP_KAT
-397      CREBBP        3781285         p.E1694*   CREBBP_trunc
-401        EZH2      148508727          p.Y646C       EZH2_SET
-403      NOTCH2      120458454    p.R2298Sfs*15    NOTCH2_PEST
-404      NOTCH2      120459035         p.R2104*    NOTCH2_PEST
-407       CD79B       62006603          p.H226N     CD79B_ITAM
-408       CD79B       62006638          p.L214P     CD79B_ITAM
-410      CREBBP        3807894         p.Y1175*   CREBBP_trunc
-415      CREBBP        3807977         p.Q1148*   CREBBP_trunc
-417       CD79B       62008691     p.X37_splice    CD79B_trunc
-419      CREBBP        3807830         p.G1197*   CREBBP_trunc
-421      NOTCH1      139390684         p.Q2503*    NOTCH1_PEST
-424       CD79B       62006831          p.D186A     CD79B_ITAM
-425       CD79B       62009554     p.X23_splice    CD79B_trunc
-426      NOTCH2      120458927         p.Q2140*    NOTCH2_PEST
+> dlbcl_coding = annotate_curated_drivers(maf_data = dlbcl_coding)
 
-> dplyr::filter(coding_capture_maf_anno, Hugo_Symbol == 
-+     "FOXO1") %>% dplyr::group_by(mutation_alias) %>% dplyr::count()
+> dplyr::filter(dlbcl_coding, !grepl("other", mutation_alias)) %>% 
++     dplyr::select(Chromosome, Start_Position, Variant_Classification, 
++         HGVSp_Short, hot_spot, mutation_alias, mutation_annotation)
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-  mutation_alias  n
-1      FOXO1_DBD 17
-2    FOXO1_Nterm  6
-3    FOXO1_other 15
+   Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias mutation_annotation
+1           1      117113520          Splice_Region        <NA>     TRUE     CD58_trunc         CD58_driver
+2           1      203274831      Nonsense_Mutation      p.Q33*     TRUE     BTG2_trunc         BTG2_driver
+3           1      203274883          Splice_Region        <NA>     TRUE     BTG2_trunc         BTG2_driver
+4           1      203276251      Nonsense_Mutation      p.W54*     TRUE     BTG2_trunc         BTG2_driver
+5          13       41239891      Missense_Mutation     p.S153R     TRUE      FOXO1_DBD        FOXO1_driver
+6          17       62006819      Missense_Mutation     p.G190A     TRUE     CD79B_ITAM        CD79B_driver
+7           1       27023114      Nonsense_Mutation      p.Q74*     TRUE   ARID1A_trunc       ARID1A_driver
+8           1       85733609      Nonsense_Mutation     p.R135*     TRUE    BCL10_Cterm        BCL10_driver
+9           6       75974988      Nonsense_Mutation     p.R138*     TRUE  TMEM30A_trunc      TMEM30A_driver
+10         12       49438193      Nonsense_Mutation    p.Y1692*     TRUE    KMT2D_trunc        KMT2D_driver
 
 > library(GAMBLR.data)
 
@@ -328,4 +174,4 @@ Showing first 10 rows:
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-02-13 15:49:35.574075 ==="
+[1] "=== COMPLETED AT 2026-02-16 11:13:45.210218 ==="

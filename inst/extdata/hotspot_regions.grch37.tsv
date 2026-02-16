@@ -1,4 +1,22 @@
 gene	alias	effect	type	chrom	start	end	strand	citation	summary
+HVCN1	HVCN1_R205	unknown	missense	12	111089051	111089052			
+HVCN1	HVCN1_I202	unknown	missense	12	111089060	111089061			
+HVCN1	HVCN1_Y42	unknown	missense	12	111099150	111099151			
+HVCN1	HVCN1_W45	unknown	missense	12	111099142	111099142			
+HVCN1	HVCN1_trunc	LOF	trunc,splicesite,spliceregion,startloss,stoploss	12	1	300000000			
+POU2AF1	POU2AF1_trunc	LOF	trunc,splicesite,spliceregion,startloss,stoploss	11	1	300000000			
+PTEN	PTEN_S10	LOF	missense	10	89624254	89624256			
+PTEN	PTEN_K6	LOF	missense	10	89624242	89624244			
+PTEN	PTEN_F347	LOF	missense	10	89725057	89725057			
+PTEN	PTEN_D24	LOF	missense	10	89624296	89624298			
+PTEN	PTEN_Y27	LOF	missense	10	89624305	89624305			
+PTEN	PTEN_R15	LOF	missense	10	89624269	89624269			
+PTEN	PTEN_Y16	LOF	missense	10	89624272	89624273			
+PTEN	PTEN_N276	LOF	missense	10	89720677	89720677			
+PTEN	PTEN_R130	LOF	missense	10	89692904	89692905			
+PTEN	PTEN_trunc	LOF	trunc,splicesite,spliceregion,startloss,stoploss	10	1	300000000			
+TNFRSF14	TNFRSF14_trunc	LOF	trunc,splicesite,spliceregion,startloss,stoploss	1	1	300000000			
+TOX	TOX_trunc	LOF	trunc,splicesite,spliceregion,startloss,stoploss	8	1	300000000			
 IRF8	IRF8_trunc	LOF	trunc,splicesite,spliceregion,startloss,stoploss	16	1	300000000			
 IRF8	IRF8_N87	LOF	missense	16	85942680	85942681			
 IRF8	IRF8_Y23	unknown	missense	16	85936688	85936688			
