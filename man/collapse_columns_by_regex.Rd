@@ -8,7 +8,7 @@ collapse_columns_by_regex(
   x,
   collapse_policy = NULL,
   genes = NULL,
-  suffix = "any",
+  suffix = "_any",
   drop_sources = TRUE,
   agg_fn = max
 )

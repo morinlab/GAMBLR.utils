@@ -12,13 +12,15 @@ summarise_mutation_status(
   genes_drop_unannotated = NULL,
   gene_drop_policy = NULL,
   encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+  use_all_aliases = TRUE,
+  include_hotspot_alias = TRUE,
   verbose = FALSE
 )
 }
 \arguments{
 \item{annotated_maf}{A data frame in MAF format that includes
 \code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
-\code{mutation_alias}, and \code{mutation_annotation}.}
+\code{mutation_alias}, and \code{driver_alias}.}
 
 \item{genes_coding}{Optional character vector of genes to include in the
 coding summary. Defaults to Tier 1 lymphoma genes.}
@@ -56,7 +58,7 @@ driver, and hotspot-level mutation status from an annotated MAF.
 }
 \details{
 This function expects output from \code{annotate_curated_hotspots()}
-(or equivalent) with \code{mutation_alias} and \code{mutation_annotation}
+(or equivalent) with \code{mutation_alias} and \code{driver_alias}
 columns. It produces a wide matrix with 0/1 indicators for each
 sample-variant combination, including per-gene coding status, driver status,
 and granular hotspot aliases. If you want to collapse multiple columns for a

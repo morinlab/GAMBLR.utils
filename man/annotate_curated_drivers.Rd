@@ -9,7 +9,8 @@ annotate_curated_drivers(
   genes_of_interest = c("MYD88", "NOTCH1", "NOTCH2"),
   genome_build,
   custom_coordinates,
-  existing_values_action = "clobber"
+  existing_values_action = "clobber",
+  class_priority = c("hotspot", "truncation", "region")
 )
 }
 \arguments{
@@ -32,7 +33,7 @@ before re-annotating. Use "update" to only fill missing values.}
 }
 \value{
 The same data frame (as given to the \code{annotated_maf} parameter) with the reviewed columns
-"hot_spot", "mutation_alias", and "mutation_annotation".
+"hot_spot", "mutation_alias", and "driver_alias".
 }
 \description{
 Annotate MAF-like data frame with a hot_spot column indicating recurrent mutations.
@@ -64,7 +65,7 @@ dlbcl_coding = annotate_curated_drivers(maf_data=dlbcl_coding)
 #look at the new columns we have
 dplyr::filter(dlbcl_coding,
              !grepl("other",mutation_alias)) \%>\%
- dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,mutation_annotation)
+ dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,driver_alias)
 
 
 }
