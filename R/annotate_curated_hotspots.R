@@ -8,9 +8,20 @@
 #' @param genes_noncoding Character vector of genes to include for non-coding mutations.
 #' @param genes_hotspot Character vector of genes with hotspot annotations (default: MYD88).
 #' @param genes_driver Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).
-#' @param encoding_policy Named list of values used for coding/driver/noncoding indicators.
+#' @param encoding_policy Named list of values used for coding/driver/noncoding/SV indicators.
+#' @param these_samples_metadata Optional metadata for samples. If provided with
+#' \code{sv_from_metadata}, SV status columns are appended via
+#' \code{encode_sv_status()}.
+#' @param sv_from_metadata Named vector or list mapping new SV column names to
+#' metadata fields. If names do not end with \code{_SV}, that suffix is added.
+#' @param sv_positive_values Values in metadata fields that indicate positive SV
+#' status (default: \code{"POS"}).
+#' @param verbose Logical. If TRUE, prints progress messages.
+#' @param return_everything Logical. If TRUE, return a list with
+#' \code{annotated_maf}, \code{full_status}, and \code{collapsed_status}.
 #'
 #' @return A wide matrix-like data frame of per-sample mutation features.
+#' If \code{return_everything = TRUE}, returns a list with intermediate outputs.
 #'
 #' @export
 
@@ -47,10 +58,10 @@ assemble_genetic_features <- function(unannotated_maf,
                                      genes_noncoding,
                                      genes_hotspot = c("MYD88"),
                                      genes_driver = c("CD79B","EZH2","NOTCH1","NOTCH2"),
-                                     encoding_policy = list(coding=2,driver=2,noncoding=1),
+                                     encoding_policy = list(coding=2,driver=2,noncoding=1,sv=2),
                                      these_samples_metadata = NULL,
                                      sv_from_metadata = c(BCL2="bcl2_ba", BCL6="bcl6_ba", MYC="myc_ba"),
-                                     sv_value = 2,
+                                     sv_positive_values = "POS",
                                      verbose = FALSE,
                                      return_everything = FALSE
                                      ){
@@ -112,8 +123,8 @@ assemble_genetic_features <- function(unannotated_maf,
       mat = status_collapse,
       metadata = these_samples_metadata,
       mapping = mapping,
-      positive_values = "POS",
-      encoding_policy = list(positive = sv_value, negative = 0),
+      positive_values = sv_positive_values,
+      encoding_policy = list(positive = encoding_policy$sv, negative = 0),
       verbose = verbose
     )
     for (col_name in names(mapping)) {
@@ -141,12 +152,13 @@ assemble_genetic_features <- function(unannotated_maf,
 #' @description Create a wide sample-by-variant matrix summarizing coding,
 #' driver, and hotspot-level mutation status from an annotated MAF.
 #'
-#' @details This function expects output from \code{annotate_curated_hotspots()}
+#' @details This function expects output from \code{annotate_curated_drivers()}
 #' (or equivalent) with \code{mutation_alias} and \code{driver_alias}
 #' columns. It produces a wide matrix with 0/1 indicators for each
 #' sample-variant combination, including per-gene coding status, driver status,
-#' and granular hotspot aliases. If you want to collapse multiple columns for a
-#' gene into a single summary column (e.g., \code{MYC_any}), see
+#' and granular hotspot aliases. Indicator values are controlled by
+#' \code{encoding_policy}. If you want to collapse multiple columns for a gene
+#' into a single summary column (e.g., \code{MYC_any}), see
 #' \code{collapse_columns_by_regex()}.
 #'
 #' @param annotated_maf A data frame in MAF format that includes
@@ -160,20 +172,21 @@ assemble_genetic_features <- function(unannotated_maf,
 #' mode. Valid keys are \code{detailed} (granular alias columns) and \code{coding}
 #' (keep only \code{GENE_coding}). Genes not listed default to driver/unknown.
 #' @param genes_drop_unannotated Optional character vector of genes for which
-#' catch-all columns (e.g. \code{GENE_other} or \code{GENE_unknown}) should
-#' be dropped from the output. Mutually exclusive with \code{gene_drop_policy}.
+#' catch-all columns (e.g. \code{GENE_other}) should be dropped from the output.
+#' Mutually exclusive with \code{gene_drop_policy}.
 #' @param gene_drop_policy Optional named list defining gene drop policies, e.g.
 #' \code{list(all = c("IGLL5"), unannotated = c("KMT2D"))}. Valid keys are
 #' \code{all} (drop all columns for those genes) and \code{unannotated} (drop only
 #' catch-all columns). Mutually exclusive with \code{genes_drop_unannotated}.
 #' @param encoding_policy Named list controlling the numeric values used for
 #' coding, non-coding, and driver indicators. Default is
-#' \code{list(coding = 2, noncoding = 1, driver = 1)}.
+#' \code{list(coding = 2, noncoding = 1, driver = 2)}.
 #' @param verbose Logical. If TRUE, prints messages describing which columns
 #' will be dropped based on reporting and drop policies.
 #'
 #' @return A wide data frame (matrix-like) with rows as samples and columns as
-#' variant categories, containing 0/1 indicators.
+#' variant categories, containing numeric indicators defined by
+#' \code{encoding_policy}.
 #'
 #' @import dplyr tidyr
 #' @export
@@ -215,7 +228,7 @@ summarise_mutation_status = function(annotated_maf,
                                      gene_reporting_policy = NULL,
                                      genes_drop_unannotated = NULL,
                                      gene_drop_policy = NULL,
-                                     encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+                                     encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
                                      use_all_aliases = TRUE,
                                      include_hotspot_alias = TRUE,
                                      verbose = FALSE){
@@ -273,7 +286,7 @@ summarise_mutation_status = function(annotated_maf,
 
   #expects the output of Annotate curated drivers
   #drop Silent and hang onto them for later
-  if(!is.null(genes_noncoding)){
+  if(!is.null(genes_noncoding) && length(genes_noncoding) > 0){
 
     noncoding_maf = dplyr::filter(annotated_maf, ! Variant_Classification %in% vc_nonSynonymous,Hugo_Symbol %in% genes_noncoding)
 
@@ -371,7 +384,7 @@ summarise_mutation_status = function(annotated_maf,
     dplyr::select(-Hugo_Symbol) %>%
     mutate(mutated = encoding_policy$coding) # will fill missing with 0 at the join stage
   
-  if(!is.null(genes_noncoding)){
+  if(!is.null(genes_noncoding) && length(genes_noncoding) > 0){
     long = bind_rows(
       noncoding_count,
       coding_count,
@@ -430,6 +443,7 @@ summarise_mutation_status = function(annotated_maf,
 #' @description Create a wide sample-by-variant matrix summarizing curated
 #' annotations from an annotated MAF using explicit inclusion rules.
 #'
+#'
 #' @param annotated_maf A data frame in MAF format that includes
 #' \code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
 #' and curated annotation columns such as \code{driver_alias}, \code{hotspot_alias},
@@ -452,7 +466,7 @@ summarise_mutation_status = function(annotated_maf,
 #' non-coding summary. Produces \code{GENE_noncoding} columns and uses
 #' \code{encoding_policy$noncoding}.
 #' @param encoding_policy Named list controlling numeric values for indicators.
-#' Default is \code{list(coding = 2, noncoding = 1, driver = 1)}.
+#' Default is \code{list(coding = 2, noncoding = 1, driver = 2)}.
 #' @param suppress_redundant Logical. If TRUE, drop \code{GENE_coding} columns
 #' when a corresponding \code{GENE_driver} column is present.
 #' @param collapse_policy Optional named list mapping new column names to regex
@@ -478,13 +492,14 @@ summarize_annotated_maf = function(annotated_maf,
                                    default_include_policy = c("driver_alias","hotspot_alias","coding"),
                                    genes_coding = NULL,
                                    genes_noncoding = NULL,
-                                   encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+                                   encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
                                    suppress_redundant = TRUE,
                                    collapse_policy = NULL,
                                    collapse_genes = NULL,
                                    collapse_suffix = "_any",
                                    collapse_drop_sources = TRUE,
                                    collapse_agg_fn = max){
+  warning("summarize_annotated_maf() is deprecated; use summarise_mutation_status() instead.")
   if(is.null(encoding_policy$noncoding)){
     warning("encoding_policy$noncoding is NULL; noncoding columns will be all zeros")
   }
@@ -662,7 +677,8 @@ summarize_annotated_maf = function(annotated_maf,
 #' @param mapping Named character vector or list mapping new column names to
 #' metadata field names. For example, \code{c(BCL6_SV = "bcl6_ba")}.
 #' @param positive_values Vector of values in the metadata field that indicate
-#' a positive status (default \code{"POS"}).
+#' a positive status (default \code{"POS"}). Any non-matching or missing values
+#' are encoded as \code{encoding_policy$negative}.
 #' @param encoding_policy Named list controlling the numeric values used for
 #' positive and negative samples. Default is
 #' \code{list(positive = 2, negative = 0)}.
@@ -670,7 +686,9 @@ summarize_annotated_maf = function(annotated_maf,
 #' (default \code{"sample_id"}).
 #' @param verbose Logical. If TRUE, prints matching diagnostics.
 #'
-#' @return The input \code{mat} with new columns appended.
+#' @return A data.frame with the input \code{mat} columns and new SV columns
+#' appended. All non-positive samples are encoded as
+#' \code{encoding_policy$negative}.
 #'
 #' @export
 #'
@@ -750,7 +768,7 @@ encode_sv_status = function(mat,
 #' default pattern of \code{^GENE_}. If provided, \code{collapse_policy} is
 #' generated automatically unless explicitly supplied.
 #' @param suffix Suffix for auto-generated columns when \code{genes} is used
-#' (default \code{"any"}, producing columns like \code{GENE_any}).
+#' (default \code{"_any"}, producing columns like \code{GENE_any}).
 #' @param drop_sources Logical. If TRUE (default), matched source columns are dropped
 #' after the new column is created.
 #' @param agg_fn Function to aggregate matched columns per row. Defaults to max.
@@ -780,7 +798,7 @@ encode_sv_status = function(mat,
 #' status_df = collapse_columns_by_regex(
 #'   status_df,
 #'   genes = c("MYC","BCL2","TP53"),
-#'   suffix = "any"
+#'   suffix = "_any"
 #' )
 #' }
 collapse_columns_by_regex = function(x,
@@ -838,8 +856,8 @@ collapse_columns_by_regex = function(x,
 #' desired gene ordering, with optional suffix priority for tie-breaking.
 #'
 #' @param gene_order Character vector of genes defining the desired order. If a
-#' feature name (e.g. \code{MYD88_L265P}) is included, it will be placed at that
-#' exact position.
+#' feature name (e.g. \code{MYD88_L265P}) is included, it will be placed at the
+#' exact index position defined by \code{gene_order}.
 #' @param features Character vector of feature names (e.g. \code{MYD88_L265P},
 #' \code{EZH2_hotspot}, \code{TP53_any}, \code{CREBBP_driver}).
 #' @param suffix_priority Character vector defining preferred suffix order.
@@ -852,7 +870,9 @@ collapse_columns_by_regex = function(x,
 #' @param gene_key Column name in \code{gene_metadata} used to join on gene names
 #' (fallback after feature-level matching).
 #'
-#' @return A data frame with one row per feature in the desired order.
+#' @return A data frame with one row per feature in the desired order, including
+#' columns \code{feature}, \code{gene}, \code{suffix}, and \code{rank}, plus any
+#' joined metadata fields.
 #'
 #' @export
 #'
@@ -939,25 +959,26 @@ order_features_by_gene = function(gene_order,
 
 #' @title Annotate curated drivers
 #'
-#' @description Annotate MAF-like data frame with a hot_spot column indicating recurrent mutations.
+#' @description Annotate MAF-like data frame with curated driver/hotspot annotations.
 #'
 #' @details This function annotates a MAF-like data frame and will create or overwrite the
-#' "hot_spot" column based on curated hotspot rules. Genes for hotspot review are supplied
+#' "hot_spot" column based on curated driver/hotspot rules. Genes for review are supplied
 #' with the `genes_of_interest` parameter. Overlap is determined using a fuzzy interval
 #' match so any overlap between a mutation and a hotspot region is considered a match.
 #' Currently only a few sets of genes are supported, see parameter description for more information and limitations.
 #' The desired genome build can be specified with `genome_build` parameter (useful if you loaded the MAF from disk).
 #' Obviously, you need to specify the same genome_build as the coordinate system used in the incoming MAF.
 #'
-#' @param annotated_maf A maf_data object or data frame in MAF format that has hotspots annotated using the function annotate_hotspots().
+#' @param maf_data A maf_data object or data frame in MAF format.
 #' @param genes_of_interest An optional vector of genes for hotspot annotation. By default, the genes present in the curated hotspot tables are supported.
 #' @param genome_build Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.
-#' @param custom_coordinates A data frame with custom coordinates for the hot spots.
-#' All mutations in any of the regions specified in the data frame will be marked as hot spots.
-#' The data frame must have the following columns: "Hugo_Symbol", "chrom", "start", and "end".
-#' Optional columns are: "classes" (regex for Variant_Classification) and "alias" (identifier for the hotspot).
-#' The "type" column can include tokens such as missense, inframe, trunc, startloss,
-#' stoploss, splicesite, and spliceregion (comma-separated).
+#' @param custom_coordinates A data frame defining custom driver/hotspot regions.
+#' Follow the same structure as \code{get_driver_coordinates()}. At minimum, it must
+#' include \code{Hugo_Symbol}, \code{chrom}, \code{start}, and \code{end}. Optional
+#' columns include \code{alias} (identifier), \code{type} (token string), and/or
+#' \code{classes} (regex for Variant_Classification). If \code{classes} is missing,
+#' it will be set to all non-synonymous classes. See \code{get_driver_coordinates()}
+#' for the expected column structure.
 #' @param existing_values_action Character. How to handle existing columns.
 #' Use "clobber" (default) to always reset "hot_spot" and "mutation_alias"
 #' before re-annotating. Use "update" to only fill missing values.
@@ -1040,7 +1061,7 @@ annotate_curated_drivers = function(maf_data,
         dplyr::mutate(classes = paste0(vc_nonSynonymous, collapse="|"))
     }
   }else{
-    coordinates = get_hotspot_coordinates(genome_build)
+    coordinates = get_driver_coordinates(genome_build)
   }
 
   if(!existing_values_action %in% c("clobber", "update")){
@@ -1121,14 +1142,14 @@ annotate_curated_drivers = function(maf_data,
   maf_skip = annotated_maf %>%
     dplyr::filter(!Hugo_Symbol %in% coordinates$Hugo_Symbol)
 
-  reviewed_maf = cool_overlaps(
+  reviewed_maf = suppressMessages(cool_overlaps(
     maf_keep,
     coordinates,
     columns1 = c("Hugo_Symbol", "Chromosome", "Start_Position", "End_Position"),
     columns2 = c("Hugo_Symbol", "chrom", "start", "end"),
     type = "fuzzy",
     nomatch = TRUE
-  )
+  ))
 
   original_cols = setdiff(colnames(annotated_maf), ".row_id")
 
@@ -1207,26 +1228,32 @@ annotate_curated_drivers = function(maf_data,
 vc_truncating = c("Nonsense_Mutation","Splice_Site","Frame_Shift_Ins","Frame_Shift_Del")
 vc_non_truncating = vc_nonSynonymous[!vc_nonSynonymous %in% vc_truncating]
 
-#' @title Hotspot coordinate definitions
+#' @title Driver coordinate definitions
 #'
-#' @description Return curated hotspot coordinate regions for a given genome build,
+#' @description Return curated driver coordinate regions for a given genome build,
 #' including per-region variant class patterns and aliases.
+#' The \code{type} field may include tokens such as missense, inframe, trunc,
+#' startloss, stoploss, splicesite, spliceregion, and utr_3 (comma-separated).
+#' This table can be used as a template for \code{custom_coordinates} in
+#' \code{annotate_curated_drivers()}.
 #'
 #' @param genome_build Reference genome build for the coordinates in the MAF file.
 #' Supported values include hg19/grch37/hs37d5/GRCh37 and hg38/grch38/GRCh38.
 #' @return A data frame with columns including "Hugo_Symbol", "chrom", "start",
-#' "end", "strand", "type", "size", "alias", and "classes".
+#' "end", and "classes", plus any columns present in the underlying curated
+#' coordinate table (e.g. "strand", "type", "alias"). The \code{size} and
+#' \code{classes} columns are added by this function.
 #'
 #' @import dplyr tidyr
 #' @export
 #'
-get_hotspot_coordinates = function(genome_build){
+get_driver_coordinates = function(genome_build){
   if (genome_build %in% c("hg19", "grch37", "hs37d5", "GRCh37")){
     coordinates = GAMBLR.utils::hotspot_regions_grch37
   }else if(genome_build %in% c("hg38", "grch38", "GRCh38")){
     coordinates = GAMBLR.utils::hotspot_regions_hg38
   }else{
-    stop("The genome build specified is not currently supported. Please provide MAF file in one of the following cordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
+    stop("The genome build specified is not currently supported. Please provide MAF file in one of the following coordinates: hg19, grch37, hs37d5, GRCh37, hg38, grch38, or GRCh38")
   }
   coordinates = coordinates %>%
     dplyr::rename(Hugo_Symbol = gene)
@@ -1284,3 +1311,15 @@ get_hotspot_coordinates = function(genome_build){
   return(coordinates)
 
 }
+
+#' @title Hotspot coordinate definitions (deprecated)
+#'
+#' @description Deprecated wrapper for \code{get_driver_coordinates()}.
+#'
+#' @param genome_build Reference genome build for the coordinates in the MAF file.
+#' Supported values include hg19/grch37/hs37d5/GRCh37 and hg38/grch38/GRCh38.
+#' @return See \code{get_driver_coordinates()}.
+#'
+#' @deprecated Use \code{get_driver_coordinates()} instead.
+#' @export
+#'

@@ -133,12 +133,12 @@ cnvKompare = function(patient_id,
   # overlap seg with cytoband regions
   # if segment extends beyond cytoband, cut it at the cytoband coordinates
   cytoband_overlap =
-        cool_overlaps(
+        suppressMessages(cool_overlaps(
         cytobands,
         these_samples_seg,
         columns1 = c("cb.chromosome", "cb.start", "cb.end"),
         columns2 = c("chrom", "start", "end")
-        ) %>%
+        )) %>%
     as.data.frame %>%
     group_by(cb.name) %>%
     mutate(
@@ -267,12 +267,12 @@ cnvKompare = function(patient_id,
 
   # generate plot
   time_plot =
-    cool_overlaps(
+    suppressMessages(cool_overlaps(
         for_plot_lg,
         for_plot,
         columns1 = c("chromosome_name", "start_position", "end_position"),
         columns2 = c("cb.chromosome", "start", "end")
-    ) %>%
+    )) %>%
     as.data.frame %>%
     select(ID, hgnc_symbol, log.ratio) %>%
     ggplot(., aes(x = ID, y = log.ratio, group = hgnc_symbol)) +

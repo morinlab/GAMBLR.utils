@@ -11,7 +11,7 @@ summarise_mutation_status(
   gene_reporting_policy = NULL,
   genes_drop_unannotated = NULL,
   gene_drop_policy = NULL,
-  encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+  encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
   use_all_aliases = TRUE,
   include_hotspot_alias = TRUE,
   verbose = FALSE
@@ -33,8 +33,8 @@ mode. Valid keys are \code{detailed} (granular alias columns) and \code{coding}
 (keep only \code{GENE_coding}). Genes not listed default to driver/unknown.}
 
 \item{genes_drop_unannotated}{Optional character vector of genes for which
-catch-all columns (e.g. \code{GENE_other} or \code{GENE_unknown}) should
-be dropped from the output. Mutually exclusive with \code{gene_drop_policy}.}
+catch-all columns (e.g. \code{GENE_other}) should be dropped from the output.
+Mutually exclusive with \code{gene_drop_policy}.}
 
 \item{gene_drop_policy}{Optional named list defining gene drop policies, e.g.
 \code{list(all = c("IGLL5"), unannotated = c("KMT2D"))}. Valid keys are
@@ -43,26 +43,28 @@ catch-all columns). Mutually exclusive with \code{genes_drop_unannotated}.}
 
 \item{encoding_policy}{Named list controlling the numeric values used for
 coding, non-coding, and driver indicators. Default is
-\code{list(coding = 2, noncoding = 1, driver = 1)}.}
+\code{list(coding = 2, noncoding = 1, driver = 2)}.}
 
 \item{verbose}{Logical. If TRUE, prints messages describing which columns
 will be dropped based on reporting and drop policies.}
 }
 \value{
 A wide data frame (matrix-like) with rows as samples and columns as
-variant categories, containing 0/1 indicators.
+variant categories, containing numeric indicators defined by
+\code{encoding_policy}.
 }
 \description{
 Create a wide sample-by-variant matrix summarizing coding,
 driver, and hotspot-level mutation status from an annotated MAF.
 }
 \details{
-This function expects output from \code{annotate_curated_hotspots()}
+This function expects output from \code{annotate_curated_drivers()}
 (or equivalent) with \code{mutation_alias} and \code{driver_alias}
 columns. It produces a wide matrix with 0/1 indicators for each
 sample-variant combination, including per-gene coding status, driver status,
-and granular hotspot aliases. If you want to collapse multiple columns for a
-gene into a single summary column (e.g., \code{MYC_any}), see
+and granular hotspot aliases. Indicator values are controlled by
+\code{encoding_policy}. If you want to collapse multiple columns for a gene
+into a single summary column (e.g., \code{MYC_any}), see
 \code{collapse_columns_by_regex()}.
 }
 \examples{

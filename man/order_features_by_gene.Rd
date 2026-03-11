@@ -16,8 +16,8 @@ order_features_by_gene(
 }
 \arguments{
 \item{gene_order}{Character vector of genes defining the desired order. If a
-feature name (e.g. \code{MYD88_L265P}) is included, it will be placed at that
-exact position.}
+feature name (e.g. \code{MYD88_L265P}) is included, it will be placed at the
+exact index position defined by \code{gene_order}.}
 
 \item{features}{Character vector of feature names (e.g. \code{MYD88_L265P},
 \code{EZH2_hotspot}, \code{TP53_any}, \code{CREBBP_driver}).}
@@ -35,7 +35,9 @@ first, then remaining rows are filled using \code{gene_key}.}
 (fallback after feature-level matching).}
 }
 \value{
-A data frame with one row per feature in the desired order.
+A data frame with one row per feature in the desired order, including
+columns \code{feature}, \code{gene}, \code{suffix}, and \code{rank}, plus any
+joined metadata fields.
 }
 \description{
 Order feature names of the form \code{GENE_something} to match a

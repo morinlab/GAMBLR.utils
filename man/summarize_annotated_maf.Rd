@@ -13,7 +13,7 @@ summarize_annotated_maf(
   default_include_policy = c("driver_alias", "hotspot_alias", "coding"),
   genes_coding = NULL,
   genes_noncoding = NULL,
-  encoding_policy = list(coding = 2, noncoding = 1, driver = 1),
+  encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
   suppress_redundant = TRUE,
   collapse_policy = NULL,
   collapse_genes = NULL,
@@ -53,7 +53,7 @@ non-coding summary. Produces \code{GENE_noncoding} columns and uses
 \code{encoding_policy$noncoding}.}
 
 \item{encoding_policy}{Named list controlling numeric values for indicators.
-Default is \code{list(coding = 2, noncoding = 1, driver = 1)}.}
+Default is \code{list(coding = 2, noncoding = 1, driver = 2)}.}
 
 \item{suppress_redundant}{Logical. If TRUE, drop \code{GENE_coding} columns
 when a corresponding \code{GENE_driver} column is present.}

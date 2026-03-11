@@ -78,11 +78,11 @@ genome_to_exome = function(maf,
   }
 
   # subset to only features covered in exome with provided padding
-  features_in_exome = cool_overlaps(
+  features_in_exome = suppressMessages(cool_overlaps(
     maf,
     this_genome_coordinates,
     columns2 = c("chrom", "start", "end")
-    ) %>%
+    )) %>%
     as.data.frame() %>%
     dplyr::select(colnames(maf)) # make sure columns and their order is consitent with the input maf
   return(features_in_exome)

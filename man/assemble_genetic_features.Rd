@@ -10,10 +10,12 @@ assemble_genetic_features(
   genes_noncoding,
   genes_hotspot = c("MYD88"),
   genes_driver = c("CD79B", "EZH2", "NOTCH1", "NOTCH2"),
-  encoding_policy = list(coding = 2, driver = 2, noncoding = 1),
+  encoding_policy = list(coding = 2, driver = 2, noncoding = 1, sv = 2),
   these_samples_metadata = NULL,
   sv_from_metadata = c(BCL2 = "bcl2_ba", BCL6 = "bcl6_ba", MYC = "myc_ba"),
-  sv_value = 2
+  sv_positive_values = "POS",
+  verbose = FALSE,
+  return_everything = FALSE
 )
 }
 \arguments{
@@ -27,12 +29,56 @@ assemble_genetic_features(
 
 \item{genes_driver}{Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).}
 
-\item{encoding_policy}{Named list of values used for coding/driver/noncoding indicators.}
+\item{encoding_policy}{Named list of values used for coding/driver/noncoding/SV indicators.}
+
+\item{these_samples_metadata}{Optional metadata for samples. If provided with
+\code{sv_from_metadata}, SV status columns are appended via
+\code{encode_sv_status()}.}
+
+\item{sv_from_metadata}{Named vector or list mapping new SV column names to
+metadata fields. If names do not end with \code{_SV}, that suffix is added.}
+
+\item{sv_positive_values}{Values in metadata fields that indicate positive SV
+status (default: \code{"POS"}).}
+
+\item{verbose}{Logical. If TRUE, prints progress messages.}
+
+\item{return_everything}{Logical. If TRUE, return a list with
+\code{annotated_maf}, \code{full_status}, and \code{collapsed_status}.}
 }
 \value{
 A wide matrix-like data frame of per-sample mutation features.
+If \code{return_everything = TRUE}, returns a list with intermediate outputs.
 }
 \description{
 Build a sample-by-feature matrix from a MAF by annotating curated drivers,
 summarizing coding/non-coding status, and collapsing per-gene columns.
+}
+\examples{
+\dontrun{
+dlbcl_meta = get_gambl_metadata() \%>\%
+  filter(seq_type != "mrna", pathology == "DLBCL")
+# Get coding AND non-coding variants for all genes (including non-Tier 1)
+# to allow for flexible summarization 
+
+dlbcl_maf = get_all_coding_ssm(
+  these_samples_metadata = dlbcl_meta,
+  include_silent = TRUE
+)
+# use the Tier 1 DLBCL list (includes almost all LymphGen features and more)
+dlbcl_genes = lymphoma_genes \%>\%
+  filter(DLBCL_Tier == 1) \%>\%
+  pull(Gene)
+
+# genes affected by aSHM are not all in the Tier 1 DLBCL list
+ashm_genes = unique(grch37_ashm_regions$gene)
+ashm_genes = ashm_genes[ashm_genes \%in\% dlbcl_genes]
+
+assembled = assemble_genetic_features(
+  dlbcl_maf,
+  dlbcl_genes,
+  ashm_genes,
+  these_samples_metadata = dlbcl_meta
+)
+}
 }

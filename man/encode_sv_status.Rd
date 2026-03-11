@@ -11,7 +11,7 @@ encode_sv_status(
   positive_values = "POS",
   encoding_policy = list(positive = 2, negative = 0),
   sample_id_col = "sample_id",
-  debug = FALSE
+  verbose = FALSE
 )
 }
 \arguments{
@@ -23,7 +23,8 @@ encode_sv_status(
 metadata field names. For example, \code{c(BCL6_SV = "bcl6_ba")}.}
 
 \item{positive_values}{Vector of values in the metadata field that indicate
-a positive status (default \code{"POS"}).}
+a positive status (default \code{"POS"}). Any non-matching or missing values
+are encoded as \code{encoding_policy$negative}.}
 
 \item{encoding_policy}{Named list controlling the numeric values used for
 positive and negative samples. Default is
@@ -32,10 +33,12 @@ positive and negative samples. Default is
 \item{sample_id_col}{Column name in \code{metadata} containing sample IDs
 (default \code{"sample_id"}).}
 
-\item{debug}{Logical. If TRUE, prints matching diagnostics.}
+\item{verbose}{Logical. If TRUE, prints matching diagnostics.}
 }
 \value{
-The input \code{mat} with new columns appended.
+A data.frame with the input \code{mat} columns and new SV columns
+appended. All non-positive samples are encoded as
+\code{encoding_policy$negative}.
 }
 \description{
 Add one or more indicator columns to a matrix/data frame based on

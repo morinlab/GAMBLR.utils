@@ -68,7 +68,7 @@ test <- liftover(
 )
 
 # retrieve all the SV that were produced from hg38 alignments
-bedpe <- GAMBLR.open::get_manta_sv(projection="hg38") 
+bedpe <- GAMBLR.open::get_manta_sv(projection="hg38")
 # lift them to grch37
 test <- liftover(
     data_df = bedpe,

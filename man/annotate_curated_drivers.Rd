@@ -6,7 +6,7 @@
 \usage{
 annotate_curated_drivers(
   maf_data,
-  genes_of_interest = c("MYD88", "NOTCH1", "NOTCH2"),
+  genes_of_interest = c("MYD88", "NOTCH1", "NOTCH2", "NFKBIZ"),
   genome_build,
   custom_coordinates,
   existing_values_action = "clobber",
@@ -14,33 +14,34 @@ annotate_curated_drivers(
 )
 }
 \arguments{
+\item{maf_data}{A maf_data object or data frame in MAF format.}
+
 \item{genes_of_interest}{An optional vector of genes for hotspot annotation. By default, the genes present in the curated hotspot tables are supported.}
 
 \item{genome_build}{Reference genome build for the coordinates in the MAF file. The default is grch37 genome build.}
 
-\item{custom_coordinates}{A data frame with custom coordinates for the hot spots.
-All mutations in any of the regions specified in the data frame will be marked as hot spots.
-The data frame must have the following columns: "Hugo_Symbol", "chrom", "start", and "end".
-Optional columns are: "classes" (regex for Variant_Classification) and "alias" (identifier for the hotspot).
-The "type" column can include tokens such as missense, inframe, trunc, startloss,
-stoploss, splicesite, and spliceregion (comma-separated).}
+\item{custom_coordinates}{A data frame defining custom driver/hotspot regions.
+Follow the same structure as \code{get_driver_coordinates()}. At minimum, it must
+include \code{Hugo_Symbol}, \code{chrom}, \code{start}, and \code{end}. Optional
+columns include \code{alias} (identifier), \code{type} (token string), and/or
+\code{classes} (regex for Variant_Classification). If \code{classes} is missing,
+it will be set to all non-synonymous classes. See \code{get_driver_coordinates()}
+for the expected column structure.}
 
 \item{existing_values_action}{Character. How to handle existing columns.
 Use "clobber" (default) to always reset "hot_spot" and "mutation_alias"
 before re-annotating. Use "update" to only fill missing values.}
-
-\item{annotated_maf}{A maf_data object or data frame in MAF format that has hotspots annotated using the function annotate_hotspots().}
 }
 \value{
 The same data frame (as given to the \code{annotated_maf} parameter) with the reviewed columns
 "hot_spot", "mutation_alias", and "driver_alias".
 }
 \description{
-Annotate MAF-like data frame with a hot_spot column indicating recurrent mutations.
+Annotate MAF-like data frame with curated driver/hotspot annotations.
 }
 \details{
 This function annotates a MAF-like data frame and will create or overwrite the
-"hot_spot" column based on curated hotspot rules. Genes for hotspot review are supplied
+"hot_spot" column based on curated driver/hotspot rules. Genes for review are supplied
 with the \code{genes_of_interest} parameter. Overlap is determined using a fuzzy interval
 match so any overlap between a mutation and a hotspot region is considered a match.
 Currently only a few sets of genes are supported, see parameter description for more information and limitations.

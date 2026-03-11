@@ -85,12 +85,12 @@ region_to_gene = function(region,
   }
 
   #intersect regions
-  intersect = cool_overlaps(
+  intersect = suppressMessages(cool_overlaps(
     region,
     gene_list,
     columns1 = c("chromosome", "start", "end"),
     columns2 = c("chromosome", "start", "end")
-  )
+  ))
   colnames(intersect)[2] = "region_start"
   colnames(intersect)[3] = "region_end"
   colnames(intersect) <- gsub("\\.y", "", colnames(intersect))

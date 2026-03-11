@@ -24,7 +24,7 @@ default pattern of \code{^GENE_}. If provided, \code{collapse_policy} is
 generated automatically unless explicitly supplied.}
 
 \item{suffix}{Suffix for auto-generated columns when \code{genes} is used
-(default \code{"any"}, producing columns like \code{GENE_any}).}
+(default \code{"_any"}, producing columns like \code{GENE_any}).}
 
 \item{drop_sources}{Logical. If TRUE (default), matched source columns are dropped
 after the new column is created.}
@@ -62,7 +62,7 @@ status_df = collapse_columns_by_regex(
 status_df = collapse_columns_by_regex(
   status_df,
   genes = c("MYC","BCL2","TP53"),
-  suffix = "any"
+  suffix = "_any"
 )
 }
 }
