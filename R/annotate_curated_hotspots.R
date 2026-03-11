@@ -50,7 +50,9 @@ assemble_genetic_features <- function(unannotated_maf,
                                      encoding_policy = list(coding=2,driver=2,noncoding=1),
                                      these_samples_metadata = NULL,
                                      sv_from_metadata = c(BCL2="bcl2_ba", BCL6="bcl6_ba", MYC="myc_ba"),
-                                     sv_value = 2
+                                     sv_value = 2,
+                                     verbose = FALSE,
+                                     return_everything = FALSE
                                      ){
   # to remove redundancy, we will drop all GENE_other for
   # the genes in genes_driver
@@ -62,11 +64,17 @@ assemble_genetic_features <- function(unannotated_maf,
   # EZH2: SET domain
   # 
   # 
+  if(verbose){
+    message("Annotating hotspots and drivers using annotate_curated_drivers...")
+  }
   annotated_maf= annotate_curated_drivers(maf_data = unannotated_maf,
                                            genes_of_interest = unique(c(genes_hotspot,
                                                                         genes_driver)))
   genes_full = unique(c(genes_coding, genes_hotspot, genes_driver))
-
+  if(verbose){
+    message("Summarizing mutation status into a wide matrix with summarise_mutation_status...")
+    message("encoding policy: coding=", encoding_policy$coding, ", driver=", encoding_policy$driver, ", noncoding=", encoding_policy$noncoding)
+  }
   mut_status = summarise_mutation_status(
     annotated_maf,
     genes_coding = genes_coding,
@@ -95,24 +103,32 @@ assemble_genetic_features <- function(unannotated_maf,
   }
 
   if (!is.null(these_samples_metadata) && !is.null(sv_from_metadata)) {
-    for (oncogene in names(sv_from_metadata)) {
-      metadata_column <- sv_from_metadata[[oncogene]]
-      col_vals <- unique(these_samples_metadata[[metadata_column]])
-      if (!"POS" %in% col_vals) {
-        warning(paste("column", metadata_column, "doesn't have any POS values",
-                      "SV encoding is expected to be POS/NEG"))
-      }
-      sv_samples <- these_samples_metadata[
-        these_samples_metadata[[metadata_column]] == "POS", "sample_id"
-      ]
-      sv_samples <- sv_samples[!is.na(sv_samples)]
-      sv_samples <- intersect(sv_samples, rownames(status_collapse))
-      onco_column <- paste0(oncogene, "_SV")
-      status_collapse[[onco_column]] <- 0
-      if (length(sv_samples) > 0) {
-        status_collapse[sv_samples, onco_column] <- sv_value
+    if (any(grepl("_SV$", names(sv_from_metadata)))) {
+      mapping <- as.list(sv_from_metadata)
+    } else {
+      mapping <- setNames(as.list(sv_from_metadata), paste0(names(sv_from_metadata), "_SV"))
+    }
+    sv_mat <- encode_sv_status(
+      mat = status_collapse,
+      metadata = these_samples_metadata,
+      mapping = mapping,
+      positive_values = "POS",
+      encoding_policy = list(positive = sv_value, negative = 0),
+      verbose = verbose
+    )
+    for (col_name in names(mapping)) {
+      if (col_name %in% colnames(sv_mat) && all(sv_mat[[col_name]] == 0, na.rm = TRUE)) {
+        warning(paste("SV encoding: no POS values found for", col_name))
       }
     }
+    status_collapse <- sv_mat
+  }
+  if(return_everything){
+    return(list(
+      annotated_maf = annotated_maf,
+      full_status = mut_status,
+      collapsed_status = status_collapse
+    ))
   }
   return(status_collapse)
   
@@ -652,7 +668,7 @@ summarize_annotated_maf = function(annotated_maf,
 #' \code{list(positive = 2, negative = 0)}.
 #' @param sample_id_col Column name in \code{metadata} containing sample IDs
 #' (default \code{"sample_id"}).
-#' @param debug Logical. If TRUE, prints matching diagnostics.
+#' @param verbose Logical. If TRUE, prints matching diagnostics.
 #'
 #' @return The input \code{mat} with new columns appended.
 #'
@@ -675,7 +691,7 @@ encode_sv_status = function(mat,
                                             positive_values = "POS",
                                             encoding_policy = list(positive = 2, negative = 0),
                                             sample_id_col = "sample_id",
-                                            debug = FALSE){
+                                            verbose = FALSE){
   if(is.null(rownames(mat))){
     stop("mat must have row names corresponding to sample IDs")
   }
@@ -692,7 +708,7 @@ encode_sv_status = function(mat,
   mat_df = as.data.frame(mat)
   sample_ids = rownames(mat_df)
 
-  if(debug){
+  if(verbose){
     message("encode_sv_status: rows in mat = ", length(sample_ids))
     message("encode_sv_status: rows in metadata = ", nrow(metadata))
     message("encode_sv_status: unique sample ids in metadata = ", length(unique(metadata[[sample_id_col]])))
@@ -707,7 +723,7 @@ encode_sv_status = function(mat,
     pos_ids = metadata[[sample_id_col]][metadata[[field]] %in% positive_values]
     pos_ids = as.character(pos_ids)
     pos_ids = base::intersect(pos_ids, as.character(sample_ids))
-    if(debug){
+    if(verbose){
       message("encode_sv_status: ", new_col, " field=", field,
               " positives in metadata=", sum(metadata[[field]] %in% positive_values, na.rm = TRUE),
               ", matched=", length(pos_ids))
