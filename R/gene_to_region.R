@@ -48,10 +48,33 @@ gene_to_region = function(gene_symbol,
   
   #filter on gene_symbol/ensembl_id
   if(!missing(gene_symbol) && missing(ensembl_id)){
+    # If aliases are available, auto-map symbols that don't match the selected build.
+    # Expected columns: hg19, hg38 (where hg19 corresponds to grch37).
+    aliases_df = as.data.frame(aliases)
+    
+    converted_symbols = character(0)
+    if(!is.null(aliases_df) && all(c("hg19", "hg38") %in% colnames(aliases_df))){
+      target_col = if(projection == "grch37") "hg19" else "hg38"
+      source_col = if(projection == "grch37") "hg38" else "hg19"
+      # Only map symbols missing from the selected build
+      missing_symbols = setdiff(gene_symbol, gene_coordinates$hugo_symbol)
+      if(length(missing_symbols) > 0){
+        map_pos = match(gene_symbol, aliases_df[[source_col]])
+        mapped = aliases_df[[target_col]][map_pos]
+        do_map = !is.na(map_pos) & gene_symbol %in% missing_symbols & !is.na(mapped) & mapped != ""
+        if(any(do_map)){
+          gene_symbol[do_map] = mapped[do_map]
+          converted_symbols = unique(aliases_df[[source_col]][map_pos[do_map]])
+        }
+      }
+    }
+    
+    gene = gene_symbol
     gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
     genes_not_vailable = gene_symbol[! gene_symbol %in% gene_coordinates$hugo_symbol]
   }
   if(missing(gene_symbol) && !missing(ensembl_id)){
+    gene = ensembl_gene_id
     gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
     genes_not_vailable = ensembl_id[! ensembl_id %in% gene_coordinates$ensembl_gene_id]
   }
@@ -78,16 +101,21 @@ gene_to_region = function(gene_symbol,
   }else{
     #make the output gene order the same as the input
     if(!missing(gene_symbol) && missing(ensembl_id)){
+      gene = gene_symbol
       region = arrange(region, match(hugo_symbol, gene_symbol))
     }
     if(missing(gene_symbol) && !missing(ensembl_id)){
+      gene = ensembl_id
       region = arrange(region, match(hugo_symbol, ensembl_id))
     }
   }
   
   region[region == ""] = NA
   region = distinct(region, .keep_all = TRUE)
-  
+  if(nrow(region)>1){
+    message(paste0(nrow(region), " regions returned for the provided gene", gene))
+    region = dplyr::slice_head(region, n = 1)
+  }
   if(return_as == "bed"){
     #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
     region = dplyr::select(region, chromosome, start, end, hugo_symbol)

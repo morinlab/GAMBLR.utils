@@ -5,9 +5,9 @@
 #' @details The user can specify the data to be converted to another genome build in a data frame with `data_df`.
 #' For the bedpe data, the user can optionally also specify a path to the bedpe file that needs to be lifted with `bedpe_file`
 #' (remained here for backwards compatibility).
-#' 
+#'
 #' The other required parameter is `target_build`, this parameter decides the final projection of the lifted data.
-#' 
+#'
 #' The data type can be specified with the `mode` argument, which accepts one of the bedpe (default, maf, or bed files).
 #' Other formats are not supported yet.
 #'
@@ -29,6 +29,7 @@
 #' @export
 #'
 #' @examples
+#'
 #' bed <- grch37_ashm_regions
 #'
 #' test <- liftover(
@@ -37,9 +38,8 @@
 #'     target_build = "hg38"
 #' )
 #'
-#' maf <- get_coding_ssm(
-#'      these_sample_ids = "DOHH-2"
-#' )
+#' maf <- GAMBLR.open::get_coding_ssm() %>%
+#'     dplyr::filter(Tumor_Sample_Barcode=="DOHH-2")
 #'
 #' test <- liftover(
 #'     data_df = maf,
@@ -47,14 +47,13 @@
 #'     target_build = "hg38"
 #' )
 #'
-#' bedpe <- get_manta_sv(
-#'      these_sample_ids = "DOHH-2"
-#' )
-#'
+#' # retrieve all the SV that were produced from hg38 alignments
+#' bedpe <- GAMBLR.open::get_manta_sv(projection="hg38")
+#' # lift them to grch37
 #' test <- liftover(
 #'     data_df = bedpe,
 #'     mode = "bedpe",
-#'     target_build = "hg38"
+#'     target_build = "grch37"
 #' )
 #'
 
@@ -68,7 +67,13 @@ liftover = function(
         standard_bed = FALSE,
         verbose = FALSE
     ){
-
+    if(missing(mode) && "genomic_data" %in% class(data_df)){
+        mode = class(data_df)
+        mode = gsub("_data","",mode)
+        mode = intersect(mode,c("seg","maf","bed"))
+        message("inferred class for setting mode:", mode)
+        data_df = strip_genomic_classes(data_df)
+    }
     if(target_build == "grch37" | target_build == "hg19") {
         chain <- rtracklayer::import.chain(
             system.file(
@@ -233,8 +238,9 @@ liftover = function(
 
             return(output)
         }
-    } else if(mode %in% c("maf", "bed")) {
+    } else if(mode %in% c("maf", "bed", "seg")) {
         # handle different styles of column names (chrom, chr, chr_hg19, etc.)
+        original_columns = colnames(data_df)
         data_df <- data_df %>%
             rename_at(
                 vars(matches("chr")), ~ "Chromosome"
@@ -245,6 +251,7 @@ liftover = function(
             rename_at(
                 vars(matches("end")), ~ "End_Position"
             )
+
 
         # Always make sure liftover input is chr-prefixed and avoid scenarios
         # of creating erroneous chrchr1 instances
@@ -258,26 +265,42 @@ liftover = function(
                 "start" = "Start_Position",
                 "end" = "End_Position"
             )
+
         over <- GenomicRanges::makeGRangesFromDataFrame(
             over,
             keep.extra.columns = TRUE
         )
+        print(over)
         lifted <- rtracklayer::liftOver(over, chain)
+
         lifted <- data.frame(
             lifted@unlistData
-        ) %>%
-            dplyr::select(-width) %>%
+        )
+        print(lifted)
+        if(mode=="maf"){
+          lifted = lifted %>%
+
             dplyr::rename(
-                "Chromosome" = "seqnames",
-                "Start_Position" = "start",
-                "End_Position" = "end",
-                "Strand" = "strand"
+              "Chromosome" = "seqnames",
+              "Start_Position" = "start",
+              "End_Position" = "end",
+              "Strand" = "strand"
             ) %>%
             rename_at(
-                vars(matches("strand")), ~ "Strand"
+              vars(matches("strand")), ~ "Strand"
             ) %>%
             dplyr::select(all_of(colnames(data_df))) %>%
             as.data.frame()
+        }else if(mode=="bed"){
+          lifted = lifted %>%
+
+            dplyr::rename(
+              "chrom" = "seqnames"
+            ) %>%
+            dplyr::select(all_of(original_columns)) %>%
+            as.data.frame()
+        }
+
 
         # If this is maf we also need to reset the NCBI_Build column value
         # to keep things sane
@@ -285,6 +308,24 @@ liftover = function(
             lifted$NCBI_Build <- "GRCh37"
         } else if(mode == "maf" & target_build %in% c("grch38", "hg38")) {
             lifted$NCBI_Build <- "GRCh38"
+        }
+        if(mode == "seg"){
+            lifted <- lifted %>%
+            rename_at(
+                vars(matches("Chromosome")), ~ "chrom"
+            ) %>%
+            rename_at(
+                vars(matches("Start_Position")), ~ "start"
+            ) %>%
+            rename_at(
+                vars(matches("End_Position")), ~ "end"
+            )
+            #re-merge adjacent segs to deal with explosion of large segs across portions of chain file
+            # df = your data.frame with columns: ID, chrom, start, end, num.mark, log.ratio, C, CN
+
+
+
+            lifted = create_seg_data(lifted, genome_build =  target_build)
         }
 
         return(lifted)

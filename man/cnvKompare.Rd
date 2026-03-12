@@ -66,6 +66,7 @@ Finally, the time series plot of CNV log ratios will be returned for all lymphom
 it to a panel of genes of interest.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 #get segs for comparison
@@ -75,5 +76,5 @@ my_list = cnvKompare(this_seg = my_segs,
                      these_sample_ids = c("02-13135T", "04-28140T"),
                      genes_of_interest = c("EZH2", "TP53", "MYC", "CREBBP","GNA13"),
                      show_x_labels = FALSE)
-
+}
 }

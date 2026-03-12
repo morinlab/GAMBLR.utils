@@ -627,7 +627,7 @@ create_seg_data <- function(seg_df, genome_build) {
     }
   }
   structure(seg_df,
-            class = c("seg_data", class(seg_df)),
+            class = c("seg_data", "genomic_data", class(seg_df)),
             genome_build = genome_build)
 }
 

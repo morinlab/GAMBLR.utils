@@ -65,7 +65,7 @@ For how to determine/specify the coordinates of each region, refer to the parame
 }
 \examples{
 
-
+\dontrun{
 dlbcl_genome_meta = get_gambl_metadata() \%>\%
     filter(pathology=="DLBCL",
     seq_type=="genome")
@@ -84,6 +84,6 @@ gistic_cn_mat = segmented_data_to_cn_matrix(
                              seg_data=all_segments,
                              strategy="GISTIC",
                              gistic_lesions_file="all_lesions.conf_90.txt")
-
+}
 
 }

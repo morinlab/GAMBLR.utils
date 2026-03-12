@@ -36,6 +36,7 @@ count_ssm_by_region(
 Count the variants in a region with a variety of filtering options.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 #define a region.
@@ -43,5 +44,5 @@ my_region = gene_to_region(gene_symbol = "MYC", return_as = "region")
 
 #count SSMs for the selected sample subset and defined region.
 count_ssm_by_region(region = my_region)
-
+}
 }

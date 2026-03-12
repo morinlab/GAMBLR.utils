@@ -2,7 +2,7 @@
 % Please edit documentation in R/map_region_to_bins.R
 \name{map_regions_to_bins}
 \alias{map_regions_to_bins}
-\title{Map region to bins}
+\title{Map regions to bins}
 \usage{
 map_regions_to_bins(
   query_regions,
@@ -12,26 +12,38 @@ map_regions_to_bins(
 )
 }
 \arguments{
-\item{query_regions}{Argument to specify. TODO}
+\item{query_regions}{Character vector of genomic regions (e.g. "chr17:777-999")
+or gene symbols if \code{query_type = "gene"}.}
 
-\item{regions}{Additional argument. TODO}
+\item{regions}{Character vector of candidate regions (bins) to match against.}
 
-\item{query_type}{Additional argument. TODO}
+\item{query_type}{One of \code{c("region", "gene")}. If \code{"gene"}, \code{query_regions}
+is interpreted as gene symbols and converted to regions via
+\code{gene_to_region()}.}
 
-\item{first}{Additional argument. TODO}
+\item{first}{Logical; if \code{TRUE}, return only the first match per query region.
+If \code{FALSE}, return all matches.}
 }
 \value{
-a named list
+A named list keyed by query region name with value(s) of matched
+region(s). When \code{first = TRUE}, each element is a single region string; when
+\code{first = FALSE}, each element is a character vector of all matches.
 }
 \description{
-Map region to bins
+Given query gene or regions, return the overlapping bin(s)
+from a candidate set of regions. Overlap is assessed by chromosome match and
+whether the query region starts inside a candidate region or fully contains it.
 }
 \examples{
-
+\dontrun{
 gene_region <- gene_to_region("TP53")
 
 all_bins <- colnames(cn_state_matrix)
 
-TP53_bin <- map_region_to_bins(gene_region, all_bins, first = TRUE)
+TP53_bin <- map_regions_to_bins(gene_region, all_bins, first = TRUE)
 
+# multiple regions
+my_regions <- c("chr17:7500000-7600000", "chr1:100000-120000")
+region_bins <- map_regions_to_bins(my_regions, all_bins, first = FALSE)
+}
 }

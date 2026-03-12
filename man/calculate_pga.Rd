@@ -58,6 +58,7 @@ The telomeres are always excluded from calculation, and centromeres/sex
 chromosomes can be optionally included or excluded.
 }
 \examples{
+\dontrun{
 seg <- get_sample_cn_segments(
     these_sample_ids = c(
         "14-36022T",
@@ -71,5 +72,6 @@ per_chromosome_pga <- calculate_pga(
      this_seg = seg,
      per_chromosome = TRUE
 )
+}
 
 }

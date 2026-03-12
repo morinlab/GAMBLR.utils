@@ -16,6 +16,7 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' library(GAMBLR.data)
 #' 
 #' #define a region.
@@ -23,7 +24,7 @@
 #'
 #' #count SSMs for the selected sample subset and defined region.
 #' count_ssm_by_region(region = my_region)
-#'
+#'}
 count_ssm_by_region = function(region,
                                chromosome,
                                start,

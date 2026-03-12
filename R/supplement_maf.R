@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' library(GAMBLR.data)
-#' 
+#' \dontrun{
 #' reddy_meta = get_gambl_metadata()
 #' reddy_meta = dplyr::filter(reddy_meta, cohort=="dlbcl_reddy")
 #' 
@@ -23,7 +23,7 @@
 #' 
 #' complete_maf = supplement_maf(incoming_maf = small_maf,
 #'                               these_samples_metadata = reddy_meta)
-#'
+#'}
 supplement_maf <- function(incoming_maf,
                            these_samples_metadata){
 

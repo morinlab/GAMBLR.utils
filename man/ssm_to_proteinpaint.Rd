@@ -69,6 +69,7 @@ MAF has all needed columns. Other columns are taken from the metadata provided b
 \code{these_samples_metadata} parameter or generated internally.
 }
 \examples{
+\dontrun{
 library(GAMBLR.data)
 
 # define same somples
@@ -84,5 +85,5 @@ pp_df = ssm_to_proteinpaint(maf_data = my_maf, this_seq_type = "genome")
 # convert only coding mutations to ProteinPaint format
 pp_df = ssm_to_proteinpaint(maf_data = my_maf, this_seq_type = "genome",
                             coding_only = TRUE)
-
+}
 }

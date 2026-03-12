@@ -15,9 +15,7 @@ annotate_sv(
     72551554, 72551555, 72551558, 72551559, 72551562, 189255425, 189255426, 189255461,
     189255462),
   genome_build = "grch37",
-  priority_to_be_oncogene = c("MYC", "BCL6"),
-  oncogene_bed,
-  include_shm_partners = FALSE
+  priority_to_be_oncogene = c("MYC", "BCL6")
 )
 }
 \arguments{
@@ -37,11 +35,10 @@ Only the columns for both chromosomes, coordinates and strand plus SOMATIC_SCORE
 
 \item{genome_build}{Reference genome build parameter, default is grch37.}
 
-\item{priority_to_be_oncogene}{Vector of gene names (default is \code{c("MYC", "BCL6")}) used to filter rows based on genes that have the highest priority to be considered oncogenes. Genes to the left (\emph{i.e.} first elements of this vector) have higher priority; non-listed genes have the lowest priority. See \strong{Details} section for more information.}
-
-\item{oncogene_bed}{Optionally, provide bed for regions to be considered oncogenes.}
-
-\item{include_shm_partners}{Set to TRUE if you want to allow aSHM regions to be considered valid oncogene partners when annotating SVs}
+\item{priority_to_be_oncogene}{Vector of gene names (default is \code{c("MYC", "BCL6")}) used to filter
+rows based on genes that have the highest priority to be considered oncogenes. Genes to the left
+(\emph{i.e.} first elements of this vector) have higher priority; non-listed genes have the lowest priority.
+See \strong{Details} section for more information.}
 }
 \value{
 A data frame with annotated SVs (gene symbol and entrez ID).
@@ -69,12 +66,12 @@ their "gene" column, both rows are kept and a warning message followed by the ro
 }
 \examples{
 library(GAMBLR.data)
-
-sv_df = get_manta_sv(verbose = FALSE)
+\dontrun{
+sv_df = GAMBLR.open::get_manta_sv(verbose = FALSE)
 annotated_entrez = annotate_sv(sv_data = sv_df,
                                with_chr_prefix = FALSE,
                                collapse_redundant = FALSE,
                                return_as = "bedpe_entrez", 
                                genome_build = "grch37")
-
+}
 }
