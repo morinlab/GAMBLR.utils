@@ -270,13 +270,17 @@ liftover = function(
             over,
             keep.extra.columns = TRUE
         )
-        print(over)
+        if(verbose){
+            print(over)
+        }
         lifted <- rtracklayer::liftOver(over, chain)
 
         lifted <- data.frame(
             lifted@unlistData
         )
-        print(lifted)
+        if(verbose){
+            print(lifted)
+        }
         if(mode=="maf"){
           lifted = lifted %>%
 
@@ -292,11 +296,8 @@ liftover = function(
             dplyr::select(all_of(colnames(data_df))) %>%
             as.data.frame()
         }else if(mode=="bed"){
+          colnames(lifted)[1:3] <- original_columns[1:3]
           lifted = lifted %>%
-
-            dplyr::rename(
-              "chrom" = "seqnames"
-            ) %>%
             dplyr::select(all_of(original_columns)) %>%
             as.data.frame()
         }
