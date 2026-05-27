@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-02-16 11:12:35.351052 ==="
+[1] "=== STARTED AT 2026-05-27 10:58:03 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 47 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
+── Running 50 example files ────────────────────────── GAMBLR.utils ──
 
 > all_sample_seg = GAMBLR.data::sample_data$grch37$seg
 
@@ -54,21 +54,21 @@
 
 > dplyr::filter(dlbcl_coding, !grepl("other", mutation_alias)) %>% 
 +     dplyr::select(Chromosome, Start_Position, Variant_Classification, 
-+         HGVSp_Short, hot_spot, mutation_alias, mutation_annotation)
++         HGVSp_Short, hot_spot, mutation_alias, driver_alias)
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-   Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias mutation_annotation
-1           1      117113520          Splice_Region        <NA>     TRUE     CD58_trunc         CD58_driver
-2           1      203274831      Nonsense_Mutation      p.Q33*     TRUE     BTG2_trunc         BTG2_driver
-3           1      203274883          Splice_Region        <NA>     TRUE     BTG2_trunc         BTG2_driver
-4           1      203276251      Nonsense_Mutation      p.W54*     TRUE     BTG2_trunc         BTG2_driver
-5          13       41239891      Missense_Mutation     p.S153R     TRUE      FOXO1_DBD        FOXO1_driver
-6          17       62006819      Missense_Mutation     p.G190A     TRUE     CD79B_ITAM        CD79B_driver
-7           1       27023114      Nonsense_Mutation      p.Q74*     TRUE   ARID1A_trunc       ARID1A_driver
-8           1       85733609      Nonsense_Mutation     p.R135*     TRUE    BCL10_Cterm        BCL10_driver
-9           6       75974988      Nonsense_Mutation     p.R138*     TRUE  TMEM30A_trunc      TMEM30A_driver
-10         12       49438193      Nonsense_Mutation    p.Y1692*     TRUE    KMT2D_trunc        KMT2D_driver
+   Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias  driver_alias
+1           1      117113520          Splice_Region        <NA>    FALSE     CD58_trunc   CD58_driver
+2           1      203274831      Nonsense_Mutation      p.Q33*    FALSE     BTG2_trunc   BTG2_driver
+3           1      203274883          Splice_Region        <NA>    FALSE     BTG2_trunc   BTG2_driver
+4           1      203276251      Nonsense_Mutation      p.W54*    FALSE     BTG2_trunc   BTG2_driver
+5           3      101578252                  3'UTR        <NA>    FALSE     NFKBIZ_UTR NFKBIZ_driver
+6           3      101578255                  3'UTR        <NA>    FALSE     NFKBIZ_UTR NFKBIZ_driver
+7          13       41239891      Missense_Mutation     p.S153R    FALSE      FOXO1_DBD  FOXO1_driver
+8          17       62006819      Missense_Mutation     p.G190A    FALSE     CD79B_ITAM  CD79B_driver
+9           1       27023114      Nonsense_Mutation      p.Q74*    FALSE   ARID1A_trunc ARID1A_driver
+10          1       85733609      Nonsense_Mutation     p.R135*    FALSE    BCL10_Cterm  BCL10_driver
 
 > library(GAMBLR.data)
 
@@ -130,18 +130,10 @@ Showing first 10 rows:
 
 > test <- liftover(data_df = bed, mode = "bed", target_build = "hg38")
 
-  1 
-127 
-[1] 127
-
 > maf <- GAMBLR.open::get_coding_ssm() %>% dplyr::filter(Tumor_Sample_Barcode == 
 +     "DOHH-2")
 
 > test <- liftover(data_df = maf, mode = "maf", target_build = "hg38")
-
-  1 
-234 
-[1] 234
 
 > bedpe <- GAMBLR.open::get_manta_sv(projection = "hg38")
 
@@ -174,4 +166,4 @@ Showing first 10 rows:
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-02-16 11:13:45.210218 ==="
+[1] "=== COMPLETED AT 2026-05-27 11:00:45 ==="
