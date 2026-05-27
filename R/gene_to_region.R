@@ -33,127 +33,98 @@ gene_to_region = function(gene_symbol,
                           sort_regions = TRUE,
                           pad_length = 0){
 
-  stopifnot('`projection` parameter must be "grch37" or "hg38"' = projection %in% c("grch37", "hg38"))
-  stopifnot('`return_as` parameter must be "region", "bed" or "df"' = return_as %in% c("region", "bed", "df"))
-  stopifnot('One and only one of the `gene_symbol` and `ensembl_id` parameters must be given to this function' = sum(missing(gene_symbol), missing(ensembl_id)) == 1)
-
-  #set mart based on selected genome projection
-  if(projection == "grch37"){
-    gene_coordinates = GAMBLR.data::grch37_gene_coordinates
-    chr_select = paste0(c(c(1:22),"X","Y"))
-  }else{
-    gene_coordinates = GAMBLR.data::hg38_gene_coordinates
-    chr_select = paste0("chr", c(c(1:22),"X","Y"))
-  }
-
-  #filter on gene_symbol/ensembl_id
-  if(!missing(gene_symbol) && missing(ensembl_id)){
-    # If aliases are available, auto-map symbols that don't match the selected build.
-    # Expected columns: hg19, hg38 (where hg19 corresponds to grch37).
-    aliases_df = as.data.frame(aliases)
-
-    converted_symbols = character(0)
-    if(!is.null(aliases_df) && all(c("hg19", "hg38") %in% colnames(aliases_df))){
-      target_col = if(projection == "grch37") "hg19" else "hg38"
-      source_col = if(projection == "grch37") "hg38" else "hg19"
-      # Only map symbols missing from the selected build
-      missing_symbols = setdiff(gene_symbol, gene_coordinates$hugo_symbol)
-      if(length(missing_symbols) > 0){
-        map_pos = match(gene_symbol, aliases_df[[source_col]])
-        mapped = aliases_df[[target_col]][map_pos]
-        do_map = !is.na(map_pos) & gene_symbol %in% missing_symbols & !is.na(mapped) & mapped != ""
-        if(any(do_map)){
-          gene_symbol[do_map] = mapped[do_map]
-          converted_symbols = unique(aliases_df[[source_col]][map_pos[do_map]])
+  stopifnot(`\`projection\` parameter must be "grch37" or "hg38"` = projection %in% 
+        c("grch37", "hg38"))
+    stopifnot(`\`return_as\` parameter must be "region", "bed" or "df"` = return_as %in% 
+        c("region", "bed", "df"))
+    stopifnot(`One and only one of the \`gene_symbol\` and \`ensembl_id\` parameters must be given to this function` = sum(missing(gene_symbol), 
+        missing(ensembl_id)) == 1)
+    if (projection == "grch37") {
+        gene_coordinates = GAMBLR.data::grch37_gene_coordinates
+        chr_select = paste0(c(c(1:22), "X", "Y"))
+    }
+    else {
+        gene_coordinates = GAMBLR.data::hg38_gene_coordinates
+        chr_select = paste0("chr", c(c(1:22), "X", "Y"))
+    }
+    if (!missing(gene_symbol) && missing(ensembl_id)) {
+        gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% 
+            gene_symbol)
+        genes_not_vailable = gene_symbol[!gene_symbol %in% gene_coordinates$hugo_symbol]
+    }
+    if (missing(gene_symbol) && !missing(ensembl_id)) {
+        gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% 
+            ensembl_id)
+        genes_not_vailable = ensembl_id[!ensembl_id %in% gene_coordinates$ensembl_gene_id]
+    }
+    if (length(genes_not_vailable) > 0) {
+        paste(genes_not_vailable, collapse = ", ") %>% gettextf("Some input gene(s) have no region info available. They are:\n%s.", 
+            .) %>% message
+    }
+    region = dplyr::select(gene_coordinates, chromosome, start, 
+        end, gene_name, hugo_symbol, ensembl_gene_id) %>% as.data.frame() %>% 
+        dplyr::filter(chromosome %in% chr_select)
+    region = mutate(region, start = start - pad_length, end = end + 
+        pad_length)
+    if (sort_regions) {
+        if (projection == "grch37") {
+            chrm_num = region$chromosome
         }
-      }
+        else {
+            chrm_num = sub("chr", "", region$chromosome)
+        }
+        chrm_num = factor(chrm_num, levels = c(1:22, "X", "Y"), 
+            ordered = TRUE)
+        region = dplyr::arrange(region, chrm_num, start)
     }
-
-    gene = gene_symbol
-    gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
-    genes_not_vailable = gene_symbol[! gene_symbol %in% gene_coordinates$hugo_symbol]
-  }
-  if(missing(gene_symbol) && !missing(ensembl_id)){
-    ensembl_gene_id = ensembl_id
-    gene = ensembl_gene_id
-    gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
-    genes_not_vailable = ensembl_id[! ensembl_id %in% gene_coordinates$ensembl_gene_id]
-  }
-
-  #print list of genes that have no region info available
-  if(length(genes_not_vailable) > 0){
-    paste(genes_not_vailable, collapse = ", ") %>%
-      gettextf("Some input gene(s) have no region info available. They are:\n%s.", .) %>%
-      message
-  }
-
-  region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
-    as.data.frame() %>%
-    dplyr::filter(chromosome %in% chr_select)
-  region = mutate(region, start = start - pad_length, end = end + pad_length)
-  if(sort_regions){
-    if(projection == "grch37"){
-      chrm_num = region$chromosome
-    }else{
-      chrm_num = sub("chr", "", region$chromosome)
+    else {
+        if (!missing(gene_symbol) && missing(ensembl_id)) {
+            region = arrange(region, match(hugo_symbol, gene_symbol))
+        }
+        if (missing(gene_symbol) && !missing(ensembl_id)) {
+            region = arrange(region, match(hugo_symbol, ensembl_id))
+        }
     }
-    chrm_num = factor(chrm_num, levels = c(1:22, "X", "Y"), ordered = TRUE)
-    region = dplyr::arrange(region, chrm_num, start)
-  }else{
-    #make the output gene order the same as the input
-    if(!missing(gene_symbol) && missing(ensembl_id)){
-      gene = gene_symbol
-      region = arrange(region, match(hugo_symbol, gene_symbol))
+    region[region == ""] = NA
+    region = distinct(region, .keep_all = TRUE)
+    if (return_as == "bed") {
+        region = dplyr::select(region, chromosome, start, end, 
+            hugo_symbol)
     }
-    if(missing(gene_symbol) && !missing(ensembl_id)){
-      gene = ensembl_id
-      region = arrange(region, match(hugo_symbol, ensembl_id))
+    else if (return_as == "df") {
+        region = region
     }
-  }
-
-  region[region == ""] = NA
-  region = distinct(region, .keep_all = TRUE)
-  if(nrow(region)>1){
-    message(paste0(nrow(region), " regions returned for the provided gene", gene))
-    region = dplyr::slice_head(region, n = 1)
-  }
-  if(return_as == "bed"){
-    #return one-row data frame with first 4 standard BED columns. TODO: Ideally also include strand if we have access to it in the initial data frame
-    region = dplyr::select(region, chromosome, start, end, hugo_symbol)
-
-  }else if(return_as == "df"){
-    region = region
-
-  }else{
-    #default: return in chr:start-end format
-    if(!missing(gene_symbol) && missing(ensembl_id)){
-      ids = dplyr::pull(region, hugo_symbol)
+    else {
+        if (!missing(gene_symbol) && missing(ensembl_id)) {
+            ids = dplyr::pull(region, hugo_symbol)
+        }
+        if (missing(gene_symbol) && !missing(ensembl_id)) {
+            ids = dplyr::pull(region, ensembl_gene_id)
+        }
+        region = setNames(paste0(region$chromosome, ":", region$start, 
+            "-", region$end, recycle0 = TRUE), ids)
     }
-    if(missing(gene_symbol) && !missing(ensembl_id)){
-      ids = dplyr::pull(region, ensembl_gene_id)
+    if (return_as %in% c("bed", "df")) {
+        if (!missing(gene_symbol)) {
+            message(paste0(nrow(region[!is.na(region$chromosome), 
+                ]), " region(s) returned for ", length(gene_symbol), 
+                " gene(s)"))
+        }
+        if (!missing(ensembl_id)) {
+            message(paste0(nrow(region[!is.na(region$chromosome), 
+                ]), " region(s) returned for ", length(ensembl_id), 
+                " gene(s)"))
+        }
     }
-    region = setNames(
-      paste0(region$chromosome, ":", region$start, "-", region$end, recycle0 = TRUE),
-      ids
-    )
-  }
-
-  if(return_as %in% c("bed", "df")){
-    if(!missing(gene_symbol)){
-      message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+    else {
+        if (!missing(gene_symbol)) {
+            message(paste0(length(region[!is.na(region)]), " region(s) returned for ", 
+                length(gene_symbol), " gene(s)"))
+        }
+        if (!missing(ensembl_id)) {
+            message(paste0(length(region[!is.na(region)]), " region(s) returned for ", 
+                length(ensembl_id), " gene(s)"))
+        }
     }
-
-    if(!missing(ensembl_id)){
-      message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(ensembl_id), " gene(s)"))
-    }
-  }else{
-    if(!missing(gene_symbol)){
-      message(paste0(length(region[!is.na(region)]), " region(s) returned for ", length(gene_symbol), " gene(s)"))
-    }
-
-    if(!missing(ensembl_id)){
-      message(paste0(length(region[!is.na(region)]), " region(s) returned for ", length(ensembl_id), " gene(s)"))
-    }
-  }
-  return(region)
+    return(region)
 }
