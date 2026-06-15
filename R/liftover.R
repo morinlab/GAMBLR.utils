@@ -241,6 +241,9 @@ liftover = function(
     } else if(mode %in% c("maf", "bed", "seg")) {
         # handle different styles of column names (chrom, chr, chr_hg19, etc.)
         original_columns = colnames(data_df)
+        chr_col   = original_columns[grepl("chr",   original_columns, ignore.case = TRUE)][1]
+        start_col = original_columns[grepl("start", original_columns, ignore.case = TRUE)][1]
+        end_col   = original_columns[grepl("end",   original_columns, ignore.case = TRUE)][1]
         data_df <- data_df %>%
             rename_at(
                 vars(matches("chr")), ~ "Chromosome"
@@ -270,17 +273,13 @@ liftover = function(
             over,
             keep.extra.columns = TRUE
         )
-        if(verbose){
-            print(over)
-        }
+        if(verbose) print(over)
         lifted <- rtracklayer::liftOver(over, chain)
 
         lifted <- data.frame(
             lifted@unlistData
         )
-        if(verbose){
-            print(lifted)
-        }
+        if(verbose) print(lifted)
         if(mode=="maf"){
           lifted = lifted %>%
 
@@ -298,6 +297,11 @@ liftover = function(
         }else if(mode=="bed"){
           colnames(lifted)[1:3] <- original_columns[1:3]
           lifted = lifted %>%
+            dplyr::rename(
+              !!chr_col   := "seqnames",
+              !!start_col := "start",
+              !!end_col   := "end"
+            ) %>%
             dplyr::select(all_of(original_columns)) %>%
             as.data.frame()
         }

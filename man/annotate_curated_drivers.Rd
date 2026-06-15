@@ -68,5 +68,25 @@ dplyr::filter(dlbcl_coding,
              !grepl("other",mutation_alias)) \%>\%
  dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,driver_alias)
 
+# Annotate TP53 driver categories across all available samples
+all_meta = suppressMessages(GAMBLR.open::get_gambl_metadata())
+all_maf = GAMBLR.open::get_all_coding_ssm(all_meta)
+
+all_maf_tp53 = annotate_curated_drivers(
+  maf_data = all_maf,
+  genes_of_interest = "TP53"
+)
+
+# TP53 mutations are classified into truncations, named hotspot codons
+# (R175, R248, R273, R282, G245) and structural loop regions (LSH1/2, LoopL2/3)
+dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") \%>\%
+  dplyr::select(Tumor_Sample_Barcode, Variant_Classification,
+                HGVSp_Short, hot_spot, mutation_alias, driver_alias) \%>\%
+  head(20)
+
+# Count how many mutations fall into each TP53 driver category
+dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") \%>\%
+  dplyr::count(mutation_alias, sort = TRUE)
+
 
 }
