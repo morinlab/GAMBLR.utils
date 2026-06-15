@@ -74,7 +74,7 @@ gene_to_region = function(gene_symbol,
     genes_not_vailable = gene_symbol[! gene_symbol %in% gene_coordinates$hugo_symbol]
   }
   if(missing(gene_symbol) && !missing(ensembl_id)){
-    gene = ensembl_gene_id
+    gene = ensembl_id
     gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
     genes_not_vailable = ensembl_id[! ensembl_id %in% gene_coordinates$ensembl_gene_id]
   }
