@@ -438,234 +438,6 @@ summarise_mutation_status = function(annotated_maf,
 }
 
 
-#' @title Summarize annotated MAF
-#'
-#' @description Create a wide sample-by-variant matrix summarizing curated
-#' annotations from an annotated MAF using explicit inclusion rules.
-#'
-#'
-#' @param annotated_maf A data frame in MAF format that includes
-#' \code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
-#' and curated annotation columns such as \code{driver_alias}, \code{hotspot_alias},
-#' \code{mutation_alias}, and \code{mutation_alias_all}.
-#' @param include_driver_alias Optional character vector of genes to summarize
-#' using \code{driver_alias} (e.g. \code{TP53_driver}).
-#' @param include_hotspot_alias Optional character vector of genes to summarize
-#' using \code{hotspot_alias} (e.g. \code{TP53_hotspot}).
-#' @param include_mutation_alias Optional character vector of genes to summarize
-#' using \code{mutation_alias} (primary alias).
-#' @param include_mutation_alias_all Optional character vector of genes to summarize
-#' using \code{mutation_alias_all} (all aliases, split by \code{";"}).
-#' @param default_include_policy Character vector controlling which summary layers
-#' to include for genes not listed in any include_* argument. Supported values:
-#' \code{driver_alias}, \code{hotspot_alias}, \code{mutation_alias},
-#' \code{mutation_alias_all}, \code{coding}, \code{none}.
-#' @param genes_coding Optional character vector of genes to include in the
-#' coding summary. Defaults to Tier 1 lymphoma genes.
-#' @param genes_noncoding Optional character vector of genes to include in the
-#' non-coding summary. Produces \code{GENE_noncoding} columns and uses
-#' \code{encoding_policy$noncoding}.
-#' @param encoding_policy Named list controlling numeric values for indicators.
-#' Default is \code{list(coding = 2, noncoding = 1, driver = 2)}.
-#' @param suppress_redundant Logical. If TRUE, drop \code{GENE_coding} columns
-#' when a corresponding \code{GENE_driver} column is present.
-#' @param collapse_policy Optional named list mapping new column names to regex
-#' patterns, passed to \code{collapse_columns_by_regex()}.
-#' @param collapse_genes Optional character vector of genes to collapse (passed
-#' to \code{collapse_columns_by_regex()}).
-#' @param collapse_suffix Suffix used when \code{collapse_genes} is provided.
-#' @param collapse_drop_sources Logical. Whether to drop source columns after
-#' collapsing. Passed to \code{collapse_columns_by_regex()}.
-#' @param collapse_agg_fn Aggregation function used when collapsing.
-#'
-#' @return A wide data frame (matrix-like) with rows as samples and columns as
-#' variant categories, containing 0/1 indicators.
-#'
-#' @import dplyr tidyr
-#' @export
-#'
-summarize_annotated_maf = function(annotated_maf,
-                                   include_driver_alias = NULL,
-                                   include_hotspot_alias = NULL,
-                                   include_mutation_alias = NULL,
-                                   include_mutation_alias_all = NULL,
-                                   default_include_policy = c("driver_alias","hotspot_alias","coding"),
-                                   genes_coding = NULL,
-                                   genes_noncoding = NULL,
-                                   encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
-                                   suppress_redundant = TRUE,
-                                   collapse_policy = NULL,
-                                   collapse_genes = NULL,
-                                   collapse_suffix = "_any",
-                                   collapse_drop_sources = TRUE,
-                                   collapse_agg_fn = max){
-  warning("summarize_annotated_maf() is deprecated; use summarise_mutation_status() instead.")
-  if(is.null(encoding_policy$noncoding)){
-    warning("encoding_policy$noncoding is NULL; noncoding columns will be all zeros")
-  }
-  if(is.null(include_driver_alias)) include_driver_alias = character(0)
-  if(is.null(include_hotspot_alias)) include_hotspot_alias = character(0)
-  if(is.null(include_mutation_alias)) include_mutation_alias = character(0)
-  if(is.null(include_mutation_alias_all)) include_mutation_alias_all = character(0)
-  if(is.null(default_include_policy)) default_include_policy = "none"
-  if(is.null(genes_coding)){
-    genes_coding = lymphoma_genes %>%
-      dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
-      dplyr::pull(Gene)
-  }
-  if(is.null(genes_noncoding)) genes_noncoding = character(0)
-
-  supported_layers = c("driver_alias","hotspot_alias","mutation_alias","mutation_alias_all","coding","none")
-  if(any(!default_include_policy %in% supported_layers)){
-    stop("default_include_policy must be a subset of: driver_alias, hotspot_alias, mutation_alias, mutation_alias_all, coding, none")
-  }
-  if("none" %in% default_include_policy && length(default_include_policy) > 1){
-    stop("default_include_policy cannot include 'none' alongside other layers")
-  }
-
-  all_genes = intersect(unique(annotated_maf$Hugo_Symbol), genes_coding)
-  explicit_genes = unique(c(
-    include_driver_alias,
-    include_hotspot_alias,
-    include_mutation_alias,
-    include_mutation_alias_all
-  ))
-  explicit_genes = intersect(explicit_genes, genes_coding)
-  default_genes = setdiff(all_genes, explicit_genes)
-
-  long_list = list()
-
-  add_driver_alias = function(df, genes){
-    if(length(genes) == 0 || !"driver_alias" %in% colnames(df)) return(NULL)
-    df %>%
-      dplyr::filter(Hugo_Symbol %in% genes, !is.na(driver_alias), driver_alias != "") %>%
-      dplyr::select(driver_alias, Tumor_Sample_Barcode) %>%
-      dplyr::distinct() %>%
-      dplyr::rename(Variant = driver_alias) %>%
-      dplyr::mutate(mutated = encoding_policy$driver)
-  }
-
-  add_hotspot_alias = function(df, genes){
-    if(length(genes) == 0 || !"hotspot_alias" %in% colnames(df)) return(NULL)
-    df %>%
-      dplyr::filter(Hugo_Symbol %in% genes, !is.na(hotspot_alias), hotspot_alias != "") %>%
-      dplyr::select(hotspot_alias, Tumor_Sample_Barcode) %>%
-      dplyr::distinct() %>%
-      dplyr::rename(Variant = hotspot_alias) %>%
-      dplyr::mutate(mutated = encoding_policy$driver)
-  }
-
-  add_mutation_alias = function(df, genes){
-    if(length(genes) == 0 || !"mutation_alias" %in% colnames(df)) return(NULL)
-    df %>%
-      dplyr::filter(Hugo_Symbol %in% genes, !is.na(mutation_alias), mutation_alias != "") %>%
-      dplyr::select(mutation_alias, Tumor_Sample_Barcode) %>%
-      dplyr::distinct() %>%
-      dplyr::rename(Variant = mutation_alias) %>%
-      dplyr::mutate(mutated = encoding_policy$driver)
-  }
-
-  add_mutation_alias_all = function(df, genes){
-    if(length(genes) == 0 || !"mutation_alias_all" %in% colnames(df)) return(NULL)
-    df %>%
-      dplyr::filter(Hugo_Symbol %in% genes, !is.na(mutation_alias_all), mutation_alias_all != "") %>%
-      dplyr::select(mutation_alias_all, Tumor_Sample_Barcode) %>%
-      tidyr::separate_rows(mutation_alias_all, sep = ";") %>%
-      dplyr::mutate(mutation_alias_all = trimws(mutation_alias_all)) %>%
-      dplyr::filter(mutation_alias_all != "") %>%
-      dplyr::distinct() %>%
-      dplyr::rename(Variant = mutation_alias_all) %>%
-      dplyr::mutate(mutated = encoding_policy$driver)
-  }
-
-  add_coding = function(df, genes){
-    if(length(genes) == 0) return(NULL)
-    genes = intersect(genes, genes_coding)
-    if(length(genes) == 0) return(NULL)
-    df %>%
-      dplyr::filter(Hugo_Symbol %in% genes, Variant_Classification %in% vc_nonSynonymous) %>%
-      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      dplyr::distinct() %>%
-      dplyr::mutate(Variant = paste0(Hugo_Symbol, "_coding")) %>%
-      dplyr::select(-Hugo_Symbol) %>%
-      dplyr::mutate(mutated = encoding_policy$coding)
-  }
-
-  add_noncoding = function(df, genes){
-    if(length(genes) == 0) return(NULL)
-    df %>%
-      dplyr::filter(Hugo_Symbol %in% genes, ! Variant_Classification %in% vc_nonSynonymous) %>%
-      dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      dplyr::distinct() %>%
-      dplyr::mutate(Variant = paste0(Hugo_Symbol, "_noncoding")) %>%
-      dplyr::select(-Hugo_Symbol) %>%
-      dplyr::mutate(mutated = encoding_policy$noncoding)
-  }
-
-  long_list = c(
-    long_list,
-    list(add_driver_alias(annotated_maf, include_driver_alias)),
-    list(add_hotspot_alias(annotated_maf, include_hotspot_alias)),
-    list(add_mutation_alias(annotated_maf, include_mutation_alias)),
-    list(add_mutation_alias_all(annotated_maf, include_mutation_alias_all)),
-    list(add_noncoding(annotated_maf, genes_noncoding))
-  )
-
-  if(length(default_genes) > 0 && !"none" %in% default_include_policy){
-    if("driver_alias" %in% default_include_policy){
-      long_list = c(long_list, list(add_driver_alias(annotated_maf, default_genes)))
-    }
-    if("hotspot_alias" %in% default_include_policy){
-      long_list = c(long_list, list(add_hotspot_alias(annotated_maf, default_genes)))
-    }
-    if("mutation_alias" %in% default_include_policy){
-      long_list = c(long_list, list(add_mutation_alias(annotated_maf, default_genes)))
-    }
-    if("mutation_alias_all" %in% default_include_policy){
-      long_list = c(long_list, list(add_mutation_alias_all(annotated_maf, default_genes)))
-    }
-    if("coding" %in% default_include_policy){
-      long_list = c(long_list, list(add_coding(annotated_maf, default_genes)))
-    }
-  }
-
-  long = dplyr::bind_rows(long_list)
-  all_samples = dplyr::distinct(annotated_maf, Tumor_Sample_Barcode)
-  all_variants = dplyr::distinct(long, Variant)
-
-  wide = long %>%
-    tidyr::complete(all_samples, all_variants, fill = list(mutated = 0)) %>%
-    tidyr::pivot_wider(names_from = Variant, values_from = mutated, values_fill = 0) %>%
-    column_to_rownames("Tumor_Sample_Barcode")
-
-  if(suppress_redundant){
-    driver_cols = grep("_driver$", colnames(wide), value = TRUE)
-    if(length(driver_cols) > 0){
-      coding_cols = sub("_driver$", "_coding", driver_cols)
-      drop_cols = intersect(coding_cols, colnames(wide))
-      if(length(drop_cols) > 0){
-        wide = wide[, setdiff(colnames(wide), drop_cols), drop = FALSE]
-      }
-    }
-  }
-
-  if(!is.null(collapse_policy) || !is.null(collapse_genes)){
-    wide = collapse_columns_by_regex(
-      wide,
-      collapse_policy = collapse_policy,
-      genes = collapse_genes,
-      suffix = collapse_suffix,
-      drop_sources = collapse_drop_sources,
-      agg_fn = collapse_agg_fn
-    )
-  }
-
-  return(wide)
-}
-
-
-
-
 
 #' @title Add binary status columns from metadata
 #'
@@ -1008,6 +780,26 @@ order_features_by_gene = function(gene_order,
 #'              !grepl("other",mutation_alias)) %>%
 #'  dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,driver_alias)
 #'
+#' # Annotate TP53 driver categories across all available samples
+#' all_meta = suppressMessages(GAMBLR.open::get_gambl_metadata())
+#' all_maf = GAMBLR.open::get_all_coding_ssm(all_meta)
+#'
+#' all_maf_tp53 = annotate_curated_drivers(
+#'   maf_data = all_maf,
+#'   genes_of_interest = "TP53"
+#' )
+#'
+#' # TP53 mutations are classified into truncations, named hotspot codons
+#' # (R175, R248, R273, R282, G245) and structural loop regions (LSH1/2, LoopL2/3)
+#' dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>%
+#'   dplyr::select(Tumor_Sample_Barcode, Variant_Classification,
+#'                 HGVSp_Short, hot_spot, mutation_alias, driver_alias) %>%
+#'   head(20)
+#'
+#' # Count how many mutations fall into each TP53 driver category
+#' dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>%
+#'   dplyr::count(mutation_alias, sort = TRUE)
+#'
 #'
 annotate_curated_drivers = function(maf_data,
                            genes_of_interest = c("MYD88", "NOTCH1", "NOTCH2","NFKBIZ"),
@@ -1101,6 +893,17 @@ annotate_curated_drivers = function(maf_data,
   if(!".row_id" %in% colnames(annotated_maf)){
     annotated_maf = annotated_maf %>%
       dplyr::mutate(.row_id = dplyr::row_number())
+  }
+
+  protected_cols = grep("\\.x$", colnames(annotated_maf), value = TRUE)
+  protected_col_map = character(0)
+  if(length(protected_cols) > 0){
+    protected_names = paste0("..gamblr_protected_col_", seq_along(protected_cols), "..")
+    while(any(protected_names %in% c(colnames(annotated_maf), colnames(coordinates)))){
+      protected_names = paste0(".", protected_names)
+    }
+    protected_col_map = stats::setNames(protected_cols, protected_names)
+    colnames(annotated_maf)[match(protected_cols, colnames(annotated_maf))] = protected_names
   }
 
   if(!missing(genes_of_interest) && !is.null(genes_of_interest)){
@@ -1216,6 +1019,10 @@ annotate_curated_drivers = function(maf_data,
       )
     )
 
+  if(length(protected_col_map) > 0){
+    colnames(reviewed_maf) = dplyr::recode(colnames(reviewed_maf), !!!protected_col_map)
+  }
+
   if(original_has_maf_class && exists("create_maf_data", mode = "function")){
     reviewed_maf = create_maf_data(reviewed_maf, genome_build)
   }
@@ -1312,14 +1119,3 @@ get_driver_coordinates = function(genome_build){
 
 }
 
-#' @title Hotspot coordinate definitions (deprecated)
-#'
-#' @description Deprecated wrapper for \code{get_driver_coordinates()}.
-#'
-#' @param genome_build Reference genome build for the coordinates in the MAF file.
-#' Supported values include hg19/grch37/hs37d5/GRCh37 and hg38/grch38/GRCh38.
-#' @return See \code{get_driver_coordinates()}.
-#'
-#' @deprecated Use \code{get_driver_coordinates()} instead.
-#' @export
-#'
