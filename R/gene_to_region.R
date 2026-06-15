@@ -77,33 +77,13 @@ gene_to_region = function(gene_symbol,
             ordered = TRUE)
         region = dplyr::arrange(region, chrm_num, start)
     }
-
-    gene = gene_symbol
-    gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
-    genes_not_vailable = gene_symbol[! gene_symbol %in% gene_coordinates$hugo_symbol]
-  }
-  if(missing(gene_symbol) && !missing(ensembl_id)){
-    gene = ensembl_id
-    gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
-    genes_not_vailable = ensembl_id[! ensembl_id %in% gene_coordinates$ensembl_gene_id]
-  }
-
-  #print list of genes that have no region info available
-  if(length(genes_not_vailable) > 0){
-    paste(genes_not_vailable, collapse = ", ") %>%
-      gettextf("Some input gene(s) have no region info available. They are:\n%s.", .) %>%
-      message
-  }
-
-  region = dplyr::select(gene_coordinates, chromosome, start, end, gene_name, hugo_symbol, ensembl_gene_id) %>%
-    as.data.frame() %>%
-    dplyr::filter(chromosome %in% chr_select)
-  region = mutate(region, start = start - pad_length, end = end + pad_length)
-  if(sort_regions){
-    if(projection == "grch37"){
-      chrm_num = region$chromosome
-    }else{
-      chrm_num = sub("chr", "", region$chromosome)
+    else {
+        if (!missing(gene_symbol) && missing(ensembl_id)) {
+            region = arrange(region, match(hugo_symbol, gene_symbol))
+        }
+        if (missing(gene_symbol) && !missing(ensembl_id)) {
+            region = arrange(region, match(hugo_symbol, ensembl_id))
+        }
     }
     region[region == ""] = NA
     region = distinct(region, .keep_all = TRUE)
