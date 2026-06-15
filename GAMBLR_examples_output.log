@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-02-16 11:12:35.351052 ==="
+[1] "=== STARTED AT 2026-06-15 11:55:18.197343 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 47 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
+── Running 51 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
 
 > all_sample_seg = GAMBLR.data::sample_data$grch37$seg
 
@@ -54,32 +54,64 @@
 
 > dplyr::filter(dlbcl_coding, !grepl("other", mutation_alias)) %>% 
 +     dplyr::select(Chromosome, Start_Position, Variant_Classification, 
-+         HGVSp_Short, hot_spot, mutation_alias, mutation_annotation)
++         HGVSp_Short, hot_spot, mutation_alias, driver_alias)
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-   Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias mutation_annotation
-1           1      117113520          Splice_Region        <NA>     TRUE     CD58_trunc         CD58_driver
-2           1      203274831      Nonsense_Mutation      p.Q33*     TRUE     BTG2_trunc         BTG2_driver
-3           1      203274883          Splice_Region        <NA>     TRUE     BTG2_trunc         BTG2_driver
-4           1      203276251      Nonsense_Mutation      p.W54*     TRUE     BTG2_trunc         BTG2_driver
-5          13       41239891      Missense_Mutation     p.S153R     TRUE      FOXO1_DBD        FOXO1_driver
-6          17       62006819      Missense_Mutation     p.G190A     TRUE     CD79B_ITAM        CD79B_driver
-7           1       27023114      Nonsense_Mutation      p.Q74*     TRUE   ARID1A_trunc       ARID1A_driver
-8           1       85733609      Nonsense_Mutation     p.R135*     TRUE    BCL10_Cterm        BCL10_driver
-9           6       75974988      Nonsense_Mutation     p.R138*     TRUE  TMEM30A_trunc      TMEM30A_driver
-10         12       49438193      Nonsense_Mutation    p.Y1692*     TRUE    KMT2D_trunc        KMT2D_driver
+   Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias  driver_alias
+1           1      117113520          Splice_Region        <NA>    FALSE     CD58_trunc   CD58_driver
+2           1      203274831      Nonsense_Mutation      p.Q33*    FALSE     BTG2_trunc   BTG2_driver
+3           1      203274883          Splice_Region        <NA>    FALSE     BTG2_trunc   BTG2_driver
+4           1      203276251      Nonsense_Mutation      p.W54*    FALSE     BTG2_trunc   BTG2_driver
+5           3      101578252                  3'UTR        <NA>    FALSE     NFKBIZ_UTR NFKBIZ_driver
+6           3      101578255                  3'UTR        <NA>    FALSE     NFKBIZ_UTR NFKBIZ_driver
+7          13       41239891      Missense_Mutation     p.S153R    FALSE      FOXO1_DBD  FOXO1_driver
+8          17       62006819      Missense_Mutation     p.G190A    FALSE     CD79B_ITAM  CD79B_driver
+9           1       27023114      Nonsense_Mutation      p.Q74*    FALSE   ARID1A_trunc ARID1A_driver
+10          1       85733609      Nonsense_Mutation     p.R135*    FALSE    BCL10_Cterm  BCL10_driver
 
-> library(GAMBLR.data)
+> all_meta = suppressMessages(GAMBLR.open::get_gambl_metadata())
 
-> my_meta <- GAMBLR.open::get_gambl_metadata()
+> all_maf = GAMBLR.open::get_all_coding_ssm(all_meta)
 
-> my_maf <- GAMBLR.open::get_coding_ssm(these_samples_metadata = my_meta, 
-+     projection = "grch37")
+> all_maf_tp53 = annotate_curated_drivers(maf_data = all_maf, 
++     genes_of_interest = "TP53")
 
-> driver_ssm_b = annotate_driver_ssm(maf_df = my_maf, 
-+     lymphoma_type = "DLBCL", noncoding_regions = c(NFKBIZ = "chr3:101578206-101578365"))
-[1] 10797    50
+> dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>% 
++     dplyr::select(Tumor_Sample_Barcode, Variant_Classification, 
++         HGVSp_Short, hot_spot, mutation_alias, driver_alias) %>% 
++     head(20)
+genomic_data Object
+Genome Build: grch37 
+Showing first 10 rows:
+   Tumor_Sample_Barcode Variant_Classification HGVSp_Short hot_spot mutation_alias driver_alias
+1           DLBCL10456T      Missense_Mutation     p.R282W     TRUE      TP53_R282  TP53_driver
+2           DLBCL10460T      Missense_Mutation     p.Y126D    FALSE      TP53_LSH1  TP53_driver
+3           DLBCL10462T      Nonsense_Mutation     p.R196*    FALSE     TP53_trunc  TP53_driver
+4           DLBCL10466T      Missense_Mutation     p.V216M    FALSE     TP53_other   TP53_other
+5           DLBCL10475T      Missense_Mutation     p.E258D    FALSE     TP53_other   TP53_other
+6           DLBCL10477T      Nonsense_Mutation     p.R209*    FALSE     TP53_trunc  TP53_driver
+7           DLBCL10478T      Missense_Mutation     p.Y220C    FALSE     TP53_other   TP53_other
+8           DLBCL10479T      Nonsense_Mutation     p.Q136*    FALSE     TP53_trunc  TP53_driver
+9           DLBCL10488T                 Intron        <NA>    FALSE     TP53_other   TP53_other
+10          DLBCL10490T      Missense_Mutation     p.P151H    FALSE     TP53_other   TP53_other
+
+> dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>% 
++     dplyr::count(mutation_alias, sort = TRUE)
+genomic_data Object
+Genome Build: grch37 
+Showing first 10 rows:
+   mutation_alias   n
+1      TP53_other 438
+2      TP53_trunc 116
+3       TP53_R248  59
+4     TP53_LoopL2  51
+5     TP53_LoopL3  47
+6       TP53_R273  44
+7       TP53_LSH1  38
+8       TP53_R175  37
+9       TP53_LSH2  34
+10      TP53_G245  18
 
 > library(GAMBLR.data)
 
@@ -130,18 +162,10 @@ Showing first 10 rows:
 
 > test <- liftover(data_df = bed, mode = "bed", target_build = "hg38")
 
-  1 
-127 
-[1] 127
-
 > maf <- GAMBLR.open::get_coding_ssm() %>% dplyr::filter(Tumor_Sample_Barcode == 
 +     "DOHH-2")
 
 > test <- liftover(data_df = maf, mode = "maf", target_build = "hg38")
-
-  1 
-234 
-[1] 234
 
 > bedpe <- GAMBLR.open::get_manta_sv(projection = "hg38")
 
@@ -158,11 +182,7 @@ Showing first 10 rows:
 
 > print(in_my_region)
   chromosome     start       end hugo_symbol region_start region_end
-1      chr18  60790579  60987361        BCL2     60790579   60987361
-2      chr18  60818347  60818553        <NA>     60790579   60987361
-3      chr18  60861822  60861898        <NA>     60790579   60987361
-4      chr18  60981035  60981315        <NA>     60790579   60987361
-5       chr8 128747680 128753674         MYC    128747680  128753674
+1       chr8 128747680 128753674         MYC    128747680  128753674
 
 > safe_oncomatrix_path <- sanitize_maf_data(mutation_maf_data = GAMBLR.data::sample_data$grch37$maf, 
 +     genes_keep = c("MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", 
@@ -174,4 +194,4 @@ Showing first 10 rows:
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-02-16 11:13:45.210218 ==="
+[1] "=== COMPLETED AT 2026-06-15 11:56:48.667907 ==="
