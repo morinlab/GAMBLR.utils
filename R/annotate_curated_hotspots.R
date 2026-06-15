@@ -945,6 +945,26 @@ annotate_curated_drivers = function(maf_data,
   maf_skip = annotated_maf %>%
     dplyr::filter(!Hugo_Symbol %in% coordinates$Hugo_Symbol)
 
+  if (nrow(maf_keep) == 0){
+    warning("No mutations found in genes of interest; i.e no hotspot or driver genes. Skipping hotspot and driver annotations.")
+
+    # Just return annotated_maf with default columns already set
+    annotated_maf = annotated_maf %>%
+      dplyr::mutate(
+        hot_spot = "FALSE",
+        driver = "FALSE",
+        mutation_alias_all = NA_character_,
+        hotspot_alias = NA_character_,
+        driver_alias = paste0(Hugo_Symbol, "_other")
+      )
+
+    if(original_has_maf_class && exists("create_maf_data", mode = "function")){
+      annotated_maf = create_maf_data(annotated_maf, genome_build)
+    }
+
+    return(annotated_maf)
+  }
+
   reviewed_maf = suppressMessages(cool_overlaps(
     maf_keep,
     coordinates,
