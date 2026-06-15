@@ -1,8 +1,11 @@
 #' @title Test feature associations between two or more groups
 #'
 #' @description Run per-feature statistical tests comparing mutation status
-#' across two (Fisher's exact) or more (chi-square) groups, with optional
-#' per-gene fallback when the requested MAF column yields no testable features.
+#' across two or more groups. When \code{test = "fisher"} and more than two
+#' \code{comparison_values} are supplied, all pairwise Fisher tests are run
+#' automatically and the results include a \code{comparison} column identifying
+#' each pair. For a single omnibus test across all groups, use
+#' \code{test = "chi_square"}.
 #'
 #' @details Each unique value in \code{maf_column} for a given gene becomes
 #' one feature, and one test is run per feature. For example, with
@@ -24,8 +27,10 @@
 #' \code{Tumor_Sample_Barcode} and \code{comparison_column}.
 #' @param comparison_column Name of the metadata column that defines groups.
 #' @param comparison_values Optional character vector of group values to
-#' include. For \code{test = "fisher"} exactly two values are required.
-#' Defaults to all unique values in \code{comparison_column}.
+#' include. For \code{test = "fisher"} with exactly two values, one comparison
+#' is run. With three or more values all C(k, 2) pairwise comparisons are run
+#' and a \code{comparison} column is added to the output. Defaults to all
+#' unique values in \code{comparison_column}.
 #' @param genes Optional character vector of \code{Hugo_Symbol} values to
 #' restrict testing to. Defaults to all genes present in \code{maf}.
 #' @param maf_column The MAF column whose unique values define features.
@@ -40,8 +45,9 @@
 #' Default is \code{"Hugo_Symbol"}.
 #' @param min_samples Minimum number of mutated samples required for a
 #' feature to be tested. Default is 2.
-#' @param test Statistical test to apply. One of \code{"fisher"} (default,
-#' requires exactly 2 groups) or \code{"chi_square"} (supports >2 groups).
+#' @param test Statistical test to apply. One of \code{"fisher"} (default;
+#' runs all pairwise comparisons when more than 2 comparison values are
+#' supplied) or \code{"chi_square"} (single omnibus test across all groups).
 #' @param p_adjust_method Multiple testing correction method passed to
 #' \code{\link[stats]{p.adjust}}. Default is \code{"BH"}.
 #' @param restrict_to_maf Logical. If TRUE (default), the denominator for each
@@ -52,13 +58,18 @@
 #' @param verbose If TRUE, messages which genes fell back to
 #' \code{fallback_column}.
 #'
-#' @return A tibble with one row per tested feature. Always present:
-#' \code{gene} (Hugo_Symbol), \code{feature} (value from \code{maf_column}
-#' or \code{fallback_column}), \code{used_fallback} (logical),
-#' \code{p_value}, \code{q_value}, \code{n_mutated}.
+#' @return A tibble with one row per tested feature (or one row per feature
+#' per pairwise comparison when more than two groups are supplied with
+#' \code{test = "fisher"}). Always present: \code{gene} (Hugo_Symbol),
+#' \code{feature} (value from \code{maf_column} or \code{fallback_column}),
+#' \code{used_fallback} (logical), \code{p_value}, \code{q_value},
+#' \code{n_mutated}.
 #' Fisher-only columns: \code{OR}, \code{conf_low}, \code{conf_high}, and
 #' per-group count columns \code{n_mutated_<group>} and denominator columns
 #' \code{n_total_<group>} (e.g. \code{n_mutated_FL}, \code{n_total_FL}).
+#' In pairwise mode a \code{comparison} column (e.g. \code{"FL vs DLBCL"})
+#' identifies which pair each row belongs to; \code{n_mutated_<group>} columns
+#' cover all groups, not only the two being compared in that row.
 #' Chi-square-only column: \code{statistic}.
 #'
 #' @import dplyr purrr
@@ -71,13 +82,13 @@
 #' suppressPackageStartupMessages(library(GAMBLR.open))
 #'
 #' meta = get_gambl_metadata()
-#' fl_dlbcl_meta = dplyr::filter(meta, pathology %in% c("FL", "DLBCL")) %>%
+#' fl_dlbcl_meta = dplyr::filter(meta, pathology %in% c("FL", "DLBCL","BL")) %>%
 #'   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 #'
 #' maf = get_all_coding_ssm(fl_dlbcl_meta)
 #' maf = annotate_curated_drivers(
 #'   maf,
-#'   genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2")
+#'   genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
 #' )
 #'
 #' # Fine-grained: one test per mutation alias category
@@ -85,8 +96,8 @@
 #'   maf = maf,
 #'   metadata = fl_dlbcl_meta,
 #'   comparison_column = "pathology",
-#'   comparison_values = c("FL", "DLBCL"),
-#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+#'   comparison_values = c("FL", "DLBCL","BL"),
+#'   genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC"),
 #'   maf_column = "mutation_alias"
 #' )
 #' dplyr::arrange(results, q_value)
@@ -129,9 +140,9 @@ test_feature_associations = function(maf,
     }
   }
 
-  if (test == "fisher" && length(comparison_values) != 2) {
-    stop("Fisher's exact test requires exactly 2 comparison_values. ",
-         "Use test = 'chi_square' for more groups.")
+  pairwise_mode <- test == "fisher" && length(comparison_values) > 2
+  if (test == "fisher" && length(comparison_values) < 2) {
+    stop("Fisher's exact test requires at least 2 comparison_values.")
   }
 
   metadata = dplyr::filter(metadata, .data[[comparison_column]] %in% comparison_values)
@@ -250,22 +261,64 @@ test_feature_associations = function(maf,
     row
   }
 
-  results_list = lapply(genes, function(g) {
+  # variant of run_test used in pairwise mode:
+  # Fisher test is restricted to `pair` samples; n_mutated_* covers all k groups
+  run_test_pair = function(feature_label, mutated_ids, pair) {
+    pair_samples = dplyr::filter(all_samples, .group %in% pair)
+    pair_samples = dplyr::mutate(pair_samples,
+      is_mutated = as.integer(Tumor_Sample_Barcode %in% mutated_ids))
+
+    n_mut_pair = sum(pair_samples$is_mutated)
+    if (n_mut_pair < min_samples) return(NULL)
+
+    ct = table(pair_samples$is_mutated, pair_samples$.group)
+    for (lvl in c("0", "1")) {
+      if (!lvl %in% rownames(ct)) {
+        extra = matrix(0L, nrow = 1, ncol = ncol(ct),
+                       dimnames = list(lvl, colnames(ct)))
+        ct = rbind(ct, extra)
+      }
+    }
+    ct = ct[c("1", "0"), pair, drop = FALSE]
+
+    res = tryCatch(fisher.test(ct), error = function(e) NULL)
+    if (is.null(res)) return(NULL)
+
+    full_status = dplyr::mutate(all_samples,
+      is_mutated = as.integer(Tumor_Sample_Barcode %in% mutated_ids))
+    per_group = full_status %>%
+      dplyr::group_by(.group) %>%
+      dplyr::summarise(n_mut = sum(is_mutated), .groups = "drop")
+
+    row = tibble::tibble(
+      OR        = unname(res$estimate),
+      conf_low  = res$conf.int[1],
+      conf_high = res$conf.int[2],
+      p_value   = res$p.value,
+      n_mutated = n_mut_pair
+    )
+    for (grp in group_levels) {
+      row[[paste0("n_mutated_", grp)]] =
+        per_group$n_mut[per_group$.group == grp]
+      row[[paste0("n_total_", grp)]] = as.integer(group_totals[grp])
+    }
+    row
+  }
+
+  run_gene = function(g, pair = NULL, verbose_fallback = FALSE) {
     gene_maf = dplyr::filter(maf, Hugo_Symbol == g)
     if (nrow(gene_maf) == 0) return(NULL)
 
     used_fallback = FALSE
     active_col = maf_column
 
-    if (n_testable(gene_maf, maf_column) == 0) {
-      if (maf_column != fallback_column) {
-        if (verbose) {
-          message(g, ": no testable features under '", maf_column,
-                  "', falling back to '", fallback_column, "'")
-        }
-        active_col = fallback_column
-        used_fallback = TRUE
+    if (n_testable(gene_maf, maf_column) == 0 && maf_column != fallback_column) {
+      if (verbose_fallback) {
+        message(g, ": no testable features under '", maf_column,
+                "', falling back to '", fallback_column, "'")
       }
+      active_col = fallback_column
+      used_fallback = TRUE
     }
 
     feat = derive_feature(gene_maf, active_col)
@@ -278,16 +331,40 @@ test_feature_associations = function(maf,
 
     purrr::map_dfr(features, function(f) {
       mutated_ids = gene_maf$Tumor_Sample_Barcode[gene_maf$.feat == f]
-      row = run_test(f, mutated_ids)
+      row = if (is.null(pair)) run_test(f, mutated_ids) else
+                                run_test_pair(f, mutated_ids, pair)
       if (is.null(row)) return(NULL)
       dplyr::bind_cols(
         tibble::tibble(gene = g, feature = f, used_fallback = used_fallback),
         row
       )
     })
-  })
+  }
 
-  results = dplyr::bind_rows(results_list)
+  if (pairwise_mode) {
+    pairs = combn(comparison_values, 2, simplify = FALSE)
+
+    # report fallbacks once (before looping over pairs)
+    if (verbose && maf_column != fallback_column) {
+      fallen = Filter(function(g) {
+        gm = dplyr::filter(maf, Hugo_Symbol == g)
+        nrow(gm) > 0 && n_testable(gm, maf_column) == 0
+      }, genes)
+      if (length(fallen) > 0) {
+        message(paste(fallen, collapse = ", "),
+                ": no testable features under '", maf_column,
+                "', falling back to '", fallback_column, "'")
+      }
+    }
+
+    results = dplyr::bind_rows(lapply(pairs, function(pair) {
+      res = dplyr::bind_rows(lapply(genes, run_gene, pair = pair))
+      if (nrow(res) > 0) res$comparison = paste(pair, collapse = " vs ")
+      res
+    }))
+  } else {
+    results = dplyr::bind_rows(lapply(genes, run_gene, verbose_fallback = verbose))
+  }
 
   if (nrow(results) == 0) {
     warning("No testable features found. Try reducing min_samples or checking maf_column.")

@@ -29,8 +29,10 @@ test_feature_associations(
 \item{comparison_column}{Name of the metadata column that defines groups.}
 
 \item{comparison_values}{Optional character vector of group values to
-include. For \code{test = "fisher"} exactly two values are required.
-Defaults to all unique values in \code{comparison_column}.}
+include. For \code{test = "fisher"} with exactly two values, one comparison
+is run. With three or more values all C(k, 2) pairwise comparisons are run
+and a \code{comparison} column is added to the output. Defaults to all
+unique values in \code{comparison_column}.}
 
 \item{genes}{Optional character vector of \code{Hugo_Symbol} values to
 restrict testing to. Defaults to all genes present in \code{maf}.}
@@ -50,8 +52,9 @@ Default is \code{"Hugo_Symbol"}.}
 \item{min_samples}{Minimum number of mutated samples required for a
 feature to be tested. Default is 2.}
 
-\item{test}{Statistical test to apply. One of \code{"fisher"} (default,
-requires exactly 2 groups) or \code{"chi_square"} (supports >2 groups).}
+\item{test}{Statistical test to apply. One of \code{"fisher"} (default;
+runs all pairwise comparisons when more than 2 comparison values are
+supplied) or \code{"chi_square"} (single omnibus test across all groups).}
 
 \item{p_adjust_method}{Multiple testing correction method passed to
 \code{\link[stats]{p.adjust}}. Default is \code{"BH"}.}
@@ -66,19 +69,27 @@ treated as wild-type, which may be unsafe if they were not sequenced.}
 \code{fallback_column}.}
 }
 \value{
-A tibble with one row per tested feature. Always present:
-\code{gene} (Hugo_Symbol), \code{feature} (value from \code{maf_column}
-or \code{fallback_column}), \code{used_fallback} (logical),
-\code{p_value}, \code{q_value}, \code{n_mutated}.
+A tibble with one row per tested feature (or one row per feature
+per pairwise comparison when more than two groups are supplied with
+\code{test = "fisher"}). Always present: \code{gene} (Hugo_Symbol),
+\code{feature} (value from \code{maf_column} or \code{fallback_column}),
+\code{used_fallback} (logical), \code{p_value}, \code{q_value},
+\code{n_mutated}.
 Fisher-only columns: \code{OR}, \code{conf_low}, \code{conf_high}, and
 per-group count columns \code{n_mutated_<group>} and denominator columns
 \code{n_total_<group>} (e.g. \code{n_mutated_FL}, \code{n_total_FL}).
+In pairwise mode a \code{comparison} column (e.g. \code{"FL vs DLBCL"})
+identifies which pair each row belongs to; \code{n_mutated_<group>} columns
+cover all groups, not only the two being compared in that row.
 Chi-square-only column: \code{statistic}.
 }
 \description{
 Run per-feature statistical tests comparing mutation status
-across two (Fisher's exact) or more (chi-square) groups, with optional
-per-gene fallback when the requested MAF column yields no testable features.
+across two or more groups. When \code{test = "fisher"} and more than two
+\code{comparison_values} are supplied, all pairwise Fisher tests are run
+automatically and the results include a \code{comparison} column identifying
+each pair. For a single omnibus test across all groups, use
+\code{test = "chi_square"}.
 }
 \details{
 Each unique value in \code{maf_column} for a given gene becomes
@@ -100,13 +111,13 @@ TRUE in the output.
 suppressPackageStartupMessages(library(GAMBLR.open))
 
 meta = get_gambl_metadata()
-fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL")) \%>\%
+fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL","BL")) \%>\%
   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 
 maf = get_all_coding_ssm(fl_dlbcl_meta)
 maf = annotate_curated_drivers(
   maf,
-  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2")
+  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
 )
 
 # Fine-grained: one test per mutation alias category
@@ -114,8 +125,7 @@ results = test_feature_associations(
   maf = maf,
   metadata = fl_dlbcl_meta,
   comparison_column = "pathology",
-  comparison_values = c("FL", "DLBCL"),
-  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  comparison_values = c("FL", "DLBCL","BL"),
   maf_column = "mutation_alias"
 )
 dplyr::arrange(results, q_value)
