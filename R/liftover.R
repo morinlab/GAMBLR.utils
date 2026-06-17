@@ -295,7 +295,6 @@ liftover = function(
             dplyr::select(all_of(colnames(data_df))) %>%
             as.data.frame()
         }else if(mode=="bed"){
-          colnames(lifted)[1:3] <- original_columns[1:3]
           lifted = lifted %>%
             dplyr::rename(
               !!chr_col   := "seqnames",
