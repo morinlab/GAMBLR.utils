@@ -67,10 +67,10 @@ liftover = function(
         standard_bed = FALSE,
         verbose = FALSE
     ){
-    if(missing(mode) && "genomic_data" %in% class(data_df)){
+    if(is.null(mode) && "genomic_data" %in% class(data_df)){
         mode = class(data_df)
         mode = gsub("_data","",mode)
-        mode = intersect(mode,c("seg","maf","bed"))
+        mode = intersect(mode,c("seg","maf","bed", "bedpe"))
         message("inferred class for setting mode:", mode)
         data_df = strip_genomic_classes(data_df)
     }
@@ -295,6 +295,7 @@ liftover = function(
             dplyr::select(all_of(colnames(data_df))) %>%
             as.data.frame()
         }else if(mode=="bed"){
+          colnames(lifted)[1:3] <- original_columns[1:3]
           lifted = lifted %>%
             dplyr::rename(
               !!chr_col   := "seqnames",

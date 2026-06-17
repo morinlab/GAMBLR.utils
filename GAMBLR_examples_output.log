@@ -6,57 +6,57 @@
 
 > all_sample_seg = dplyr::rename(all_sample_seg, sample = "ID")
 
-> sample_seg = dplyr::filter(all_sample_seg, sample == 
+> sample_seg = dplyr::filter(all_sample_seg, sample ==
 +     "02-13135T")
 
 > adjust_ploidy(this_seg = sample_seg)
 # A tibble: 144 × 6
    sample    chrom     start       end LOH_flag log.ratio
    <chr>     <chr>     <dbl>     <dbl>    <dbl>     <dbl>
- 1 02-13135T 1         10001    762600        0     0    
- 2 02-13135T 1        762601 121500000        0     0    
- 3 02-13135T 1     142600000 161506889        0     0    
- 4 02-13135T 1     161506890 161652716        0     0    
+ 1 02-13135T 1         10001    762600        0     0
+ 2 02-13135T 1        762601 121500000        0     0
+ 3 02-13135T 1     142600000 161506889        0     0
+ 4 02-13135T 1     161506890 161652716        0     0
  5 02-13135T 1     161652717 162110568        0     0.585
- 6 02-13135T 1     162110569 162111399        0     0    
- 7 02-13135T 1     162111400 249203757        0     0    
- 8 02-13135T 1     249203758 249250620        0     0    
- 9 02-13135T 2         10001     11319        0     0    
-10 02-13135T 2         11320  90500000        0     0    
+ 6 02-13135T 1     162110569 162111399        0     0
+ 7 02-13135T 1     162111400 249203757        0     0
+ 8 02-13135T 1     249203758 249250620        0     0
+ 9 02-13135T 2         10001     11319        0     0
+10 02-13135T 2         11320  90500000        0     0
 # ℹ 134 more rows
 
-> multi_sample_seg = dplyr::filter(all_sample_seg, sample %in% 
+> multi_sample_seg = dplyr::filter(all_sample_seg, sample %in%
 +     c("02-13135T", "SU-DHL-4"))
 
 > adjust_ploidy(this_seg = multi_sample_seg)
 # A tibble: 144 × 6
    sample    chrom     start       end LOH_flag log.ratio
    <chr>     <chr>     <dbl>     <dbl>    <dbl>     <dbl>
- 1 02-13135T 1         10001    762600        0     0    
- 2 02-13135T 1        762601 121500000        0     0    
- 3 02-13135T 1     142600000 161506889        0     0    
- 4 02-13135T 1     161506890 161652716        0     0    
+ 1 02-13135T 1         10001    762600        0     0
+ 2 02-13135T 1        762601 121500000        0     0
+ 3 02-13135T 1     142600000 161506889        0     0
+ 4 02-13135T 1     161506890 161652716        0     0
  5 02-13135T 1     161652717 162110568        0     0.585
- 6 02-13135T 1     162110569 162111399        0     0    
- 7 02-13135T 1     162111400 249203757        0     0    
- 8 02-13135T 1     249203758 249250620        0     0    
- 9 02-13135T 2         10001     11319        0     0    
-10 02-13135T 2         11320  90500000        0     0    
+ 6 02-13135T 1     162110569 162111399        0     0
+ 7 02-13135T 1     162111400 249203757        0     0
+ 8 02-13135T 1     249203758 249250620        0     0
+ 9 02-13135T 2         10001     11319        0     0
+10 02-13135T 2         11320  90500000        0     0
 # ℹ 134 more rows
 
-> dlbcl_meta = GAMBLR.open::get_gambl_metadata() %>% 
+> dlbcl_meta = GAMBLR.open::get_gambl_metadata() %>%
 +     dplyr::filter(pathology == "DLBCL")
 
-> dlbcl_coding = GAMBLR.open::get_all_coding_ssm(dlbcl_meta, 
+> dlbcl_coding = GAMBLR.open::get_all_coding_ssm(dlbcl_meta,
 +     include_silent = TRUE)
 
 > dlbcl_coding = annotate_curated_drivers(maf_data = dlbcl_coding)
 
-> dplyr::filter(dlbcl_coding, !grepl("other", mutation_alias)) %>% 
-+     dplyr::select(Chromosome, Start_Position, Variant_Classification, 
+> dplyr::filter(dlbcl_coding, !grepl("other", mutation_alias)) %>%
++     dplyr::select(Chromosome, Start_Position, Variant_Classification,
 +         HGVSp_Short, hot_spot, mutation_alias, driver_alias)
 genomic_data Object
-Genome Build: grch37 
+Genome Build: grch37
 Showing first 10 rows:
    Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias  driver_alias
 1           1      117113520          Splice_Region        <NA>    FALSE     CD58_trunc   CD58_driver
@@ -74,15 +74,15 @@ Showing first 10 rows:
 
 > all_maf = GAMBLR.open::get_all_coding_ssm(all_meta)
 
-> all_maf_tp53 = annotate_curated_drivers(maf_data = all_maf, 
+> all_maf_tp53 = annotate_curated_drivers(maf_data = all_maf,
 +     genes_of_interest = "TP53")
 
-> dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>% 
-+     dplyr::select(Tumor_Sample_Barcode, Variant_Classification, 
-+         HGVSp_Short, hot_spot, mutation_alias, driver_alias) %>% 
+> dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>%
++     dplyr::select(Tumor_Sample_Barcode, Variant_Classification,
++         HGVSp_Short, hot_spot, mutation_alias, driver_alias) %>%
 +     head(20)
 genomic_data Object
-Genome Build: grch37 
+Genome Build: grch37
 Showing first 10 rows:
    Tumor_Sample_Barcode Variant_Classification HGVSp_Short hot_spot mutation_alias driver_alias
 1           DLBCL10456T      Missense_Mutation     p.R282W     TRUE      TP53_R282  TP53_driver
@@ -96,10 +96,10 @@ Showing first 10 rows:
 9           DLBCL10488T                 Intron        <NA>    FALSE     TP53_other   TP53_other
 10          DLBCL10490T      Missense_Mutation     p.P151H    FALSE     TP53_other   TP53_other
 
-> dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>% 
+> dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>%
 +     dplyr::count(mutation_alias, sort = TRUE)
 genomic_data Object
-Genome Build: grch37 
+Genome Build: grch37
 Showing first 10 rows:
    mutation_alias   n
 1      TP53_other 438
@@ -115,8 +115,8 @@ Showing first 10 rows:
 
 > library(GAMBLR.data)
 
-> ashm_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions, 
-+     fix_names = "concat", concat_cols = c("gene", "region"), 
+> ashm_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions,
++     fix_names = "concat", concat_cols = c("gene", "region"),
 +     sep = "-")
 
 > get_genome_build(ashm_bed)
@@ -124,7 +124,7 @@ Showing first 10 rows:
 
 > print(ashm_bed)
 BED Data Object
-Genome Build: grch37 
+Genome Build: grch37
 Showing first 10 rows:
    chrom     start       end           name region regulatory_comment
 1      1   6661482   6662702     KLHL21-TSS    TSS               <NA>
@@ -138,44 +138,44 @@ Showing first 10 rows:
 9      1 157669490 157671299      FCRL3-TSS    TSS               <NA>
 10     1 203274698 203275778    BTG2-intron intron    active_promoter
 
-> another_bed = create_bed_data(somatic_hypermutation_locations_GRCh37_v_latest, 
-+     fix_names = "concat", concat_cols = c("chr_name", "hg19_start", 
+> another_bed = create_bed_data(somatic_hypermutation_locations_GRCh37_v_latest,
++     fix_names = "concat", concat_cols = c("chr_name", "hg19_start",
 +         "hg19_end"))
 
 > get_genome_build(another_bed)
 [1] "grch37"
 
-> gene_regions <- create_bed_data(hg38_gene_coordinates, 
-+     fix_names = "concat", sep = "-", concat_cols = c("chromosome", 
+> gene_regions <- create_bed_data(hg38_gene_coordinates,
++     fix_names = "concat", sep = "-", concat_cols = c("chromosome",
 +         "start", "end", "gene_name"))
 
 > get_genome_build(gene_regions)
 [1] "hg38"
 
-> bcl2_region = gene_to_region(gene_symbol = "BCL2", 
+> bcl2_region = gene_to_region(gene_symbol = "BCL2",
 +     projection = "grch37")
 
-> bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", 
+> bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
 +     projection = "grch37")
 
 > bed <- grch37_ashm_regions
 
 > test <- liftover(data_df = bed, mode = "bed", target_build = "hg38")
 
-> maf <- GAMBLR.open::get_coding_ssm() %>% dplyr::filter(Tumor_Sample_Barcode == 
+> maf <- GAMBLR.open::get_coding_ssm() %>% dplyr::filter(Tumor_Sample_Barcode ==
 +     "DOHH-2")
 
 > test <- liftover(data_df = maf, mode = "maf", target_build = "hg38")
 
 > bedpe <- GAMBLR.open::get_manta_sv(projection = "hg38")
 
-> test <- liftover(data_df = bedpe, mode = "bedpe", 
+> test <- liftover(data_df = bedpe, mode = "bedpe",
 +     target_build = "grch37")
 
-> chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, 
+> chr8q_bins = region_to_bins(chromosome = "8", start = 48100000,
 +     end = 146364022, bin_size = 20000)
 
-> genes_of_interest = gene_to_region(gene_symbol = c("MYC", 
+> genes_of_interest = gene_to_region(gene_symbol = c("MYC",
 +     "BCL2"), projection = "grch37", return_as = "df")
 
 > in_my_region = region_to_gene(region = genes_of_interest)
@@ -184,14 +184,14 @@ Showing first 10 rows:
   chromosome     start       end hugo_symbol region_start region_end
 1       chr8 128747680 128753674         MYC    128747680  128753674
 
-> safe_oncomatrix_path <- sanitize_maf_data(mutation_maf_data = GAMBLR.data::sample_data$grch37$maf, 
-+     genes_keep = c("MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", 
+> safe_oncomatrix_path <- sanitize_maf_data(mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
++     genes_keep = c("MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4",
 +         "IGLL5"))
 
 > library(GAMBLR.data)
 
 > metadata = GAMBLR.data::gambl_metadata
 
-> lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
+> lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv",
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
 [1] "=== COMPLETED AT 2026-06-15 11:56:48.667907 ==="
