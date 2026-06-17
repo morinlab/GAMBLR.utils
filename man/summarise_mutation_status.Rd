@@ -18,91 +18,189 @@ summarise_mutation_status(
 )
 }
 \arguments{
-\item{annotated_maf}{A data frame in MAF format that includes
-\code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
-\code{mutation_alias}, and \code{driver_alias}.}
+\item{annotated_maf}{A data frame in MAF format produced by
+\code{\link{annotate_curated_drivers}}. Must include \code{Hugo_Symbol},
+\code{Tumor_Sample_Barcode}, \code{Variant_Classification},
+\code{driver_alias}, \code{mutation_alias}, \code{mutation_alias_all},
+and \code{hotspot_alias}.}
 
-\item{genes_coding}{Optional character vector of genes to include in the
-coding summary. Defaults to Tier 1 lymphoma genes.}
+\item{genes_coding}{Optional character vector of genes for which to produce
+\code{GENE_coding} or driver-alias columns. Defaults to all Tier 1
+lymphoma genes. Genes from \code{gene_reporting_policy} are unioned into
+this set automatically.}
 
-\item{genes_noncoding}{Optional character vector of genes to include for
-non-coding mutation summaries. If NULL, non-coding mutations are not included.}
+\item{genes_noncoding}{Optional character vector of genes for which to also
+count non-coding mutations (Silent, UTR, Flank — anything not in
+\code{vc_nonSynonymous}). Produces a \code{GENE_noncoding} column. The
+input MAF must include non-coding variant classes for this to have any
+effect. Default \code{NULL} (no non-coding columns).}
 
-\item{gene_reporting_policy}{Optional named list defining per-gene reporting
-mode. Valid keys are \code{detailed} (granular alias columns only),
-\code{coding} (keep only \code{GENE_coding}), and \code{maximal} (produce
-the full column set: \code{GENE_coding}, \code{GENE_driver},
-\code{GENE_other}, per-alias columns, and \code{GENE_any}). Genes not
-listed default to driver/unknown. If a gene is also listed in
-\code{genes_noncoding}, \code{GENE_noncoding} is produced and included in
-\code{GENE_any}. Genes listed under \code{detailed} that have no
-\code{mutation_alias} or \code{hotspot_alias} entries in the MAF
-automatically fall back to \code{_coding} reporting and a warning is issued.}
+\item{gene_reporting_policy}{Optional named list controlling per-gene column
+output. Valid keys:
+\describe{
+\item{\code{detailed}}{Produce per-alias columns (from
+\code{mutation_alias_all} and \code{hotspot_alias}) plus a
+\code{GENE_other} catch-all for mutations that match no alias.
+Genes with no alias data at all fall back to \code{_coding} with a
+warning.}
+\item{\code{coding}}{Produce only \code{GENE_coding}, suppressing
+driver-alias columns. Useful to coarsen a gene that has driver
+annotations but where you do not want alias-level resolution.}
+\item{\code{maximal}}{Produce the full column set: \code{GENE_coding},
+per-alias columns, \code{GENE_driver}/\code{GENE_other}, and
+\code{GENE_any}. If the gene is also in \code{genes_noncoding},
+\code{GENE_noncoding} is included in \code{GENE_any}.}
+}
+A gene may appear under only one key. Default \code{NULL} (all genes use
+the default driver/coding behaviour).}
 
 \item{genes_drop_unannotated}{Optional character vector of genes for which
-catch-all columns (e.g. \code{GENE_other}) should be dropped from the output.
+the catch-all \code{GENE_other} column should be removed from the output.
+Shorthand for \code{gene_drop_policy = list(unannotated = ...)}.
 Mutually exclusive with \code{gene_drop_policy}.}
 
-\item{gene_drop_policy}{Optional named list defining gene drop policies, e.g.
-\code{list(all = c("IGLL5"), unannotated = c("KMT2D"))}. Valid keys are
-\code{all} (drop all columns for those genes) and \code{unannotated} (drop only
-catch-all columns). Mutually exclusive with \code{genes_drop_unannotated}.}
+\item{gene_drop_policy}{Optional named list with keys \code{all} and/or
+\code{unannotated}. \code{all}: remove every \code{GENE_*} column for the
+listed genes. \code{unannotated}: remove only the \code{GENE_other}
+catch-all column. Mutually exclusive with \code{genes_drop_unannotated}.}
 
-\item{encoding_policy}{Named list controlling the numeric values used for
-coding, non-coding, and driver indicators. Default is
-\code{list(coding = 2, noncoding = 1, driver = 2)}.}
+\item{encoding_policy}{Named list of numeric values for each indicator type.
+Default \code{list(coding = 2, noncoding = 1, driver = 2)}. Setting all
+values to 1 produces a standard binary 0/1 matrix.}
 
-\item{verbose}{Logical. If TRUE, prints messages describing which columns
-will be dropped based on reporting and drop policies.}
+\item{use_all_aliases}{Logical. If \code{TRUE} (default), per-alias columns
+are built from \code{mutation_alias_all} (semicolon-separated specific
+aliases, no catch-alls). If \code{FALSE}, uses \code{mutation_alias}
+(which may contain \code{GENE_other} catch-all values and produce fewer
+specific alias columns).}
+
+\item{include_hotspot_alias}{Logical. If \code{TRUE} (default), also builds
+alias columns from \code{hotspot_alias} for genes under the \code{detailed}
+or \code{maximal} policy, and for all other annotated genes via a separate
+\code{hotspot_count} table. Default \code{TRUE}.}
+
+\item{verbose}{Logical. If \code{TRUE}, prints messages about which policy
+and drop decisions are being applied. Default \code{FALSE}.}
 }
 \value{
-A wide data frame (matrix-like) with rows as samples and columns as
-variant categories, containing numeric indicators defined by
-\code{encoding_policy}.
+A data frame with one row per sample (row names = sample IDs) and
+one column per feature. Cell values are 0 (absent) or a positive integer
+set by \code{encoding_policy}. Column types that may appear:
+\code{GENE_coding}, \code{GENE_noncoding}, \code{GENE_driver},
+\code{GENE_other}, per-alias columns (e.g. \code{EZH2_Y641}),
+\code{GENE_any} (maximal policy only).
 }
 \description{
-Create a wide sample-by-variant matrix summarizing coding,
-driver, and hotspot-level mutation status from an annotated MAF.
+Build a wide sample-by-feature binary (or weighted) matrix from
+an annotated MAF. Each column represents one feature — either a gene-level
+summary or a specific mutation alias — and each cell contains a numeric
+indicator defined by \code{encoding_policy} (0 = absent, non-zero = present).
 }
 \details{
-This function expects output from \code{annotate_curated_drivers()}
-(or equivalent) with \code{mutation_alias} and \code{driver_alias}
-columns. It produces a wide matrix with 0/1 indicators for each
-sample-variant combination, including per-gene coding status, driver status,
-and granular hotspot aliases. Indicator values are controlled by
-\code{encoding_policy}. If you want to collapse multiple columns for a gene
-into a single summary column (e.g., \code{MYC_any}), see
-\code{collapse_columns_by_regex()}.
+\subsection{Input requirements}{
+
+The input must be the output of \code{\link{annotate_curated_drivers}}, which
+adds the \code{driver_alias}, \code{mutation_alias}, \code{mutation_alias_all},
+and \code{hotspot_alias} columns used here.
+}
+
+\subsection{Column naming conventions}{
+
+The function produces columns named \code{GENE_suffix}, where the suffix
+depends on the gene's reporting policy:
+
+\describe{
+\item{\code{GENE_coding}}{Any mutation present in the gene (the base
+indicator). Produced for genes with no driver annotations, genes under
+the \code{coding} policy, genes under the \code{detailed} policy that
+lack alias annotations (fallback), and genes under the \code{maximal}
+policy.}
+\item{\code{GENE_driver} / \code{GENE_other}}{Produced for genes that have
+driver alias annotations (e.g. \code{MYD88_L265P}, \code{MYD88_other}).
+\code{_driver} columns reflect the specific annotated driver alias;
+\code{_other} is the catch-all for unannotated mutations.}
+\item{Per-alias columns (e.g. \code{EZH2_Y641}, \code{EZH2_other})}{
+Produced for genes under the \code{detailed} or \code{maximal} policy
+when \code{mutation_alias_all} or \code{hotspot_alias} entries exist.}
+\item{\code{GENE_noncoding}}{Produced when the gene appears in
+\code{genes_noncoding}. Counts mutations with
+\code{Variant_Classification} NOT in \code{vc_nonSynonymous} (i.e.
+Silent, UTR, Flank). The input MAF must include these classes.}
+\item{\code{GENE_any}}{Produced only for genes under the \code{maximal}
+policy. The element-wise maximum across all \code{GENE_*} columns for
+that gene, including \code{GENE_noncoding} when the gene is also in
+\code{genes_noncoding}.}
+}
+}
+
+\subsection{Default reporting behaviour}{
+
+Genes with driver alias annotations (i.e. \code{driver_alias} contains a
+\code{_driver} suffix entry) produce \code{GENE_driver}/\code{GENE_other}
+columns and do \strong{not} get a \code{GENE_coding} column. Genes without
+driver annotations produce only \code{GENE_coding}. Use
+\code{gene_reporting_policy} to override this per gene.
+}
+
+\subsection{Policy interactions with \code{genes_coding}}{
+
+Genes listed under any \code{gene_reporting_policy} key are automatically
+added to the internal coding gene universe regardless of whether they appear
+in \code{genes_coding}. This means you do not need to manually add policy
+genes to \code{genes_coding}.
+}
 }
 \examples{
 \dontrun{
+# Basic usage: default Tier 1 genes, driver-alias columns where available
 maf = GAMBLR.open::get_coding_ssm(
   these_samples_metadata = GAMBLR.open::get_gambl_metadata(),
   this_seq_type = "capture"
 )
 maf_anno = annotate_curated_drivers(maf)
-summary_mat = summarise_mutation_status(maf_anno)
-summary_mat[1:5, 1:5]
+mat = summarise_mutation_status(maf_anno)
+# Each row is a sample; columns like MYD88_L265P, MYD88_other, TP53_coding
+mat[1:5, 1:8]
 }
 
 \dontrun{
+# Per-gene reporting policies:
+#   EZH2 -> maximal: gets _coding, per-alias, _driver, _other, _any columns
+#   MYD88 -> detailed: gets only per-alias columns (MYD88_L265P, etc.)
+#   NOTCH1 -> coding: collapses everything to a single NOTCH1_coding column
+# Genes not listed (TP53, KMT2D, ...) use default driver/coding behaviour.
+# Drop the unannotated catch-all for KMT2D to keep only annotated drivers.
 maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm())
-summary_mat = summarise_mutation_status(
+mat = summarise_mutation_status(
   maf_anno,
-  genes_coding = c("MYD88","NOTCH1","FOXO1"),
-  gene_reporting_policy = list(detailed = c("FOXO1"), coding = c("EZH2")),
-  genes_drop_unannotated = c("NOTCH1")
+  gene_reporting_policy = list(
+    maximal  = c("EZH2"),
+    detailed = c("MYD88"),
+    coding   = c("NOTCH1")
+  ),
+  gene_drop_policy = list(unannotated = c("KMT2D"))
 )
+grep("EZH2", colnames(mat), value = TRUE)
+# [1] "EZH2_coding" "EZH2_Y641"  "EZH2_A677"  "EZH2_driver" "EZH2_other" "EZH2_any"
 }
 
 \dontrun{
-# Include selected non-coding genes and custom indicator values
-maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm(include_silent=TRUE))
-summary_mat = summarise_mutation_status(
-  maf_anno,
-  genes_noncoding = c("PIM1","SOCS1"),
-  encoding_policy = list(coding = 2, noncoding = 1, driver = 1)
+# Non-coding mutations for aSHM target genes.
+# The input MAF must include non-coding variant classes (Silent, UTR, Flank).
+maf_full = GAMBLR.open::get_ssm_by_samples(
+  these_samples_metadata = GAMBLR.open::get_gambl_metadata(),
+  coding_only = FALSE
 )
+maf_anno = annotate_curated_drivers(maf_full)
+mat = summarise_mutation_status(
+  maf_anno,
+  genes_noncoding = c("PIM1", "SOCS1", "BCL6"),
+  # use binary encoding for all indicator types
+  encoding_policy = list(coding = 1, noncoding = 1, driver = 1)
+)
+# PIM1_coding: any coding mutation in PIM1
+# PIM1_noncoding: Silent/UTR/Flank mutations in PIM1
+grep("PIM1", colnames(mat), value = TRUE)
 }
 
 }

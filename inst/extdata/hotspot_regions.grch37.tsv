@@ -143,10 +143,12 @@ TMEM30A	TMEM30A_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300
 TNFAIP3	TNFAIP3_trunc	truncation	trunc,splicesite,spliceregion	6	1	300000000	+	LOF		
 TNFRSF14	TNFRSF14_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	1	1	300000000	+	LOF		
 TOX	TOX_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	8	1	300000000	-	LOF		
+TP53	TP53_Y220	hotspot	missense,inframe	17	7578190	7578191	-	LOF	PMID: 23315175	
+TP53	TP53_Y234	hotspot	missense,inframe	17	7577580	7577581				
 TP53	TP53_LSH1	region	missense,inframe	17	7578525	7579332	-	LOF	PMC2569165	
-TP53	TP53_LoopL3	region	missense,inframe	17	7577532	7577572	-			
-TP53	TP53_LoopL2	region	missense,inframe	17	7578268	7578440	-			
-TP53	TP53_LSH2	region	missense,inframe	17	7577077	7577124	-			
+TP53	TP53_LoopL3	region	missense,inframe	17	7577532	7577572	-	LOF		
+TP53	TP53_LoopL2	region	missense,inframe	17	7578268	7578440	-	LOF		
+TP53	TP53_LSH2	region	missense,inframe	17	7577077	7577124	-	LOF		
 TP53	TP53_trunc	truncation	trunc	17	1	300000000	-	LOF		
 TP53	TP53_R175	hotspot	missense,inframe	17	7578406	7578406	-	LOF		
 TP53	TP53_R248	hotspot	missense,inframe	17	7577538	7577539	-	LOF		
