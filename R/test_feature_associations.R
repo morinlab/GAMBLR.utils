@@ -561,3 +561,318 @@ test_feature_associations = function(maf = NULL,
                           q_value = stats::p.adjust(p_value, method = p_adjust_method))
   results
 }
+
+
+#' @title Select Informative Features Using Elastic Net
+#'
+#' @description Uses elastic net regularization to identify non-redundant,
+#' informative features from a sample-by-feature matrix with respect to group
+#' membership. Addresses the correlated/hierarchical feature problem common in
+#' mutation matrices (e.g. \code{GENE_coding}, \code{GENE_driver}, and
+#' \code{GENE_any} all measure similar biology). Features are penalized
+#' according to specificity: catch-all columns (\code{_any}) receive the
+#' highest penalty, intermediate summaries (\code{_coding}, \code{_driver},
+#' \code{_other}, \code{_noncoding}) receive a moderate penalty, and specific
+#' aliases (e.g. \code{EZH2_Y641}) receive the baseline penalty. This biases
+#' the model toward selecting the most granular informative representation of
+#' each gene.
+#'
+#' @details One \code{cv.glmnet} model (binomial family) is fit per comparison.
+#' Features with a non-zero coefficient at the selected lambda are retained.
+#' Returned odds ratios (\code{OR}) are exponentiated regularized logistic
+#' regression coefficients, not Fisher test ORs, and reflect the direction and
+#' relative magnitude of each feature's contribution after adjusting for the
+#' others. Set \code{run_fisher = TRUE} to also return Fisher-based ORs,
+#' confidence intervals, and adjusted p-values for use with
+#' \code{plot_feature_associations}.
+#'
+#' @param feature_matrix A data frame with samples as rows and binary features
+#'   as columns. Either include a sample ID column (named by
+#'   \code{sample_id_column}) or set \code{sample_id_column = NULL} and supply
+#'   meaningful row names.
+#' @param metadata A data frame with at least a sample ID column and
+#'   \code{comparison_column}.
+#' @param comparison_column Column name in \code{metadata} defining groups.
+#' @param sample_id_column Column in \code{feature_matrix} containing sample
+#'   IDs. Set to \code{NULL} to use row names instead. Default
+#'   \code{"Tumor_Sample_Barcode"}.
+#' @param comparison_values Character vector of group values to include.
+#'   Defaults to all unique values in \code{comparison_column}.
+#' @param contrast One of \code{"one_vs_rest"} or \code{"pairwise"}. Default
+#'   \code{"one_vs_rest"}.
+#' @param alpha Elastic net mixing parameter (0 = ridge, 1 = LASSO). Values
+#'   around 0.5–0.8 are recommended for correlated features. Default \code{0.8}.
+#' @param lambda_select Which cross-validated lambda to use: \code{"1se"}
+#'   (sparser, more regularized) or \code{"min"} (minimum CV error, more
+#'   features). Default \code{"1se"}.
+#' @param nfolds Number of cross-validation folds. Automatically capped at the
+#'   smaller class size for each comparison. Default \code{10}.
+#' @param run_fisher Logical. If \code{TRUE}, runs Fisher's exact test post-hoc
+#'   on selected features and adds \code{OR}, \code{conf_low},
+#'   \code{conf_high}, \code{p_value}, and \code{q_value} columns that are
+#'   compatible with \code{plot_feature_associations}. Default \code{FALSE}.
+#' @param p_adjust_method P-value adjustment method passed to
+#'   \code{\link[stats]{p.adjust}}. Used only when \code{run_fisher = TRUE}.
+#'   Default \code{"BH"}.
+#' @param min_samples Minimum number of samples with a non-zero value required
+#'   to include a feature. Default \code{2}.
+#' @param seed Random seed for reproducibility. Default \code{42}.
+#'
+#' @return A tibble. When \code{run_fisher = FALSE}: columns \code{gene},
+#'   \code{feature}, \code{comparison}, \code{coef}, \code{OR} (from
+#'   \code{exp(coef)}). When \code{run_fisher = TRUE}: additionally
+#'   \code{OR} (Fisher), \code{conf_low}, \code{conf_high}, \code{p_value},
+#'   \code{q_value}, \code{n_mutated}, and per-group count columns — matching
+#'   \code{test_feature_associations} output for use with
+#'   \code{plot_feature_associations}.
+#'
+#' @import dplyr
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' mat = get_binary_matrix(
+#'   these_samples_metadata = get_gambl_metadata(),
+#'   maf_data = get_coding_ssm()
+#' )
+#' meta = get_gambl_metadata()
+#' selected = select_informative_features(
+#'   feature_matrix    = mat,
+#'   metadata          = meta,
+#'   comparison_column = "pathology",
+#'   comparison_values = c("DLBCL", "FL", "BL"),
+#'   run_fisher        = TRUE
+#' )
+#' plot_feature_associations(selected, max_q = 0.1)
+#' }
+select_informative_features = function(
+  feature_matrix,
+  metadata,
+  comparison_column,
+  sample_id_column  = "Tumor_Sample_Barcode",
+  comparison_values = NULL,
+  contrast          = "one_vs_rest",
+  alpha             = 0.8,
+  lambda_select     = "1se",
+  nfolds            = 10,
+  run_fisher        = FALSE,
+  p_adjust_method   = "BH",
+  min_samples       = 2,
+  seed              = 42
+) {
+  contrast      = match.arg(contrast, c("one_vs_rest", "pairwise"))
+  lambda_select = match.arg(lambda_select, c("1se", "min"))
+
+  if (!requireNamespace("glmnet", quietly = TRUE)) {
+    stop("Package 'glmnet' is required. Install with: install.packages('glmnet')")
+  }
+
+  # ── resolve sample IDs and feature columns ────────────────────────────────
+
+  feature_matrix = as.data.frame(feature_matrix)
+
+  if (!is.null(sample_id_column)) {
+    if (!sample_id_column %in% colnames(feature_matrix)) {
+      stop("'", sample_id_column, "' not found in feature_matrix.")
+    }
+    mat_ids   = feature_matrix[[sample_id_column]]
+    feat_cols = setdiff(colnames(feature_matrix), sample_id_column)
+  } else {
+    mat_ids   = rownames(feature_matrix)
+    feat_cols = colnames(feature_matrix)
+    if (is.null(mat_ids) ||
+        identical(mat_ids, as.character(seq_len(nrow(feature_matrix))))) {
+      stop("feature_matrix has no meaningful row names. ",
+           "Add row names or supply sample_id_column.")
+    }
+  }
+
+  # ── align metadata ────────────────────────────────────────────────────────
+
+  meta_id_col = if (!is.null(sample_id_column)) sample_id_column else
+                  "Tumor_Sample_Barcode"
+
+  if (!meta_id_col %in% colnames(metadata)) {
+    stop("'", meta_id_col, "' not found in metadata.")
+  }
+
+  if (is.null(comparison_values)) {
+    comparison_values = sort(unique(as.character(
+      metadata[[comparison_column]]
+    )))
+  }
+
+  meta_sub = dplyr::filter(
+    metadata,
+    .data[[comparison_column]] %in% comparison_values,
+    .data[[meta_id_col]] %in% mat_ids
+  )
+  meta_sub$.group = as.character(meta_sub[[comparison_column]])
+  keep_ids = meta_sub[[meta_id_col]]
+
+  # align feature matrix rows to metadata (same order as keep_ids)
+  row_idx  = match(keep_ids, mat_ids)
+  feat_mat = as.matrix(feature_matrix[row_idx, feat_cols, drop = FALSE])
+  rownames(feat_mat) = keep_ids
+  feat_mat[is.na(feat_mat)] = 0
+
+  # ── filter low-prevalence features ───────────────────────────────────────
+
+  n_nonzero = colSums(feat_mat > 0)
+  feat_mat  = feat_mat[, n_nonzero >= min_samples, drop = FALSE]
+  feat_cols_kept = colnames(feat_mat)
+
+  if (ncol(feat_mat) == 0) {
+    stop("No features remain after min_samples = ", min_samples, " filtering.")
+  }
+
+  # ── penalty factors (lower = less penalized = more likely selected) ───────
+  # _any columns are the most redundant → highest penalty
+  # intermediate summaries (_coding, _driver, _other, _noncoding) → moderate
+  # specific aliases (e.g. EZH2_Y641) → baseline
+
+  penalty_factors = dplyr::case_when(
+    grepl("_any$", feat_cols_kept)                                   ~ 3.0,
+    grepl("_coding$|_driver$|_other$|_noncoding$", feat_cols_kept)  ~ 1.5,
+    TRUE                                                             ~ 1.0
+  )
+
+  group_vec = meta_sub$.group
+
+  # ── inner helper: fit one glmnet model and extract non-zero features ──────
+
+  fit_one = function(x, y, label, pf, feat_names) {
+    pos_n = sum(y == 1L)
+    neg_n = sum(y == 0L)
+    if (pos_n < 2L || neg_n < 2L) {
+      warning("Skipping comparison '", label, "': too few samples in one class.")
+      return(NULL)
+    }
+    safe_folds = min(nfolds, pos_n, neg_n)
+
+    set.seed(seed)
+    fit = tryCatch(
+      glmnet::cv.glmnet(
+        x              = x,
+        y              = y,
+        family         = "binomial",
+        alpha          = alpha,
+        nfolds         = safe_folds,
+        penalty.factor = pf,
+        standardize    = TRUE
+      ),
+      error = function(e) {
+        warning("cv.glmnet failed for '", label, "': ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (is.null(fit)) return(NULL)
+
+    lam      = if (lambda_select == "1se") fit$lambda.1se else fit$lambda.min
+    coefs    = glmnet::coef.glmnet(fit, s = lam)
+    coef_vec = as.numeric(coefs)[-1]    # drop intercept; length == ncol(x)
+    names(coef_vec) = feat_names
+
+    nonzero = which(coef_vec != 0)
+    if (length(nonzero) == 0) {
+      message("No features selected for '", label,
+              "'. Try lambda_select = 'min' or lower alpha.")
+      return(NULL)
+    }
+
+    tibble::tibble(
+      gene       = sub("_.*$", "", feat_names[nonzero]),
+      feature    = feat_names[nonzero],
+      comparison = label,
+      coef       = coef_vec[nonzero],
+      OR_glmnet  = exp(coef_vec[nonzero])
+    )
+  }
+
+  # ── run comparisons ───────────────────────────────────────────────────────
+
+  if (contrast == "one_vs_rest") {
+    results = dplyr::bind_rows(lapply(comparison_values, function(g) {
+      y = as.integer(group_vec == g)
+      fit_one(feat_mat, y, paste(g, "vs rest"), penalty_factors, feat_cols_kept)
+    }))
+  } else {
+    pairs   = combn(comparison_values, 2, simplify = FALSE)
+    results = dplyr::bind_rows(lapply(pairs, function(pair) {
+      idx   = group_vec %in% pair
+      y     = as.integer(group_vec[idx] == pair[[1]])
+      x     = feat_mat[idx, , drop = FALSE]
+      label = paste(pair, collapse = " vs ")
+
+      # drop features with no variance in this pair
+      keep  = colSums(x > 0) >= min_samples
+      if (!any(keep)) return(NULL)
+
+      fit_one(x[, keep, drop = FALSE], y, label,
+              penalty_factors[keep], feat_cols_kept[keep])
+    }))
+  }
+
+  if (is.null(results) || nrow(results) == 0) {
+    warning("No features selected across any comparison.")
+    empty = tibble::tibble(
+      gene       = character(),
+      feature    = character(),
+      comparison = character(),
+      coef       = numeric(),
+      OR_glmnet  = numeric()
+    )
+    if (run_fisher) {
+      empty$OR        = numeric()
+      empty$conf_low  = numeric()
+      empty$conf_high = numeric()
+      empty$p_value   = numeric()
+      empty$q_value   = numeric()
+    }
+    return(empty)
+  }
+
+  # ── optional post-hoc Fisher test ─────────────────────────────────────────
+
+  if (run_fisher) {
+    selected_feats = unique(results$feature)
+
+    # build feature_matrix subset: sample_id_column + selected features only
+    sub_cols = if (!is.null(sample_id_column)) {
+      c(sample_id_column, intersect(selected_feats, colnames(feature_matrix)))
+    } else {
+      intersect(selected_feats, colnames(feature_matrix))
+    }
+    sub_mat = feature_matrix[, sub_cols, drop = FALSE]
+    if (!is.null(sample_id_column) && is.null(rownames(sub_mat))) {
+      rownames(sub_mat) = seq_len(nrow(sub_mat))
+    }
+
+    fisher_res = test_feature_associations(
+      feature_matrix    = sub_mat,
+      metadata          = metadata,
+      comparison_column = comparison_column,
+      sample_id_column  = sample_id_column,
+      comparison_values = comparison_values,
+      contrast          = contrast,
+      test              = "fisher",
+      p_adjust_method   = p_adjust_method,
+      min_samples       = min_samples
+    )
+
+    # join Fisher columns onto glmnet results; glmnet OR kept as OR_glmnet
+    join_cols = intersect(
+      c("feature", "comparison", "OR", "conf_low", "conf_high",
+        "p_value", "q_value", "n_mutated",
+        grep("^n_mutated_|^n_total_", colnames(fisher_res), value = TRUE)),
+      colnames(fisher_res)
+    )
+    results = dplyr::left_join(
+      results,
+      dplyr::select(fisher_res, dplyr::all_of(join_cols)),
+      by = c("feature", "comparison")
+    )
+  }
+
+  results
+}

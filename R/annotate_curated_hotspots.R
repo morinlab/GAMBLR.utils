@@ -1051,6 +1051,7 @@ annotate_curated_drivers = function(maf_data,
       dplyr::mutate(
         hot_spot = "FALSE",
         driver = "FALSE",
+        mutation_alias = paste0(Hugo_Symbol, "_other"),
         mutation_alias_all = NA_character_,
         hotspot_alias = NA_character_,
         driver_alias = paste0(Hugo_Symbol, "_other")
