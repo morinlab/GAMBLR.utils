@@ -29,8 +29,15 @@ coding summary. Defaults to Tier 1 lymphoma genes.}
 non-coding mutation summaries. If NULL, non-coding mutations are not included.}
 
 \item{gene_reporting_policy}{Optional named list defining per-gene reporting
-mode. Valid keys are \code{detailed} (granular alias columns) and \code{coding}
-(keep only \code{GENE_coding}). Genes not listed default to driver/unknown.}
+mode. Valid keys are \code{detailed} (granular alias columns only),
+\code{coding} (keep only \code{GENE_coding}), and \code{maximal} (produce
+the full column set: \code{GENE_coding}, \code{GENE_driver},
+\code{GENE_other}, per-alias columns, and \code{GENE_any}). Genes not
+listed default to driver/unknown. If a gene is also listed in
+\code{genes_noncoding}, \code{GENE_noncoding} is produced and included in
+\code{GENE_any}. Genes listed under \code{detailed} that have no
+\code{mutation_alias} or \code{hotspot_alias} entries in the MAF
+automatically fall back to \code{_coding} reporting and a warning is issued.}
 
 \item{genes_drop_unannotated}{Optional character vector of genes for which
 catch-all columns (e.g. \code{GENE_other}) should be dropped from the output.
