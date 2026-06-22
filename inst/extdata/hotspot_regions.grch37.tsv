@@ -41,24 +41,9 @@ CD58	CD58_trunc	truncation	trunc,splicesite,spliceregion,startloss	1	1	300000000
 CD70	CD70_trunc	truncation	trunc,splicesite,spliceregion,startloss	19	1	300000000	-	LOF		
 CCND3	CCND3_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300000000	+	GOF		
 CCND3	CCND3_stabilizing	missense	missense,inframe	6	41903682	41903710	-	GOF		
-FAKECARD11	CARD11_C49	hotspot	missense,inframe	7	2987283	2987283	+	GOF		The CARD11 C49N mutation is located in the N-terminal CARD domain of the protein. In vitro studies with JPM50.6 cells expressing CARD11 C49N demonstrate that the mutation is activating as measured by increased NF-κB signaling, with or without stimulation by anti-CD3/CD28 antibodies, compared to wildtype (PMID: 33202260).
 CARD11	CARD11_CARD	region	missense,inframe	7	2985480	2987394			18-110	
 CARD11	CARD11_Linker	region	missense,inframe	7	2984141	2985479			111-130	
-FAKECARD11	CARD11_G123	hotspot	missense,inframe	77	2984162	2984163	+	GOF		The CARD11 G123S mutation reduces the levels of pro-apoptotic BIM and increases cell growth when transfected into B cells, as compared to the wildtype protein. Expression of this mutant in mantle cell lymphoma cell lines resulted in resistance to the B-cell receptor (BCR)-inhibitor, ibrutinib, the NF-κB-inhibitor, lenalidomide, and a combination of the two drugs (PMID: 27224912).
-FAKECARD11	CARD11_G126	hotspot	missense,inframe	77	2984153	2984153	+	GOF		The CARD11 G126D mutation lies in the LATCH domain of the protein. Expression of this mutation in human fibroblast and T lymphocyte cell lines demonstrated it is activating as measured by increased cofactor association and increased downstream signaling compared to wildtype CARD11 (PMID: 23149938).
-FAKECARD11	CARD11_T128	hotspot	missense,inframe	77	2984147	2984147	+	unknown		
-FAKECARD11	CARD11_F130	hotspot	missense,inframe	77	2984142	2984142	+	unknown		
-FAKECARD11	CARD11_T117	hotspot	missense,inframe	77	2985462	2985462	+	GOF		
-FAKECARD11	CARD11_F115	hotspot	missense,inframe	77	2985468	2985468	+	GOF		
-FAKECARD11	CARD11_R113	hotspot	missense,inframe	77	2985473	2985473	+	unknown		The CARD11 R113Q mutation lies in the LATCH domain of the protein. Expression of this mutation in a human T lymphocyte cell lines demonstrated it is likely activating as measured by slightly increased downstream signaling compared to wildtype CARD11 (PMID: 23149938).
-CARD11	CARD11_D401	hotspot	missense,inframe	7	2976810	2976811	+	unknown		
-CARD11	CARD11_D357	hotspot	missense,inframe	7	2977613	2977614	+	unknown		
-CARD11	CARD11_Y361	hotspot	missense,inframe	7	2977602	2977603	+	unknown		
-CARD11	CARD11_249_251	hotspot	missense,inframe	7	2979495	2979501	+	GOF		The CARD11 L251P mutation has been detected in patients with diffuse large B cell lymphoma (DLBCL) and occurs in the protein's coiled-coil domain. Expression of this mutation led to stabilization of β-catenin and constitutive activation of NF-κB signaling in a gain-of-function manner in human T cell lines and promotes survival of DLBCL cell lines (PMID: 26776161, 18323416).
-CARD11	CARD11_245	hotspot	missense,inframe	7	2979513	2979513	+	unknown		
-CARD11	CARD11_R337	hotspot	missense,inframe	7	2978320	2978320	+	unknown		
-CARD11	CARD11_D230	hotspot	missense,inframe	7	2979559	2979559	+	GOF		 In vitro studies in lymphoma cell lines expressing CARD11 D230N demonstrated that the mutation is activating as measured by constitutive NF-kb activation compared to wildtype (PMID: 18323416). 
-CARD11	CARD11_K215	hotspot	missense,inframe	7	2983885	2983886	+	unknown		
+CARD11	CARD11_coiledcoil	region	missense,inframe	7	2976705	2984081			152-447	
 CARD11	CARD11_E626	hotspot	missense,inframe	7	2963931	2963931	+	GOF		The CARD11 E626K mutation resides in the linker domain of the protein and has been identified in patients with Sezary Syndrome. Expression of the E626K mutation in Jurkat T cells constitutively activates NF-κB and TCR signalling in a gain-of-function manner. In addition, the alteration causes enhanced JNK phosphorylation (PMID: 26551667).
 CD79B	CD79B_trunc	truncation	trunc	17	1	300000000	-	unknown	20054396	There is suggestive but not definitive evidence for gain-of-function behaviour, and the mechanism remains incompletely resolved.
 CD79B	CD79B_ITAM	region	missense,inframe	17	1	62007132 	-	GOF	20054396	CD79B ITAM mutations are gain-of-function alterations that enhance B-cell receptor signalling by disrupting Lyn-mediated negative feedback and receptor internalization, thereby sustaining chronic active NF-κB activation in ABC-DLBCL
@@ -163,9 +148,6 @@ KLHL14	KLHL14_E235	hotspot	missense	18	30349850	30349852
 KLHL14	KLHL14_W245	hotspot	missense	18	30349820	30349820				
 KLHL6	KLHL6_trunc	truncation	trunc	3	1	300000000				
 KLHL6	KLHL6_BTB	region	missense	3	183273402	183273153				
-KLHL6	KLHL6_L90	hotspot	missense	3	183273173	183273174				
-KLHL6	KLHL6_S94	hotspot	missense	3	183273161	183273162				
-KLHL6	KLHL6_F97	hotspot	missense	3	183273153	183273153				
 KLHL6	KLHL6_L65	hotspot	missense	3	183273248	183273248				
 KLHL6	KLHL6_E547	hotspot	missense	3	183209941	183209942				
 KRAS	KRAS_G13	hotspot	missense	12	25398281	25398282	-	GOF		
@@ -230,7 +212,7 @@ STAT3	STAT3_E616	hotspot	missense,inframe	17	40475062	40475064	-	GOF	29378236)
 STAT3	STAT3_V637	hotspot	missense	17	40474491	40474492		unknown		
 STAT3	STAT3_Y640	hotspot	missense	17	40474482	40474483	-	GOF		canonical activating mutation
 STAT3	STAT3_N647	hotspot	missense	17	40474461	40474462				
-STAT3	STAT3_K658	hotspot	missense	17	40474427	40474423		GOF	 27345172	activating
+STAT3	STAT3_K658	hotspot	missense	17	40474423	40474427		GOF	 27345172	activating
 STAT3	STAT3_I659	hotspot	missense	17	40474425	40474426		unknown		
 STAT3	STAT3_D661	hotspot	missense	17	40474419	40474420	-	GOF		activating
 STAT3	STAT3_P715	hotspot	missense	17	40469200	40469201	-	GOF	36446385	 The most frequent germline mutations causing STAT3 GOF syndrome are T716M and P715 L in 17% and 12% of patients, respectively
