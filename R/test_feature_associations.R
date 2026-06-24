@@ -616,15 +616,49 @@ test_feature_associations = function(maf = NULL,
 #'   Default \code{"BH"}.
 #' @param min_samples Minimum number of samples with a non-zero value required
 #'   to include a feature. Default \code{2}.
+#' @param positive_only Logical. If \code{TRUE}, restricts the returned features
+#'   to those with a positive coefficient (\code{coef > 0}) in at least one
+#'   comparison. Features whose coefficients are negative in every comparison
+#'   are informative only as depletions and may reflect collinearity rather than
+#'   group-specific enrichment. Default \code{FALSE}.
 #' @param seed Random seed for reproducibility. Default \code{42}.
+#' @param balance_classes Logical. If \code{TRUE}, per-sample observation
+#'   weights are applied inside each \code{cv.glmnet} call to compensate for
+#'   class imbalance. Positive-class samples receive weight
+#'   \code{n_negative / n_positive} and negative-class samples receive weight
+#'   1, so both classes contribute equally to the loss regardless of their
+#'   sizes. Recommended when one class dominates the training data (e.g. DLBCL
+#'   outnumbering minority classes several-fold). Default \code{FALSE}.
+#' @param priority_features Optional character vector of feature names that
+#'   should always enter the model regardless of regularisation. These features
+#'   receive a \code{penalty.factor} of 0 in \code{glmnet}, making them
+#'   unpenalised — lambda shrinks all other coefficients but leaves these
+#'   unconstrained. Features not found in the filtered feature matrix are
+#'   ignored with a warning. In the pairwise contrast, priority features are
+#'   also exempt from the \code{min_samples} variance filter. Default
+#'   \code{NULL}.
+#' @param return_models Logical. If \code{TRUE}, returns a list with elements
+#'   \code{results} (the usual tibble), \code{models} (a named list of fitted
+#'   model objects, one per comparison), \code{contrast}, and
+#'   \code{comparison_values}. Each element of \code{models} contains
+#'   \code{fit} (the \code{cv.glmnet} object), \code{lambda} (the selected
+#'   lambda), \code{features} (character vector of feature names in the order
+#'   the model was trained on, after collinear-column dropping), \code{label}
+#'   (the comparison label string), and \code{pos_class} (the group encoded as
+#'   1 in the binary outcome). Pass the returned list to
+#'   \code{GAMBLR.predict::predict_from_glmnet_models()} to classify new
+#'   samples. Default \code{FALSE}.
 #'
-#' @return A tibble. When \code{run_fisher = FALSE}: columns \code{gene},
-#'   \code{feature}, \code{comparison}, \code{coef}, \code{OR} (from
-#'   \code{exp(coef)}). When \code{run_fisher = TRUE}: additionally
-#'   \code{OR} (Fisher), \code{conf_low}, \code{conf_high}, \code{p_value},
-#'   \code{q_value}, \code{n_mutated}, and per-group count columns — matching
+#' @return When \code{return_models = FALSE} (default): a tibble. When
+#'   \code{run_fisher = FALSE}: columns \code{gene}, \code{feature},
+#'   \code{comparison}, \code{coef}, \code{OR} (from \code{exp(coef)}).
+#'   When \code{run_fisher = TRUE}: additionally \code{OR} (Fisher),
+#'   \code{conf_low}, \code{conf_high}, \code{p_value}, \code{q_value},
+#'   \code{n_mutated}, and per-group count columns — matching
 #'   \code{test_feature_associations} output for use with
-#'   \code{plot_feature_associations}.
+#'   \code{plot_feature_associations}. When \code{return_models = TRUE}: a
+#'   named list with \code{results} (the tibble described above),
+#'   \code{models}, \code{contrast}, and \code{comparison_values}.
 #'
 #' @import dplyr
 #' @export
@@ -658,7 +692,11 @@ select_informative_features = function(
   run_fisher        = FALSE,
   p_adjust_method   = "BH",
   min_samples       = 2,
-  seed              = 42
+  positive_only     = FALSE,
+  seed              = 42,
+  return_models     = FALSE,
+  priority_features = NULL,
+  balance_classes   = FALSE
 ) {
   contrast      = match.arg(contrast, c("one_vs_rest", "pairwise"))
   lambda_select = match.arg(lambda_select, c("1se", "min"))
@@ -719,7 +757,9 @@ select_informative_features = function(
   # ── filter low-prevalence features ───────────────────────────────────────
 
   n_nonzero = colSums(feat_mat > 0)
-  feat_mat  = feat_mat[, n_nonzero >= min_samples, drop = FALSE]
+  feat_mat  = feat_mat[, n_nonzero >= min_samples |
+                           colnames(feat_mat) %in% priority_features,
+                       drop = FALSE]
   feat_cols_kept = colnames(feat_mat)
 
   if (ncol(feat_mat) == 0) {
@@ -733,22 +773,84 @@ select_informative_features = function(
 
   penalty_factors = dplyr::case_when(
     grepl("_any$", feat_cols_kept)                                   ~ 3.0,
-    grepl("_coding$|_driver$|_other$|_noncoding$", feat_cols_kept)  ~ 1.5,
+    grepl("_coding$|_driver$|_hotspot$|_other$|_noncoding$", feat_cols_kept)  ~ 1.5,
     TRUE                                                             ~ 1.0
   )
+
+  if (!is.null(priority_features)) {
+    missing_pf = setdiff(priority_features, feat_cols_kept)
+    if (length(missing_pf) > 0) {
+      warning(
+        "priority_features not found in feature matrix (ignored): ",
+        paste(missing_pf, collapse = ", ")
+      )
+    }
+    penalty_factors[feat_cols_kept %in% priority_features] = 0
+  }
 
   group_vec = meta_sub$.group
 
   # ── inner helper: fit one glmnet model and extract non-zero features ──────
 
-  fit_one = function(x, y, label, pf, feat_names) {
+  fit_one = function(x, y, label, pf, feat_names, pos_class = NULL) {
     pos_n = sum(y == 1L)
     neg_n = sum(y == 0L)
     if (pos_n < 2L || neg_n < 2L) {
       warning("Skipping comparison '", label, "': too few samples in one class.")
       return(NULL)
     }
-    safe_folds = min(nfolds, pos_n, neg_n)
+
+    # ── drop perfectly collinear columns ─────────────────────────────────────
+    # Identical columns cause numerical instability in glmnet and arise
+    # naturally when a gene has only one hotspot alias (GENE_hotspot ==
+    # GENE_alias) or all coding mutations are drivers (GENE_coding ==
+    # GENE_driver). Within each group of identical columns, keep the one with
+    # the lowest penalty factor (most specific feature); break ties by position.
+    col_sig    = apply(x, 2, paste, collapse = "\r")
+    dup_groups = split(seq_along(col_sig), col_sig)
+    keep_idx   = sort(vapply(dup_groups, function(idx) idx[which.min(pf[idx])],
+                             integer(1L)))
+    if (length(keep_idx) < ncol(x)) {
+      n_dropped = ncol(x) - length(keep_idx)
+      message(n_dropped, " perfectly collinear feature(s) removed for '",
+              label, "'.")
+      x          = x[, keep_idx, drop = FALSE]
+      pf         = pf[keep_idx]
+      feat_names = feat_names[keep_idx]
+    }
+
+    # ── within-gene correlation-aware penalty scaling ─────────────────────────
+    # Summary features (e.g. GENE_hotspot, GENE_coding) are by construction
+    # supersets of more-specific features of the same gene, creating partial
+    # collinearity. For each gene with multiple features, detect which features
+    # are binary supersets of others via crossprod, then scale each parent's
+    # penalty upward by (1 + max |cor| with any child feature).
+    gene_labels = sub("_[^_]+$", "", feat_names)
+    for (g in unique(gene_labels)) {
+      idx = which(gene_labels == g)
+      if (length(idx) < 2L) next
+      sub_x = x[, idx, drop = FALSE]
+      cs    = colSums(sub_x)
+      cp    = crossprod(sub_x)          # cp[j,k] = dot(col_j, col_k)
+      # is_child[j,k] = TRUE when col_j is a strict binary subset of col_k
+      # (every 1 in col_j also appears in col_k, but col_k has more 1s)
+      cs_mat   = matrix(cs, length(idx), length(idx))  # row j = cs[j]
+      is_child = (cs_mat == cp) & (cs_mat < matrix(cs, length(idx), length(idx),
+                                                    byrow = TRUE))
+      cor_mat  = suppressWarnings(stats::cor(sub_x))
+      cor_mat[is.na(cor_mat)] = 0
+      diag(cor_mat) = 0
+      # for each parent k, take the max |cor| with any child j
+      max_child_r  = apply(is_child * abs(cor_mat), 2, max)
+      pf[idx]      = pf[idx] * (1 + max_child_r)
+    }
+
+    safe_folds  = min(nfolds, pos_n, neg_n)
+    obs_weights = if (balance_classes) {
+      ifelse(y == 1L, neg_n / pos_n, 1.0)
+    } else {
+      NULL
+    }
 
     set.seed(seed)
     fit = tryCatch(
@@ -759,7 +861,8 @@ select_informative_features = function(
         alpha          = alpha,
         nfolds         = safe_folds,
         penalty.factor = pf,
-        standardize    = TRUE
+        standardize    = TRUE,
+        weights        = obs_weights
       ),
       error = function(e) {
         warning("cv.glmnet failed for '", label, "': ", conditionMessage(e))
@@ -780,37 +883,83 @@ select_informative_features = function(
       return(NULL)
     }
 
-    tibble::tibble(
+    coefs = tibble::tibble(
       gene       = sub("_.*$", "", feat_names[nonzero]),
       feature    = feat_names[nonzero],
       comparison = label,
       coef       = coef_vec[nonzero],
       OR_glmnet  = exp(coef_vec[nonzero])
     )
+
+    if (!return_models) return(coefs)
+
+    list(
+      coefs = coefs,
+      model = list(
+        fit       = fit,
+        lambda    = lam,
+        features  = feat_names,
+        label     = label,
+        pos_class = pos_class
+      )
+    )
   }
 
   # ── run comparisons ───────────────────────────────────────────────────────
 
+  model_list = list()
+
   if (contrast == "one_vs_rest") {
-    results = dplyr::bind_rows(lapply(comparison_values, function(g) {
+    raw = lapply(comparison_values, function(g) {
       y = as.integer(group_vec == g)
-      fit_one(feat_mat, y, paste(g, "vs rest"), penalty_factors, feat_cols_kept)
-    }))
+      fit_one(feat_mat, y, paste(g, "vs rest"),
+              penalty_factors, feat_cols_kept, pos_class = g)
+    })
+    if (return_models) {
+      results    = dplyr::bind_rows(lapply(raw, `[[`, "coefs"))
+      model_list = stats::setNames(
+        lapply(raw, `[[`, "model"),
+        sapply(raw, function(r) if (is.null(r)) NA_character_ else r$model$label)
+      )
+      model_list = model_list[!vapply(model_list, is.null, logical(1L))]
+    } else {
+      results = dplyr::bind_rows(raw)
+    }
   } else {
-    pairs   = combn(comparison_values, 2, simplify = FALSE)
-    results = dplyr::bind_rows(lapply(pairs, function(pair) {
+    pairs = combn(comparison_values, 2, simplify = FALSE)
+    raw   = lapply(pairs, function(pair) {
       idx   = group_vec %in% pair
       y     = as.integer(group_vec[idx] == pair[[1]])
       x     = feat_mat[idx, , drop = FALSE]
       label = paste(pair, collapse = " vs ")
 
-      # drop features with no variance in this pair
-      keep  = colSums(x > 0) >= min_samples
+      keep  = colSums(x > 0) >= min_samples |
+              feat_cols_kept %in% priority_features
       if (!any(keep)) return(NULL)
 
       fit_one(x[, keep, drop = FALSE], y, label,
-              penalty_factors[keep], feat_cols_kept[keep])
-    }))
+              penalty_factors[keep], feat_cols_kept[keep],
+              pos_class = pair[[1]])
+    })
+    if (return_models) {
+      results    = dplyr::bind_rows(lapply(raw, `[[`, "coefs"))
+      model_list = stats::setNames(
+        lapply(raw, `[[`, "model"),
+        sapply(raw, function(r) if (is.null(r)) NA_character_ else r$model$label)
+      )
+      model_list = model_list[!vapply(model_list, is.null, logical(1L))]
+    } else {
+      results = dplyr::bind_rows(raw)
+    }
+  }
+
+  if (positive_only && !is.null(results) && nrow(results) > 0) {
+    keep_features = results |>
+      dplyr::group_by(.data$feature) |>
+      dplyr::summarise(any_positive = any(.data$coef > 0), .groups = "drop") |>
+      dplyr::filter(.data$any_positive) |>
+      dplyr::pull(.data$feature)
+    results = dplyr::filter(results, .data$feature %in% keep_features)
   }
 
   if (is.null(results) || nrow(results) == 0) {
@@ -828,6 +977,14 @@ select_informative_features = function(
       empty$conf_high = numeric()
       empty$p_value   = numeric()
       empty$q_value   = numeric()
+    }
+    if (return_models) {
+      return(list(
+        results           = empty,
+        models            = model_list,
+        contrast          = contrast,
+        comparison_values = comparison_values
+      ))
     }
     return(empty)
   }
@@ -872,6 +1029,15 @@ select_informative_features = function(
       dplyr::select(fisher_res, dplyr::all_of(join_cols)),
       by = c("feature", "comparison")
     )
+  }
+
+  if (return_models) {
+    return(list(
+      results           = results,
+      models            = model_list,
+      contrast          = contrast,
+      comparison_values = comparison_values
+    ))
   }
 
   results

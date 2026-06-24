@@ -10,10 +10,11 @@ aliases = read_tsv("inst/extdata/aliases.tsv")
 
 usethis::use_data(aliases,overwrite = T)
 
-hotspot_regions_grch37 =  read_tsv("inst/extdata/hotspot_regions.grch37.tsv")
+hotspot_regions_grch37 =  read_tsv("inst/extdata/hotspot_regions.grch37.tsv") %>%
+  dplyr::filter(include == TRUE)
 usethis::use_data(hotspot_regions_grch37,overwrite = T)
 
-col_ord = colnames(hotspot_regions_grch37)
+dcol_ord = colnames(hotspot_regions_grch37)
 
 hotspot_regions_grch37_bed = hotspot_regions_grch37 %>%
   select(chrom,start,end,strand,any_of(colnames(hotspot_regions_grch37))) %>%

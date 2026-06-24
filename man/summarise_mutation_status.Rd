@@ -8,13 +8,15 @@ summarise_mutation_status(
   annotated_maf,
   genes_coding = NULL,
   genes_noncoding = NULL,
+  noncoding_maf = NULL,
   gene_reporting_policy = NULL,
   genes_drop_unannotated = NULL,
   gene_drop_policy = NULL,
   encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
   use_all_aliases = TRUE,
   include_hotspot_alias = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  these_samples_metadata = NULL
 )
 }
 \arguments{
@@ -30,10 +32,25 @@ lymphoma genes. Genes from \code{gene_reporting_policy} are unioned into
 this set automatically.}
 
 \item{genes_noncoding}{Optional character vector of genes for which to also
-count non-coding mutations (Silent, UTR, Flank — anything not in
-\code{vc_nonSynonymous}). Produces a \code{GENE_noncoding} column. The
-input MAF must include non-coding variant classes for this to have any
-effect. Default \code{NULL} (no non-coding columns).}
+count non-coding mutations. Produces a \code{GENE_noncoding} column.
+When \code{noncoding_maf} is \code{NULL}, non-coding mutations are taken
+from \code{annotated_maf} by excluding rows whose
+\code{Variant_Classification} is in \code{vc_nonSynonymous} (Silent, UTR,
+Flank), so the input MAF must include those classes. When
+\code{noncoding_maf} is provided, all rows in that MAF for genes in
+\code{genes_noncoding} are counted regardless of
+\code{Variant_Classification}. Default \code{NULL} (no non-coding
+columns).}
+
+\item{noncoding_maf}{Optional MAF data frame supplying non-coding mutations
+separately from \code{annotated_maf}. Must contain at least
+\code{Hugo_Symbol} and \code{Tumor_Sample_Barcode}. Intended for
+region-restricted non-coding mutation sets (e.g. aSHM hotspot windows)
+where extracting non-coding variants for all genes from a single MAF
+would be inefficient. When provided, every row whose \code{Hugo_Symbol}
+is in \code{genes_noncoding} contributes to the \code{GENE_noncoding}
+count; no \code{Variant_Classification} filter is applied. Ignored if
+\code{genes_noncoding} is \code{NULL}. Default \code{NULL}.}
 
 \item{gene_reporting_policy}{Optional named list controlling per-gene column
 output. Valid keys:
@@ -81,6 +98,14 @@ or \code{maximal} policy, and for all other annotated genes via a separate
 
 \item{verbose}{Logical. If \code{TRUE}, prints messages about which policy
 and drop decisions are being applied. Default \code{FALSE}.}
+
+\item{these_samples_metadata}{Optional data frame with a \code{sample_id}
+column defining the complete sample universe. When supplied: (1) any
+\code{Tumor_Sample_Barcode} in the MAF that is absent from
+\code{sample_id} is dropped with a warning; (2) every \code{sample_id}
+present in the metadata receives a row in the output, filled with 0 for
+all features if no mutations were observed. Default \code{NULL} (sample
+universe derived from the MAF).}
 }
 \value{
 A data frame with one row per sample (row names = sample IDs) and
