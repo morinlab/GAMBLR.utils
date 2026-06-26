@@ -123,7 +123,6 @@ gene_to_region = function(gene_symbol,
     if(!missing(gene_symbol)){
       message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(gene_symbol), " gene(s)"))
     }
-
     if(!missing(ensembl_id)){
       message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(ensembl_id), " gene(s)"))
     }
