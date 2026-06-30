@@ -254,6 +254,17 @@ assemble_genetic_features <- function(unannotated_maf,
 #'   \code{unannotated}. \code{all}: remove every \code{GENE_*} column for the
 #'   listed genes. \code{unannotated}: remove only the \code{GENE_other}
 #'   catch-all column. Mutually exclusive with \code{genes_drop_unannotated}.
+#' @param genes_use_counts Optional character vector of gene symbols for which
+#'   every \code{GENE_*} column reports the raw number of distinct mutation
+#'   occurrences observed in that sample, instead of the fixed
+#'   \code{encoding_policy} value. For example, if a sample has 3 separate
+#'   \code{KMT2D_trunc} mutations, \code{KMT2D_trunc} is \code{3} for that
+#'   sample rather than \code{encoding_policy$driver}. Genes not listed here
+#'   are unaffected and continue to use \code{encoding_policy} as usual. Under
+#'   the \code{maximal} policy, \code{GENE_any} is still the element-wise
+#'   maximum across that gene's columns, so it becomes the largest single
+#'   per-feature count rather than a binary indicator. Default \code{NULL}
+#'   (all genes use \code{encoding_policy}).
 #' @param encoding_policy Named list of numeric values for each indicator type.
 #'   Default \code{list(coding = 2, noncoding = 1, driver = 2)}. Setting all
 #'   values to 1 produces a standard binary 0/1 matrix.
@@ -339,6 +350,16 @@ assemble_genetic_features <- function(unannotated_maf,
 #' grep("PIM1", colnames(mat), value = TRUE)
 #' }
 #'
+#' \dontrun{
+#' # Report raw occurrence counts for KMT2D instead of the encoding_policy
+#' # value. A sample with 3 separate KMT2D_trunc mutations gets 3, not 2.
+#' # All other genes are unaffected and still use encoding_policy.
+#' mat = summarise_mutation_status(
+#'   maf_anno,
+#'   genes_use_counts = c("KMT2D")
+#' )
+#' }
+#'
 summarise_mutation_status = function(annotated_maf,
                                      genes_coding = NULL,
                                      genes_noncoding = NULL,
@@ -347,10 +368,24 @@ summarise_mutation_status = function(annotated_maf,
                                      genes_drop_unannotated = NULL,
                                      gene_drop_policy = NULL,
                                      encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
+                                     genes_use_counts = NULL,
                                      use_all_aliases = TRUE,
                                      include_hotspot_alias = TRUE,
                                      verbose = FALSE,
                                      these_samples_metadata = NULL){
+
+  # per-row "mutated" value: the raw occurrence count for genes listed in
+  # genes_use_counts, otherwise the fixed encoding_policy value. Gene is
+  # recovered from the variant name's prefix (e.g. "KMT2D_trunc" -> "KMT2D"),
+  # which holds for both GENE_<suffix> columns and alias strings alike.
+  resolve_mutated_value = function(variant, n, policy_value, genes_use_counts){
+    if(is.null(genes_use_counts) || length(genes_use_counts) == 0){
+      return(rep(policy_value, length(variant)))
+    }
+    gene = sub("_.*$", "", variant)
+    ifelse(gene %in% genes_use_counts, n, policy_value)
+  }
+
   if(is.null(genes_coding)){
     genes_coding = lymphoma_genes %>%
     dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
@@ -443,12 +478,11 @@ summarise_mutation_status = function(annotated_maf,
 
     noncoding_count = noncoding_source %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      unique() %>%
+      dplyr::count(Hugo_Symbol, Tumor_Sample_Barcode, name = "n") %>%
       mutate(Variant=paste0(Hugo_Symbol,"_noncoding")) %>%
-      ungroup() %>%
       dplyr::select(-Hugo_Symbol) %>%
-      mutate(mutated = encoding_policy$noncoding) # will fill missing with 0 at the join stage
+      mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$noncoding, genes_use_counts)) %>%
+      dplyr::select(-n) # will fill missing with 0 at the join stage
 
   }
 
@@ -504,10 +538,10 @@ summarise_mutation_status = function(annotated_maf,
   }
 
   detailed_driver_count = detailed_alias_long %>%
-    group_by(mutation_alias, Tumor_Sample_Barcode) %>%
-    unique() %>%
+    dplyr::count(mutation_alias, Tumor_Sample_Barcode, name = "n") %>%
     rename(Variant=mutation_alias) %>%
-    mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
+    mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>%
+    dplyr::select(-n) # will fill missing with 0 at the join stage
 
   driver_report_genes = dplyr::filter(coding_maf, grepl("_driver", driver_alias)) %>%
     pull(Hugo_Symbol) %>%
@@ -524,10 +558,10 @@ summarise_mutation_status = function(annotated_maf,
   driver_count = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% driver_report_genes) %>%
     dplyr::select(driver_alias, Tumor_Sample_Barcode) %>%
-    group_by(driver_alias, Tumor_Sample_Barcode) %>%
-    unique() %>%
+    dplyr::count(driver_alias, Tumor_Sample_Barcode, name = "n") %>%
     rename(Variant=driver_alias) %>%
-    mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
+    mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>%
+    dplyr::select(-n) # will fill missing with 0 at the join stage
 
   # maximal genes: count all driver_alias values (_driver and _other)
   maximal_driver_count = NULL
@@ -536,10 +570,10 @@ summarise_mutation_status = function(annotated_maf,
       dplyr::filter(Hugo_Symbol %in% maximal_genes,
                     !is.na(driver_alias), driver_alias != "") %>%
       dplyr::select(driver_alias, Tumor_Sample_Barcode) %>%
-      group_by(driver_alias, Tumor_Sample_Barcode) %>%
-      unique() %>%
+      dplyr::count(driver_alias, Tumor_Sample_Barcode, name = "n") %>%
       rename(Variant = driver_alias) %>%
-      mutate(mutated = encoding_policy$driver)
+      mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>%
+      dplyr::select(-n)
   }
 
   hotspot_count = NULL
@@ -549,10 +583,10 @@ summarise_mutation_status = function(annotated_maf,
                     !Hugo_Symbol %in% detailed_genes,
                     !Hugo_Symbol %in% maximal_genes) %>%
       dplyr::select(hotspot_alias, Tumor_Sample_Barcode) %>%
-      group_by(hotspot_alias, Tumor_Sample_Barcode) %>%
-      unique() %>%
+      dplyr::count(hotspot_alias, Tumor_Sample_Barcode, name = "n") %>%
       rename(Variant=hotspot_alias) %>%
-      mutate(mutated = encoding_policy$driver) # use driver encoding for hotspot
+      mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>% # use driver encoding for hotspot
+      dplyr::select(-n)
   }
 
   # only exclude detailed_genes that actually have alias coverage; genes with no
@@ -609,24 +643,22 @@ summarise_mutation_status = function(annotated_maf,
     if (nrow(unaliased) > 0) {
       detailed_other_count = unaliased %>%
         dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-        dplyr::group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-        dplyr::distinct() %>%
+        dplyr::count(Hugo_Symbol, Tumor_Sample_Barcode, name = "n") %>%
         dplyr::mutate(Variant = paste0(Hugo_Symbol, "_other")) %>%
-        dplyr::ungroup() %>%
         dplyr::select(-Hugo_Symbol) %>%
-        dplyr::mutate(mutated = encoding_policy$coding)
+        dplyr::mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$coding, genes_use_counts)) %>%
+        dplyr::select(-n)
     }
   }
 
   coding_count = coding_maf %>%
     dplyr::filter(!Hugo_Symbol %in% skip_genes_coding) %>%
     dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    unique() %>%
+    dplyr::count(Hugo_Symbol, Tumor_Sample_Barcode, name = "n") %>%
     mutate(Variant=paste0(Hugo_Symbol,"_coding")) %>%
-    ungroup() %>%
     dplyr::select(-Hugo_Symbol) %>%
-    mutate(mutated = encoding_policy$coding) # will fill missing with 0 at the join stage
+    mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$coding, genes_use_counts)) %>%
+    dplyr::select(-n) # will fill missing with 0 at the join stage
   
   if(!is.null(genes_noncoding) && length(genes_noncoding) > 0){
     long = bind_rows(

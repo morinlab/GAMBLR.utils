@@ -13,6 +13,7 @@ summarise_mutation_status(
   genes_drop_unannotated = NULL,
   gene_drop_policy = NULL,
   encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
+  genes_use_counts = NULL,
   use_all_aliases = TRUE,
   include_hotspot_alias = TRUE,
   verbose = FALSE,
@@ -84,6 +85,18 @@ catch-all column. Mutually exclusive with \code{genes_drop_unannotated}.}
 \item{encoding_policy}{Named list of numeric values for each indicator type.
 Default \code{list(coding = 2, noncoding = 1, driver = 2)}. Setting all
 values to 1 produces a standard binary 0/1 matrix.}
+
+\item{genes_use_counts}{Optional character vector of gene symbols for which
+every \code{GENE_*} column reports the raw number of distinct mutation
+occurrences observed in that sample, instead of the fixed
+\code{encoding_policy} value. For example, if a sample has 3 separate
+\code{KMT2D_trunc} mutations, \code{KMT2D_trunc} is \code{3} for that
+sample rather than \code{encoding_policy$driver}. Genes not listed here
+are unaffected and continue to use \code{encoding_policy} as usual. Under
+the \code{maximal} policy, \code{GENE_any} is still the element-wise
+maximum across that gene's columns, so it becomes the largest single
+per-feature count rather than a binary indicator. Default \code{NULL}
+(all genes use \code{encoding_policy}).}
 
 \item{use_all_aliases}{Logical. If \code{TRUE} (default), per-alias columns
 are built from \code{mutation_alias_all} (semicolon-separated specific
@@ -226,6 +239,16 @@ mat = summarise_mutation_status(
 # PIM1_coding: any coding mutation in PIM1
 # PIM1_noncoding: Silent/UTR/Flank mutations in PIM1
 grep("PIM1", colnames(mat), value = TRUE)
+}
+
+\dontrun{
+# Report raw occurrence counts for KMT2D instead of the encoding_policy
+# value. A sample with 3 separate KMT2D_trunc mutations gets 3, not 2.
+# All other genes are unaffected and still use encoding_policy.
+mat = summarise_mutation_status(
+  maf_anno,
+  genes_use_counts = c("KMT2D")
+)
 }
 
 }

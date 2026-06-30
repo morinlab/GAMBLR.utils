@@ -21,7 +21,8 @@ select_informative_features(
   seed = 42,
   return_models = FALSE,
   priority_features = NULL,
-  balance_classes = FALSE
+  balance_classes = FALSE,
+  covariate_columns = NULL
 )
 }
 \arguments{
@@ -103,6 +104,20 @@ class imbalance. Positive-class samples receive weight
 1, so both classes contribute equally to the loss regardless of their
 sizes. Recommended when one class dominates the training data (e.g. DLBCL
 outnumbering minority classes several-fold). Default \code{FALSE}.}
+
+\item{covariate_columns}{Optional character vector of column names in
+\code{metadata} to include as unpenalised covariates in every model
+(\code{penalty.factor = 0}, like \code{priority_features}). Use this to
+control for a known technical confounder — e.g. \code{seq_type} — so
+that other features' coefficients are estimated conditional on it
+rather than confounded by it. Numeric columns are included as-is;
+character/factor columns are dummy-encoded (one reference level
+dropped). Columns containing \code{NA} are rejected with an error,
+since \code{cv.glmnet} cannot handle missing values. Note this does
+not repair individual features whose measured values are themselves
+corrupted by the confounder (e.g. a region not assayed at all in one
+batch) — exclude those features from \code{feature_matrix} directly
+instead. Default \code{NULL}.}
 }
 \value{
 When \code{return_models = FALSE} (default): a tibble. When

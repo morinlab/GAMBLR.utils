@@ -637,6 +637,19 @@ test_feature_associations = function(maf = NULL,
 #'   ignored with a warning. In the pairwise contrast, priority features are
 #'   also exempt from the \code{min_samples} variance filter. Default
 #'   \code{NULL}.
+#' @param covariate_columns Optional character vector of column names in
+#'   \code{metadata} to include as unpenalised covariates in every model
+#'   (\code{penalty.factor = 0}, like \code{priority_features}). Use this to
+#'   control for a known technical confounder — e.g. \code{seq_type} — so
+#'   that other features' coefficients are estimated conditional on it
+#'   rather than confounded by it. Numeric columns are included as-is;
+#'   character/factor columns are dummy-encoded (one reference level
+#'   dropped). Columns containing \code{NA} are rejected with an error,
+#'   since \code{cv.glmnet} cannot handle missing values. Note this does
+#'   not repair individual features whose measured values are themselves
+#'   corrupted by the confounder (e.g. a region not assayed at all in one
+#'   batch) — exclude those features from \code{feature_matrix} directly
+#'   instead. Default \code{NULL}.
 #' @param return_models Logical. If \code{TRUE}, returns a list with elements
 #'   \code{results} (the usual tibble), \code{models} (a named list of fitted
 #'   model objects, one per comparison), \code{contrast}, and
@@ -696,7 +709,8 @@ select_informative_features = function(
   seed              = 42,
   return_models     = FALSE,
   priority_features = NULL,
-  balance_classes   = FALSE
+  balance_classes   = FALSE,
+  covariate_columns = NULL
 ) {
   contrast      = match.arg(contrast, c("one_vs_rest", "pairwise"))
   lambda_select = match.arg(lambda_select, c("1se", "min"))
@@ -788,6 +802,42 @@ select_informative_features = function(
     penalty_factors[feat_cols_kept %in% priority_features] = 0
   }
 
+  # ── optional covariates (e.g. seq_type) included unpenalised ──────────────
+  # meta_sub's rows are already in the same order as feat_mat's (both derived
+  # from keep_ids), so covariate columns can be pulled directly without
+  # re-matching.
+  covariate_cols = character(0)
+  if (!is.null(covariate_columns)) {
+    missing_cov = setdiff(covariate_columns, colnames(meta_sub))
+    if (length(missing_cov) > 0) {
+      stop("covariate_columns not found in metadata: ",
+           paste(missing_cov, collapse = ", "))
+    }
+    cov_mat = do.call(cbind, lapply(covariate_columns, function(cc) {
+      v = meta_sub[[cc]]
+      if (anyNA(v)) {
+        stop("covariate_columns '", cc, "' contains NA values; remove or ",
+             "impute before calling select_informative_features().")
+      }
+      if (is.numeric(v)) {
+        m = matrix(v, ncol = 1, dimnames = list(NULL, paste0("covariate__", cc)))
+      } else {
+        f = factor(v)
+        if (nlevels(f) < 2L) {
+          stop("covariate_columns '", cc, "' has fewer than 2 levels.")
+        }
+        m = stats::model.matrix(~f)[, -1, drop = FALSE]
+        colnames(m) = paste0("covariate__", cc, "__", levels(f)[-1])
+      }
+      m
+    }))
+    rownames(cov_mat) = rownames(feat_mat)
+    feat_mat        = cbind(feat_mat, cov_mat)
+    feat_cols_kept  = colnames(feat_mat)
+    covariate_cols  = colnames(cov_mat)
+    penalty_factors = c(penalty_factors, rep(0, ncol(cov_mat)))
+  }
+
   group_vec = meta_sub$.group
 
   # ── inner helper: fit one glmnet model and extract non-zero features ──────
@@ -825,8 +875,12 @@ select_informative_features = function(
     # collinearity. For each gene with multiple features, detect which features
     # are binary supersets of others via crossprod, then scale each parent's
     # penalty upward by (1 + max |cor| with any child feature).
+    # covariate columns (e.g. seq_type dummies) are excluded from this
+    # gene-grouping logic — they aren't gene features and grouping unrelated
+    # dummy levels of the same covariate together would be meaningless
     gene_labels = sub("_[^_]+$", "", feat_names)
-    for (g in unique(gene_labels)) {
+    gene_labels[feat_names %in% covariate_cols] = NA
+    for (g in unique(stats::na.omit(gene_labels))) {
       idx = which(gene_labels == g)
       if (length(idx) < 2L) next
       sub_x = x[, idx, drop = FALSE]
@@ -934,7 +988,8 @@ select_informative_features = function(
       label = paste(pair, collapse = " vs ")
 
       keep  = colSums(x > 0) >= min_samples |
-              feat_cols_kept %in% priority_features
+              feat_cols_kept %in% priority_features |
+              feat_cols_kept %in% covariate_cols
       if (!any(keep)) return(NULL)
 
       fit_one(x[, keep, drop = FALSE], y, label,
