@@ -673,7 +673,7 @@ test_feature_associations = function(maf = NULL,
 #'   named list with \code{results} (the tibble described above),
 #'   \code{models}, \code{contrast}, and \code{comparison_values}.
 #'
-#' @import dplyr
+#' @import dplyr glmnet
 #' @export
 #'
 #' @examples
