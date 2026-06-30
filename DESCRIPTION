@@ -21,6 +21,7 @@ Imports:
     ggplot2,
     ggpubr,
     ggrepel,
+    glmnet,
     methods,
     org.Hs.eg.db,
     readr,
@@ -29,6 +30,8 @@ Imports:
     S4Vectors,
     tibble,
     tidyr
+Suggests:
+    glmnet
 Remotes:
     morinlab/GAMBLR.data,
     morinlab/GAMBLR.helpers

@@ -1,156 +1,240 @@
-gene	alias	class	type	chrom	start	end	strand	effect	citation	summary
-NFKBIZ	NFKBIZ_UTR	region	utr_3	3	101578214	101578365	+	GOF		
-ARID1A	ARID1A_trunc	truncation	trunc,splicesite,spliceregion	1	1	300000000	+	LOF		
-B2M	B2M_trunc	truncation	trunc,splicesite,spliceregion,startloss	15	1	300000000	+	LOF		
-BCL10	BCL10_Cterm	region	trunc,splicesite,spliceregion,startloss,missense	1	1	85736343	-	GOF	PMC9357155	C-terminal truncating mutations in BCL10 remove an inhibitory regulatory region that normally restrains filament signalling, thereby locking MALT1 in an activated CBM complex and sustaining constitutive NF-κB signalling
-BCL10	BCL10_CARD	region	missense	1	85736344	300000000	-	GOF	PMC9357155	CARD domain missense mutations in BCL10 enhance self-assembly of the CBM signalling scaffold, driving ligand-independent NF-κB activation
-BCL2	BCL2_G101	hotspot	missense	18	60985598	60985599	-	GOF	30514704	venetoclax resistance in CLL
-BCL2	BCL2_D103	hotspot	missense	18	60985592	60985594	-	GOF	36982875	venetoclax resistance in CLL
-BCL2	BCL2_A113	hotspot	missense	18	60985562	60985563	-	GOF	32232486	venetoclax resistance in CLL
-BCL2	BCL2_F104	hotspot	missense	18	60985588	60985590	-	GOF	32232486	venetoclax resistance in CLL
-BCL2	BCL2_L119	hotspot	missense	18	60985544	60985545	-	GOF	32232486	venetoclax resistance in CLL
-BCL7A	BCL7A_trunc	truncation	trunc,splicesite,spliceregion,startloss	12	1	300000000	+	LOF		
-BCL7A	BCL7A_R11	hotspot	missense	12	122460028	122460030	+	LOF		
-BRAF	BRAF_S467	hotspot	missense	7	140481409	140481409	-	GOF		
-BRAF	BRAF_L485	hotspot	missense	7	140477853	140477853	-	GOF		
-BRAF	BRAF_N581	hotspot	missense	7	140453987	140453987	-	GOF		
-BRAF	BRAF_E586	hotspot	missense	7	140453179	140453179	-	GOF		
-BRAF	BRAF_F595	hotspot	missense	7	140453152	140453152	-	GOF		
-BRAF	BRAF_G469	hotspot	missense	7	140481402	140481403	-	GOF		
-BRAF	BRAF_G464	hotspot	missense	7	140481417	140481417	-	unknown		
-BRAF	BRAF_N581	hotspot	missense	7	140453192	140453193	-	GOF		
-BRAF	BRAF_L597	hotspot	missense	7	140453145	140453146	-	GOF		
-BRAF	BRAF_K483	hotspot	missense	7	140477861	140477861	-	GOF		
-BRAF	BRAF_F595	hotspot	missense	7	140453150	140453150	-	GOF		
-BRAF	BRAF_G466	hotspot	missense	7	140481411	140481412	-	GOF		
-BRAF	BRAF_K601	hotspot	missense	7	140453132	140453134	-	unknown		
-BRAF	BRAF_G469	hotspot	missense	7	140481402	140481402	-	GOF		
-BRAF	BRAF_V600	hotspot	missense	7	140453136	140453136	-	GOF		
-BRAF	BRAF_D594	hotspot	missense	7	140453153	140453155	-	GOF	20141835	Class 3 mutants of BRAF are kinase-dead but bind RAS strongly and activate ERK signalling by activating CRAF rather than through their own kinase activity
-BTG1	BTG1_Q36	hotspot	missense	12	92539204	92539206	-	LOF		
-BTG1	BTG1_trunc	truncation	trunc,splicesite,spliceregion	12	1	300000000	-	LOF		
-BTG2	BTG2_trunc	truncation	trunc,splicesite,spliceregion	1	1	300000000	+	LOF		
-CD58	CD58_trunc	truncation	trunc,splicesite,spliceregion,startloss	1	1	300000000	-	LOF		
-CD79B	CD79B_trunc	truncation	trunc	17	1	300000000	-	unknown	20054396	There is suggestive but not definitive evidence for gain-of-function behaviour, and the mechanism remains incompletely resolved.
-CD79B	CD79B_ITAM	region	missense,inframe	17	1	62007132 	-	GOF	20054396	CD79B ITAM mutations are gain-of-function alterations that enhance B-cell receptor signalling by disrupting Lyn-mediated negative feedback and receptor internalization, thereby sustaining chronic active NF-κB activation in ABC-DLBCL
-CREBBP	CREBBP_KAT	region	missense,inframe	16	3781320	3791000	-	LOF	40090010	CREBBP KAT-domain missense mutations impair histone acetyltransferase activity while preserving protein expression, leading to loss of enhancer acetylation and defective transcriptional activation programs in B-cell lymphomas
-CREBBP	CREBBP_trunc	truncation	trunc	16	1	300000000	-	LOF	PMC5386396	
-EZH2	EZH2_SET	region	missense	7	148506238	148508764	-	GOF	PMC3062411	EZH2 Y641 hotspot mutations act as neomorphic gain-of-function alleles that alter PRC2 substrate specificity, cooperatively increasing H3K27 trimethylation and enforcing transcriptional repression programs characteristic of germinal-centre lymphoma.
-FAS	FAS_death	region	missense,inframe	10	90773115	90774133	+	LOF		
-FAS	FAS_trunc	truncation	trunc,splicesite,spliceregion	10	1	300000000	+	LOF		
-FBXW7	FBXW7_R465	hotspot	missense	4	153249384	153249385	-	LOF	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
-FBXW7	FBXW7_R479	hotspot	missense	4	153247366	153247367	-	LOF	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
-FBXW7	FBXW7_R505	hotspot	missense	4	153247288	153247289	-	LOF	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
-FBXW7	FBXW7_R689	hotspot	missense	4	153244091	153244092	-	LOF	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
-FBXW7	FBXW7_R425	hotspot	missense	4	153249503	153249503	-	LOF	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
-FBXW7	FBXW7_T385	hotspot	missense	4	153250906	153250907	-	LOF	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
-FBXW7	FBXW7_trunc	truncation	trunc	4	1	300000000	-	LOF	15150404	FBXW7 inactivation directly impairs MYC degradation and therefore increase MYC stability
-FOXO1	FOXO1_Nterm	region	missense,inframe,startloss,trunc	13	41240271	41240351	-	GOF	23460611	FOXO1 hotspot mutations disrupt AKT-mediated phosphorylation, enforcing constitutive nuclear localization and transcriptional activity.
-FOXO1	FOXO1_DBD	region	missense,inframe,trunc	13	41134885	41239920	-	LOF	PMC9482095	FOXO1 mutations affecting the forkhead DNA-binding domain impair DNA binding and transcriptional activity, indicating a loss-of-function mechanism distinct from AKT-site mutations that promote constitutive FOXO1 activation
-GNA13	GNA13_Q27	hotspot	missense,inframe	17	63052631	63052633	-	unknown		
-GNA13	GNA13_M68	hotspot	missense,inframe	17	63052509	63052510	-	unknown		
-GNA13	GNA13_D222	hotspot	missense,inframe	17	63010844	63010845	-	unknown		
-GNA13	GNA13_G60	hotspot	missense,inframe	17	63052533	63052534	-	LOF		
-GNA13	GNA13_trunc	truncation	trunc,splicesite,spliceregion,startloss	17	1	300000000	-	LOF		
-GNA13	GNA13_D294	hotspot	missense,inframe	17	63010628	63010628	-	unknown		
-GNA13	GNA13_E258	hotspot	missense,inframe	17	63010735	63010737	-	unknown		
-GNA13	GNA13_Q194	hotspot	missense,inframe	17	63010927	63010927	-	unknown		
-GNA13	GNA13_L184	hotspot	missense,inframe	17	63014381	63014382	-	unknown		
-GNA13	GNA13_R264	hotspot	missense,inframe	17	63010718	63010719	-	unknown		
-HRAS	HRAS_G13	hotspot	missense	11	534285	534286	-	GOF		
-HRAS	HRAS_G12	hotspot	missense	11	534288	534289	-	GOF		
-HRAS	HRAS_Q61	hotspot	missense	11	533873	533875	-	GOF		
-HVCN1	HVCN1_R205	hotspot	missense	12	111089051	111089052	-	unknown		
-HVCN1	HVCN1_I202	hotspot	missense	12	111089060	111089061	-	unknown		
-HVCN1	HVCN1_Y42	hotspot	missense	12	111099150	111099151	-	unknown		
-HVCN1	HVCN1_W45	hotspot	missense	12	111099142	111099142	-	unknown		
-HVCN1	HVCN1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	12	1	300000000	-	LOF		
-IRF8	IRF8_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	16	1	300000000	+	LOF		
-IRF8	IRF8_N87	hotspot	missense	16	85942680	85942681	+	LOF		
-IRF8	IRF8_Y23	hotspot	missense	16	85936688	85936688	+	unknown		
-IRF8	IRF8_K66	hotspot	missense	16	85942618	85942618	+	unknown		
-IRF8	IRF8_S55	hotspot	missense	16	85936784	85936785	+	LOF		
-IRF8	IRF8_T80	hotspot	missense	16	85942659	85942659	+	LOF		
-IRF8	IRF8_C84	hotspot	missense	16	85942671	85942673	+	unknown		
-IRF8	IRF8_D91	hotspot	missense	16	85942692	85942693	+	unknown		
-IRF8	IRF8_V426	hotspot	missense	16	85954884	85954884	+	unknown		
-IRF8	IRF8_I424	hotspot	missense	16	85954877	85954877	+	unknown		
-IRF8	IRF8_E115	hotspot	missense	16	85942764	85942764	+	unknown		
-IRF8	IRF8_Q118	hotspot	missense	16	85942773	85942774	+	unknown		
-KMT2D	KMT2D_trunc	truncation	trunc	12	1	300000000	-	LOF		
-KRAS	KRAS_G13	hotspot	missense	12	25398281	25398282	-	GOF		
-KRAS	KRAS_G12	hotspot	missense	12	25398284	25398285	-	GOF		
-KRAS	KRAS_Q61	hotspot	missense	12	25380275	25380277	-	GOF		
-KRAS	KRAS_A146	hotspot	missense	12	25378561	25378562	-	GOF		
-KRAS	KRAS_Q22	hotspot	missense	12	25398254	25398255	-	GOF		
-KRAS	KRAS_K117	hotspot	missense	12	25378647	25378649	-	GOF		
-KRAS	KRAS_A59	hotspot	missense	12	25380282	25380283	-	GOF		
-KRAS	KRAS_L19	hotspot	missense	12	25398262	25398262	-	GOF		
-KRAS	KRAS_D119	hotspot	missense	12	25378642	25378643	-	GOF		
-MAP2K1	MAP2K1_F53	hotspot	missense	15	66727441	66727443	+	GOF	30341394	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_K57	hotspot	missense	15	66727453	66727455	+	GOF	25351745	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_C121	hotspot	missense	15	66729153	66729154	+	GOF	25899310	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_E203	hotspot	missense	15	66774131	66774131	+	GOF	39806853	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_Q56	hotspot	missense	15	66727450	66727452	+	GOF	36442478	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_V60E	hotspot	missense	15	66727462	66727463	+	GOF	28263969	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_D67N	hotspot	missense	15	66727483	66727485	+	GOF	25049390	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_I103	hotspot	missense	15	66729099	66729101	+	GOF	12370306	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_N122	hotspot	missense	15	66729156	66729158	+	GOF	32641410	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_P124	hotspot	missense	15	66729162	66729163	+	GOF	29483135	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_G128	hotspot	missense	15	66729173	66729175	+	GOF	34726260	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MAP2K1	MAP2K1_Y130	hotspot	missense	15	66729180	66729181	+	GOF	39313591	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
-MEF2B	MEF2B_MADS	region	missense,inframe	19	19258640	19261541	-	NEO	PMC3954820	MEF2B hotspot mutations derepress transcription by uncoupling DNA binding from normal co-repressor control.
-MEF2B	MEF2B_trunc	truncation	trunc,splicesite,spliceregion	19	1	300000000	-	GOF	39179580	MEF2B truncations cause a gain of transcriptional output via loss of inhibitory control
-MYC	MYC_mycbox	region	missense,inframe	8	128750677	128750696	+	GOF		MYC hotspot mutations are gain-of-function mutations that increase MYC protein stability by disrupting phosphodegron-mediated degradation.
-MYD88	MYD88_L265P	hotspot	missense	3	38182641	38182641	+	GOF	29925955	MYD88 L265P promotes formation of an oncogenic MYD88–TLR9–BCR signalling supercomplex that constitutively activates NF-κB signalling
-NFKBIE	NFKBIE_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300000000	-	LOF		
-NOTCH1	NOTCH1_PEST	region	trunc,splicesite,spliceregion	9	1	139396897	-	GOF		NOTCH1 PEST domain mutations act as gain-of-function alterations by disrupting FBXW7-mediated degradation of the NOTCH1 intracellular domain, resulting in prolonged nuclear signalling and sustained transcriptional activation
-NOTCH2	NOTCH2_PEST	region	trunc	1	1	120459150	-	GOF		
-POU2AF1	POU2AF1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	11	1	300000000	-	LOF		
-POU2F2	POU2F2_T223	hotspot	missense,inframe	19	42600029	42600030	-	NEO		
-PRDM1	PRDM1_trunc	truncation	trunc,splicesite,spliceregion	6	1	300000000	+	LOF		
-PTEN	PTEN_S10	hotspot	missense	10	89624254	89624256	+	LOF		
-PTEN	PTEN_K6	hotspot	missense	10	89624242	89624244	+	LOF		
-PTEN	PTEN_F347	hotspot	missense	10	89725057	89725057	+	LOF		
-PTEN	PTEN_D24	hotspot	missense	10	89624296	89624298	+	LOF		
-PTEN	PTEN_Y27	hotspot	missense	10	89624305	89624305	+	LOF		
-PTEN	PTEN_R15	hotspot	missense	10	89624269	89624269	+	LOF		
-PTEN	PTEN_Y16	hotspot	missense	10	89624272	89624273	+	LOF		
-PTEN	PTEN_N276	hotspot	missense	10	89720677	89720677	+	LOF		
-PTEN	PTEN_R130	hotspot	missense	10	89692904	89692905	+	LOF		
-PTEN	PTEN_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	10	1	300000000	+	LOF		
-SGK1	SGK1_trunc	truncation	trunc,splicesite,spliceregion	6	134492254	134495732	-	GOF	33988691	
-STAT3	STAT3_E616	hotspot	missense	17	40475062	40475064	-	GOF	23872306	
-STAT3	STAT3_E616	hotspot	inframe	17	40475061	40475062	-	GOF	23872306	
-STAT3	STAT3_S614	hotspot	missense	17	40475068	40475070	-	GOF		
-STAT3	STAT3_Y640	hotspot	missense	17	40474482	40474483	-	GOF		
-STAT3	STAT3_D661	hotspot	missense	17	40474419	40474420	-	GOF		
-STAT3	STAT3_D570	hotspot	missense	17	40475317	40475318	-	GOF	PMC4672786	
-STAT3	STAT3_N567	hotspot	missense	17	40475325	40475325	-	GOF		
-STAT3	STAT3_P715	hotspot	missense	17	40469200	40469200	-	GOF		
-STAT3	STAT3_D566	hotspot	missense	17	40475328	40475330	-	GOF		
-STAT6	STAT6_DBD	region	missense,inframe	12	57496650	57498340	-	GOF		
-TBL1XR1	TBL1XR1_Y446	hotspot	missense,inframe	3	176750838	176750839	-	NEO	32619424	TBL1XR1 hotspot mutations promote lymphomagenesis by reprogramming SMRT/HDAC3 corepressor targeting, enforcing an aberrant memory B-cell transcriptional state that drives repeated germinal-centre re-entry
-TBL1XR1	TBL1XR1_WD40	region	missense,inframe	3	1	176750837	-	unknown		
-TBL1XR1	TBL1XR1_WD40	region	missense,inframe	3	176750840	176768393	-	unknown		
-TET2	TET2_trunc	truncation	trunc,splicesite,spliceregion	4	1	300000000	+	LOF		
-TET2	TET2_R1261	hotspot	missense	4	106164913	106164914	+	LOF		
-TET2	TET2_C1193	hotspot	missense	4	106164068	106164068	+	LOF		
-TET2	TET2_R1214	hotspot	missense	4	106164772	106164773	+	LOF		
-TET2	TET2_R1261	hotspot	missense	4	106164913	106164914	+	LOF		
-TET2	TET2_R1896	hotspot	missense	4	106197353	106197355	+	LOF		
-TMEM30A	TMEM30A_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300000000	-	LOF		
-TNFAIP3	TNFAIP3_trunc	truncation	trunc,splicesite,spliceregion	6	1	300000000	+	LOF		
-TNFRSF14	TNFRSF14_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	1	1	300000000	+	LOF		
-TOX	TOX_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	8	1	300000000	-	LOF		
-TP53	TP53_LSH1	region	missense,inframe	17	7578525	7579332	-	LOF	PMC2569165	
-TP53	TP53_LoopL3	region	missense,inframe	17	7577532	7577572	-			
-TP53	TP53_LoopL2	region	missense,inframe	17	7578268	7578440	-			
-TP53	TP53_LSH2	region	missense,inframe	17	7577077	7577124	-			
-TP53	TP53_trunc	truncation	trunc	17	1	300000000	-	LOF		
-TP53	TP53_R175	hotspot	missense,inframe	17	7578406	7578406	-	LOF		
-TP53	TP53_R248	hotspot	missense,inframe	17	7577538	7577539	-	LOF		
-TP53	TP53_R282	hotspot	missense,inframe	17	7577094	7577094	-	LOF		
-TP53	TP53_R273	hotspot	missense,inframe	17	7577120	7577121	-	LOF		
-TP53	TP53_G245	hotspot	missense,inframe	17	7577547	7577548	-	LOF		
-										
+gene	alias	class	type	chrom	start	end	strand	effect	include	citation	summary
+ARID1A	ARID1A_trunc	truncation	trunc,splicesite,spliceregion	1	1	300000000	+	LOF	TRUE		
+B2M	B2M_L7	hotspot	missense	15	45003763	45003764	+	LOF	TRUE		
+B2M	B2M_L9	hotspot	missense	15	45003768	45003770	+	LOF	TRUE		
+B2M	B2M_C45	hotspot	missense	15	45007686	45007688	+	LOF	TRUE		
+B2M	B2M_L10	hotspot	missense	15	45003773	45003773	+		TRUE		
+B2M	B2M_L12	hotspot	missense	15	45003778	45003779	+	LOF	TRUE		
+B2M	B2M_trunc	truncation	trunc,splicesite,spliceregion,startloss	15	1	300000000	+	LOF	TRUE		
+BCL10	BCL10_Cterm	region	trunc,splicesite,spliceregion,startloss,missense	1	1	85736343	-	GOF	TRUE	PMC9357155	C-terminal truncating mutations in BCL10 remove an inhibitory regulatory region that normally restrains filament signalling, thereby locking MALT1 in an activated CBM complex and sustaining constitutive NF-κB signalling
+BCL10	BCL10_CARD	region	missense	1	85736344	300000000	-	GOF	TRUE	PMC9357155	CARD domain missense mutations in BCL10 enhance self-assembly of the CBM signalling scaffold, driving ligand-independent NF-κB activation
+BCL2	BCL2_G33	hotspot	missense	18	60985802	60985803	-	GOF	FALSE	PMID: 25452615	In vitro studies have demonstrated that this mutation is activating as measured by increased BCL2 binding affinity to proapoptotic proteins and reduced apoptosis compared to wildtype controls 
+BCL2	BCL2_P59	hotspot	missense	18	60985724	60985725	-	GOF	FALSE	(PMID: 9651399)	The BCL2 P59S mutation is located in a flexible loop domain of the protein. This mutation has been found in patients with lymphomas (PMID: 1339299). In vitro experiments have demonstrated that this mutation is activating as measured by reduced apoptosis compared to wildtype controls (PMID: 9651399).
+BCL2	BCL2_G101	hotspot	missense	18	60985598	60985599	-	GOF	FALSE	30514704	venetoclax resistance in CLL
+BCL2	BCL2_A131	hotspot	missense	18	60985507	60985509	-	GOF	FALSE		
+BCL2	BCL2_D103	hotspot	missense	18	60985592	60985594	-	GOF	FALSE	36982875	venetoclax resistance in CLL
+BCL2	BCL2_A113	hotspot	missense	18	60985562	60985563	-	GOF	FALSE	32232486	venetoclax resistance in CLL
+BCL2	BCL2_F104	hotspot	missense	18	60985588	60985590	-	GOF	FALSE	32232486	venetoclax resistance in CLL
+BCL2	BCL2_L119	hotspot	missense	18	60985544	60985545	-	GOF	FALSE	32232486	venetoclax resistance in CLL
+BCL7A	BCL7A_trunc	truncation	trunc,splicesite,spliceregion,startloss	12	1	300000000	+	LOF	TRUE		
+BCL7A	BCL7A_R11	hotspot	missense	12	122460028	122460030	+	LOF	TRUE		
+BRAF	BRAF_S467	hotspot	missense	7	140481409	140481409	-	GOF	TRUE		
+BRAF	BRAF_L485	hotspot	missense	7	140477853	140477853	-	GOF	TRUE		
+BRAF	BRAF_N581	hotspot	missense	7	140453987	140453987	-	GOF	TRUE		
+BRAF	BRAF_E586	hotspot	missense	7	140453179	140453179	-	GOF	TRUE		
+BRAF	BRAF_F595	hotspot	missense	7	140453152	140453152	-	GOF	TRUE		
+BRAF	BRAF_G469	hotspot	missense	7	140481402	140481403	-	GOF	TRUE		
+BRAF	BRAF_G464	hotspot	missense	7	140481417	140481417	-	unknown	TRUE		
+BRAF	BRAF_N581	hotspot	missense	7	140453192	140453193	-	GOF	TRUE		
+BRAF	BRAF_L597	hotspot	missense	7	140453145	140453146	-	GOF	TRUE		
+BRAF	BRAF_K483	hotspot	missense	7	140477861	140477861	-	GOF	TRUE		
+BRAF	BRAF_F595	hotspot	missense	7	140453150	140453150	-	GOF	TRUE		
+BRAF	BRAF_G466	hotspot	missense	7	140481411	140481412	-	GOF	TRUE		
+BRAF	BRAF_K601	hotspot	missense	7	140453132	140453134	-	unknown	TRUE		
+BRAF	BRAF_G469	hotspot	missense	7	140481402	140481402	-	GOF	TRUE		
+BRAF	BRAF_V600	hotspot	missense	7	140453136	140453136	-	GOF	TRUE		
+BRAF	BRAF_D594	hotspot	missense	7	140453153	140453155	-	GOF	TRUE	20141835	Class 3 mutants of BRAF are kinase-dead but bind RAS strongly and activate ERK signalling by activating CRAF rather than through their own kinase activity
+BTG1	BTG1_Q36	hotspot	missense	12	92539204	92539206	-	LOF	TRUE		
+BTG1	BTG1_trunc	truncation	trunc,splicesite,spliceregion	12	1	300000000	-	LOF	TRUE		
+BTG2	BTG2_trunc	truncation	trunc,splicesite,spliceregion	1	1	300000000	+	LOF	TRUE		
+C10orf12	C10orf12_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	10	1	300000000			TRUE		
+CARD11	CARD11_CARD	region	missense,inframe	7	2985480	2987394			TRUE	18-110	
+CARD11	CARD11_Linker	region	missense,inframe	7	2984141	2985479			TRUE	111-130	
+CARD11	CARD11_coiledcoil	region	missense,inframe	7	2976705	2984081			TRUE	152-447	
+CARD11	CARD11_E626	hotspot	missense,inframe	7	2963931	2963931	+	GOF	TRUE		The CARD11 E626K mutation resides in the linker domain of the protein and has been identified in patients with Sezary Syndrome. Expression of the E626K mutation in Jurkat T cells constitutively activates NF-κB and TCR signalling in a gain-of-function manner. In addition, the alteration causes enhanced JNK phosphorylation (PMID: 26551667).
+CCND3	CCND3_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300000000	+	GOF	TRUE		
+CCND3	CCND3_stabilizing	missense	missense,inframe	6	41903682	41903710	-	GOF	TRUE		
+CD58	CD58_trunc	truncation	trunc,splicesite,spliceregion,startloss	1	1	300000000	-	LOF	TRUE		
+CD70	CD70_trunc	truncation	trunc,splicesite,spliceregion,startloss	19	1	300000000	-	LOF	TRUE		
+CD79B	CD79B_trunc	truncation	trunc	17	1	300000000	-	unknown	TRUE	20054396	There is suggestive but not definitive evidence for gain-of-function behaviour, and the mechanism remains incompletely resolved.
+CD79B	CD79B_ITAM	region	missense,inframe	17	1	62007132 	-	GOF	TRUE	20054396	CD79B ITAM mutations are gain-of-function alterations that enhance B-cell receptor signalling by disrupting Lyn-mediated negative feedback and receptor internalization, thereby sustaining chronic active NF-κB activation in ABC-DLBCL
+CDKN2A	CDKN2A_trunc	truncation	trunc,splicesite,spliceregion,stoploss	9	1	300000000	+	LOF	TRUE		
+CREBBP	CREBBP_KAT	region	missense,inframe	16	3781320	3791000	-	LOF	TRUE	40090010	CREBBP KAT-domain missense mutations impair histone acetyltransferase activity while preserving protein expression, leading to loss of enhancer acetylation and defective transcriptional activation programs in B-cell lymphomas
+CREBBP	CREBBP_trunc	truncation	trunc	16	1	300000000	-	LOF	TRUE	PMC5386396	
+DDX3X	DDX3X_F487	hotspot	missense,inframe	X	41205625	41205627	+	LOF	TRUE		
+DDX3X	DDX3X_R531	hotspot	missense,inframe	X	41205851	41205852	+	LOF	TRUE		
+DDX3X	DDX3X_R475	hotspot	missense,inframe	X	41205589	41205590	+	LOF	TRUE		
+DDX3X	DDX3X_F357	hotspot	missense,inframe	X	41204476	41204477	+	LOF	TRUE		
+DDX3X	DDX3X_trunc	truncation	trunc,splicesite,spliceregion,stoploss	X	1	300000000	+	LOF	TRUE		
+DTX1	DTX1_trunc	truncation	trunc,splicesite,spliceregion,stoploss,startloss	12	1	300000000	+	LOF	TRUE		Truncating mutations in DTX1 generally occur in the exon 1 WWE1 domain of the protein. These mutations have been identified in patients with diffuse large B-Cell Lymphoma and splenic marginal zone lymphomas (PMID: 25171927). In vitro studies with mammalian cells expressing a truncated DTX1 mutant lacking domain III demonstrated that truncation mutations are likely inactivating as measured by the inability to inhibit MASH1-mediated transcriptional activation compared to full transcript DTX1 (PMID: 11564735).
+DTX1	DTX1_E49	hotspot	missense,inframe	12	113496144	113496144	+	LOF	TRUE		The DTX1 E49D mutation occurs in the WWE1 N-terminal protein interaction domain. In a Notch transcriptional reporter assay, this alteration failed to repress NCID-induced transcription of the reporter gene in comparison to wildtype DTX1 (PMID: 25171927).
+DTX1	DTX1_D75	hotspot	missense,inframe	12	113496221	113496221	+	LOF	TRUE		The DTX1 D75A mutation occurs in the WWE1 N-terminal protein interaction domain. In a Notch transcriptional reporter assay, this alteration failed to repress NCID-induced transcription of the reporter gene in comparison to wildtype DTX1 (PMID: 25171927).
+DUSP2	DUSP2_trunc	truncation	trunc,splicesite,spliceregion,stoploss,startloss	2	1	300000000	+	LOF	TRUE		
+EBF1	EBF1_trunc	truncation	trunc,splicesite,spliceregion,stoploss,startloss	5	1	300000000	+	LOF	TRUE		
+EP300	EP300_trunc	truncation	trunc,splicesite,spliceregion,stoploss,startloss	22	1	300000000	+	LOF	TRUE		
+EP300	EP300_KAT	region	missense,inframe	22	41562607	41572465	+	unknown	TRUE		
+EP300	EP300_Bromo	region	missense,inframe	22	41548318	41553388	+	unknown	TRUE		
+EP300	EP300_ZNF	region	missense,inframe	22	41523649	41525976	+	unknown	TRUE		
+ETS1	ETS1_trunc	truncation	trunc,splicesite,spliceregion,stoploss,startloss	11	1	300000000	+	LOF	TRUE		
+ETV6	ETV6_trunc	truncation	trunc,splicesite,spliceregion,stoploss,startloss	12	1	300000000	+	LOF	TRUE		
+EZH2	EZH2_SET	region	missense	7	148506238	148508764	-	GOF	TRUE	PMC3062411	EZH2 Y641 hotspot mutations act as neomorphic gain-of-function alleles that alter PRC2 substrate specificity, cooperatively increasing H3K27 trimethylation and enforcing transcriptional repression programs characteristic of germinal-centre lymphoma.
+FAS	FAS_death	region	missense,inframe	10	90773115	90774133	+	LOF	TRUE		
+FAS	FAS_trunc	truncation	trunc,splicesite,spliceregion	10	1	300000000	+	LOF	TRUE		
+FBXO11	FBXO11_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	2	1	300000000	+		TRUE		
+FBXO11	FBXO11_N725	hotspot	missense	2	48040426	48040427	+	unknown	TRUE		
+FBXO11	FBXO11_N704	hotspot	missense	2	48040488	48040489	+	LOF	TRUE		
+FBXO11	FBXO11_N702	hotspot	missense	2	48040495	48040496	+	LOF	TRUE		
+FBXO11	FBXO11_E700	hotspot	missense	2	48040500	48040501	+	LOF	TRUE		
+FBXO11	FBXO11_G697	hotspot	missense	2	48040510	48040511	+	LOF	TRUE		
+FBXW7	FBXW7_R465	hotspot	missense	4	153249384	153249385	-	LOF	TRUE	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
+FBXW7	FBXW7_R479	hotspot	missense	4	153247366	153247367	-	LOF	TRUE	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
+FBXW7	FBXW7_R505	hotspot	missense	4	153247288	153247289	-	LOF	TRUE	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
+FBXW7	FBXW7_R689	hotspot	missense	4	153244091	153244092	-	LOF	TRUE	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
+FBXW7	FBXW7_R425	hotspot	missense	4	153249503	153249503	-	LOF	TRUE	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
+FBXW7	FBXW7_T385	hotspot	missense	4	153250906	153250907	-	LOF	TRUE	15150404	The canonical FBXW7 hotspot mutations directly impair MYC degradation and therefore increase MYC stability
+FBXW7	FBXW7_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	4	1	300000000	-	LOF	TRUE	15150404	FBXW7 inactivation directly impairs MYC degradation and therefore increase MYC stability
+FOXO1	FOXO1_Nterm	region	missense,inframe,startloss,trunc	13	41240271	41240351	-	GOF	TRUE	23460611	FOXO1 hotspot mutations disrupt AKT-mediated phosphorylation, enforcing constitutive nuclear localization and transcriptional activity.
+FOXO1	FOXO1_DBD	region	missense,inframe,trunc	13	41134885	41239920	-	LOF	TRUE	PMC9482095	FOXO1 mutations affecting the forkhead DNA-binding domain impair DNA binding and transcriptional activity, indicating a loss-of-function mechanism distinct from AKT-site mutations that promote constitutive FOXO1 activation
+GNA13	GNA13_14-19	hotspot	missense,inframe	17	63052656	63052671			TRUE		
+GNA13	GNA13_21-26	hotspot	missense,inframe	17	63052636	63052651			TRUE		
+GNA13	GNA13_27-35	hotspot	missense,inframe	17	63052609	63052633	-	unknown	TRUE		
+GNA13	GNA13_G1motif	hotspot	missense,inframe	17	63052524	63052562	-	unknown	TRUE	AA 58-63	
+GNA13	GNA13_G3motif	hotspot	missense,inframe	17	63010829	63010862	-	unknown	TRUE	AA 218-227	
+GNA13	GNA13_M68	hotspot	missense,inframe	17	63052509	63052510	-	unknown	TRUE		
+GNA13	GNA13_trunc	truncation	trunc,splicesite,spliceregion,startloss	17	1	300000000	-	LOF	TRUE		
+GNA13	GNA13_G4motif	hotspot	missense,inframe	17	63010628	63010650	-	unknown	TRUE	AA 287-294	
+GNA13	GNA13_G2motif	hotspot	missense,inframe	17	63010897	63010925	-	unknown	TRUE	AA 195-203	
+GNA13	GNA13_228-286	hotspot	missense,inframe	17	63010651	63010820	-	unknown	TRUE		
+GNAI2	GNAI2_G1motif	hotspot	missense,inframe	3	50273870	50289569	+		TRUE	AA 35-52	
+GNAI2	GNAI2_trunc	truncation	trunc,splicesite,spliceregion,startloss	3	1	300000000	+	LOF	TRUE		
+GNAI2	GNAI2_G2motif	hotspot	missense,inframe	3	50293680	50293704	+		TRUE	AA 174-182	
+GNAI2	GNAI2_G3motif	hotspot	missense,inframe	3	50294168	50294197	+		TRUE	AA 197-212	
+GNAI2	GNAI2_G4motif	hotspot	missense,inframe	3	50294445	50294466	+		TRUE	AA 266-273	
+HNRNPU	HNRNPU_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	1	1	300000000	+	LOF	TRUE		
+HRAS	HRAS_G13	hotspot	missense	11	534285	534286	-	GOF	TRUE		
+HRAS	HRAS_G12	hotspot	missense	11	534288	534289	-	GOF	TRUE		
+HRAS	HRAS_Q61	hotspot	missense	11	533873	533875	-	GOF	TRUE		
+HVCN1	HVCN1_R205	hotspot	missense	12	111089051	111089052	-	unknown	TRUE		
+HVCN1	HVCN1_I202	hotspot	missense	12	111089060	111089061	-	unknown	TRUE		
+HVCN1	HVCN1_Y42	hotspot	missense	12	111099150	111099151	-	unknown	TRUE		
+HVCN1	HVCN1_W45	hotspot	missense	12	111099142	111099142	-	unknown	TRUE		
+HVCN1	HVCN1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	12	1	300000000	-	LOF	TRUE		
+IKZF3	IKZF3_I128	hotspot	missense	17	37948968	37948968	+	unknown	TRUE		
+IKZF3	IKZF3_213-219	hotspot	missense	17	37944564	37944582	+	unknown	TRUE		
+IL4R	IL4R_I242	hotspot	missense	16	27367183	27367183	+	GOF	TRUE		
+IRF4	IRF4_K59	hotspot	missense	6	393328	393328			TRUE		
+IRF4	IRF4_N63	hotspot	missense	6	393340	393340			TRUE		
+IRF4	IRF4_L70	hotspot	missense	6	393360	393360			TRUE		
+IRF8	IRF8_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	16	1	300000000	+	LOF	TRUE		
+IRF8	IRF8_N87	hotspot	missense	16	85942680	85942681	+	LOF	FALSE		
+IRF8	IRF8_Y23	hotspot	missense	16	85936688	85936688	+	unknown	FALSE		
+IRF8	IRF8_K66	hotspot	missense	16	85942618	85942618	+	unknown	FALSE		
+IRF8	IRF8_S55	hotspot	missense	16	85936784	85936785	+	LOF	FALSE		
+IRF8	IRF8_T80	hotspot	missense	16	85942659	85942659	+	LOF	FALSE		
+IRF8	IRF8_C84	hotspot	missense	16	85942671	85942673	+	unknown	FALSE		
+IRF8	IRF8_D91	hotspot	missense	16	85942692	85942693	+	unknown	FALSE		
+IRF8	IRF8_V426	hotspot	missense	16	85954884	85954884	+	unknown	FALSE		
+IRF8	IRF8_I424	hotspot	missense	16	85954877	85954877	+	unknown	FALSE		
+IRF8	IRF8_E115	hotspot	missense	16	85942764	85942764	+	unknown	FALSE		
+IRF8	IRF8_Q118	hotspot	missense	16	85942773	85942774	+	unknown	FALSE		
+ITPKB	ITPKB_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	1	1	300000000			TRUE		
+KLF2	KLF2_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	19	1	300000000			TRUE		
+KLF2	KLF2_H210	hotspot	missense	19	16436578	16436579			TRUE		
+KLF2	KLF2_256-259	hotspot	missense	19	16436719	16436726			TRUE		
+KLF2	KLF2_269-278	hotspot	missense	19	16436755	16436784			TRUE		
+KLHL14	KLHL14_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	18	1	300000000			TRUE		
+KLHL14	KLHL14_90-92	hotspot	missense,inframe	18	30350279	30350281			TRUE		
+KLHL14	KLHL14_216-218	hotspot	missense	18	30349902	30349909			TRUE		
+KLHL14	KLHL14_L225	hotspot	missense	18	30349882	30349882			TRUE		
+KLHL14	KLHL14_E235	hotspot	missense	18	30349850	30349852			TRUE		
+KLHL14	KLHL14_W245	hotspot	missense	18	30349820	30349820			TRUE		
+KLHL6	KLHL6_trunc	truncation	trunc	3	1	300000000			TRUE		
+KLHL6	KLHL6_BTB	region	missense	3	183273153	183273402			TRUE		
+KLHL6	KLHL6_L65	hotspot	missense	3	183273248	183273248			TRUE		
+KLHL6	KLHL6_E547	hotspot	missense	3	183209941	183209942			TRUE		
+KMT2D	KMT2D_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	12	1	300000000	-	LOF	TRUE		
+KRAS	KRAS_G13	hotspot	missense	12	25398281	25398282	-	GOF	TRUE		
+KRAS	KRAS_G12	hotspot	missense	12	25398284	25398285	-	GOF	TRUE		
+KRAS	KRAS_Q61	hotspot	missense	12	25380275	25380277	-	GOF	TRUE		
+KRAS	KRAS_A146	hotspot	missense	12	25378561	25378562	-	GOF	TRUE		
+KRAS	KRAS_Q22	hotspot	missense	12	25398254	25398255	-	GOF	TRUE		
+KRAS	KRAS_K117	hotspot	missense	12	25378647	25378649	-	GOF	TRUE		
+KRAS	KRAS_A59	hotspot	missense	12	25380282	25380283	-	GOF	TRUE		
+KRAS	KRAS_L19	hotspot	missense	12	25398262	25398262	-	GOF	TRUE		
+KRAS	KRAS_D119	hotspot	missense	12	25378642	25378643	-	GOF	TRUE		
+LCOR	LCOR_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	10	1	300000000		LOF	TRUE		
+MAP2K1	MAP2K1_kinase	region	missense,inframe	15	66727453	66782847	+	GOF	TRUE		
+MAP2K1	MAP2K1_F53	hotspot	missense	15	66727441	66727443		GOF	FALSE	30341394	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_K57	hotspot	missense	15	66727453	66727455	+	GOF	FALSE	25351745	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_C121	hotspot	missense	15	66729153	66729154	+	GOF	FALSE	25899310	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_E203	hotspot	missense	15	66774131	66774131	+	GOF	FALSE	39806853	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_Q56	hotspot	missense	15	66727450	66727452	+	GOF	FALSE	36442478	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_V60E	hotspot	missense	15	66727462	66727463	+	GOF	FALSE	28263969	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_D67N	hotspot	missense	15	66727483	66727485	+	GOF	FALSE	25049390	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_I103	hotspot	missense	15	66729099	66729101	+	GOF	FALSE	12370306	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_N122	hotspot	missense	15	66729156	66729158	+	GOF	FALSE	32641410	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_P124	hotspot	missense	15	66729162	66729163	+	GOF	FALSE	29483135	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_G128	hotspot	missense	15	66729173	66729175	+	GOF	FALSE	34726260	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MAP2K1	MAP2K1_Y130	hotspot	missense	15	66729180	66729181	+	GOF	FALSE	39313591	MAP2K1 hotspot mutations such as K57, D67, C121 and G128 activate MEK1 by disrupting autoinhibitory structural elements, promoting constitutive ERK signalling independent of upstream RAF activation
+MEF2B	MEF2B_MADS	region	missense,inframe	19	19258640	19261541	-	NEO	TRUE	PMC3954820	MEF2B hotspot mutations derepress transcription by uncoupling DNA binding from normal co-repressor control.
+MEF2B	MEF2B_trunc	truncation	trunc,splicesite,spliceregion	19	1	300000000	-	GOF	TRUE	39179580	MEF2B truncations cause a gain of transcriptional output via loss of inhibitory control
+MTOR	MTOR_I2500	hotspot	missense	1	11169376	11169377			TRUE		
+MYC	MYC_mycbox	region	missense,inframe	8	128750677	128750696	+	GOF	TRUE		MYC hotspot mutations are gain-of-function mutations that increase MYC protein stability by disrupting phosphodegron-mediated degradation.
+MYD88	MYD88_L265P	hotspot	missense	3	38182641	38182641	+	GOF	TRUE	29925955	MYD88 L265P promotes formation of an oncogenic MYD88–TLR9–BCR signalling supercomplex that constitutively activates NF-κB signalling
+NFKBIA	NFKBIA_trunc	truncation	trunc,splicesite,spliceregion,startloss	14	1	300000000			TRUE		
+NFKBIE	NFKBIE_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300000000	-	LOF	TRUE		
+NFKBIZ	NFKBIZ_UTR	region	utr_3	3	101578214	101578365	+	GOF	TRUE		
+NOTCH1	NOTCH1_PEST	region	trunc,splicesite,spliceregion	9	1	139396897	-	GOF	TRUE		NOTCH1 PEST domain mutations act as gain-of-function alterations by disrupting FBXW7-mediated degradation of the NOTCH1 intracellular domain, resulting in prolonged nuclear signalling and sustained transcriptional activation
+NOTCH2	NOTCH2_PEST	region	trunc	1	1	120459150	-	GOF	TRUE		
+POU2AF1	POU2AF1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	11	1	300000000	-	LOF	TRUE		
+POU2F2	POU2F2_T223	hotspot	missense,inframe	19	42600029	42600030	-	NEO	TRUE		
+POU2F2	POU2F2_Q238	hotspot	missense,inframe	19	42600031	42600031			TRUE		
+POU2F2	POU2F2_T239	hotspot	missense,inframe	19	42600030	42600030			TRUE		
+PRDM1	PRDM1_trunc	truncation	trunc,splicesite,spliceregion	6	1	300000000	+	LOF	TRUE		
+PTEN	PTEN_S10	hotspot	missense	10	89624254	89624256	+	LOF	TRUE		
+PTEN	PTEN_K6	hotspot	missense	10	89624242	89624244	+	LOF	TRUE		
+PTEN	PTEN_F347	hotspot	missense	10	89725057	89725057	+	LOF	TRUE		
+PTEN	PTEN_D24	hotspot	missense	10	89624296	89624298	+	LOF	TRUE		
+PTEN	PTEN_Y27	hotspot	missense	10	89624305	89624305	+	LOF	TRUE		
+PTEN	PTEN_R15	hotspot	missense	10	89624269	89624269	+	LOF	TRUE		
+PTEN	PTEN_Y16	hotspot	missense	10	89624272	89624273	+	LOF	TRUE		
+PTEN	PTEN_N276	hotspot	missense	10	89720677	89720677	+	LOF	TRUE		
+PTEN	PTEN_R130	hotspot	missense	10	89692904	89692905	+	LOF	TRUE		
+PTEN	PTEN_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	10	1	300000000	+	LOF	TRUE		
+RB1	RB1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	13	1	300000000	+	LOF	TRUE		
+RB1	RB1_S567	hotspot	missense	13	49027133	49027133	+	LOF	TRUE		
+RB1	RB1_R621	hotspot	missense	13	49030386	49030387	+	unknown	TRUE		
+RHOA	RHOA_G17	hotspot	missense,inframe	3	49412973	49412973			TRUE		
+RHOA	RHOA_5-6	hotspot	missense,inframe	3	49413007	49413010			TRUE		
+RHOA	RHOA_Switch	hotspot	missense,inframe	3	49405879	49405966			TRUE	AA 61-78	
+RHOA	RHOA_Effector	hotspot	missense,inframe	3	49412892	49412935			TRUE	AA 30-44	
+SGK1	SGK1_trunc	truncation	trunc,splicesite,spliceregion	6	134492254	134495732	-	GOF	TRUE	33988691	
+STAT3	STAT3_D566	hotspot	missense	17	40475328	40475330	-	LOF	TRUE	26553978	dominant negative
+STAT3	STAT3_N567	hotspot	missense	17	40475325	40475325	-	LOF	TRUE		
+STAT3	STAT3_D570	hotspot	missense	17	40475317	40475318	-	LOF	TRUE	PMC4672786	dominant negative
+STAT3	STAT3_S614	hotspot	missense	17	40475068	40475070	-	GOF	TRUE	25709890	
+STAT3	STAT3_E616	hotspot	missense,inframe	17	40475062	40475064	-	GOF	TRUE	29378236)	
+STAT3	STAT3_V637	hotspot	missense	17	40474491	40474492		unknown	TRUE		
+STAT3	STAT3_Y640	hotspot	missense	17	40474482	40474483	-	GOF	TRUE		canonical activating mutation
+STAT3	STAT3_N647	hotspot	missense	17	40474461	40474462			TRUE		
+STAT3	STAT3_K658	hotspot	missense	17	40474423	40474427		GOF	TRUE	 27345172	activating
+STAT3	STAT3_I659	hotspot	missense	17	40474425	40474426		unknown	TRUE		
+STAT3	STAT3_D661	hotspot	missense	17	40474419	40474420	-	GOF	TRUE		activating
+STAT3	STAT3_P715	hotspot	missense	17	40469200	40469201	-	GOF	TRUE	36446385	 The most frequent germline mutations causing STAT3 GOF syndrome are T716M and P715 L in 17% and 12% of patients, respectively
+STAT3	STAT3_trunc	truncation	trunc,splicesite,spliceregion	17	1	300000000		LOF	TRUE		
+STAT6	STAT6_DBD	region	missense,inframe	12	57496650	57498340	-	GOF	TRUE		
+TBL1XR1	TBL1XR1_Y446	hotspot	missense,inframe	3	176750838	176750839	-	NEO	TRUE	32619424	TBL1XR1 hotspot mutations promote lymphomagenesis by reprogramming SMRT/HDAC3 corepressor targeting, enforcing an aberrant memory B-cell transcriptional state that drives repeated germinal-centre re-entry
+TBL1XR1	TBL1XR1_WD40	region	missense,inframe	3	1	176750837	-	unknown	TRUE		
+TBL1XR1	TBL1XR1_WD40	region	missense,inframe	3	176750840	176768393	-	unknown	TRUE		
+TET2	TET2_trunc	truncation	trunc,splicesite,spliceregion	4	1	300000000	+	LOF	TRUE		
+TET2	TET2_R1261	hotspot	missense	4	106164913	106164914	+	LOF	TRUE		
+TET2	TET2_C1193	hotspot	missense	4	106164068	106164068	+	LOF	TRUE		
+TET2	TET2_R1214	hotspot	missense	4	106164772	106164773	+	LOF	TRUE		
+TET2	TET2_R1261	hotspot	missense	4	106164913	106164914	+	LOF	TRUE		
+TET2	TET2_R1896	hotspot	missense	4	106197353	106197355	+	LOF	TRUE		
+TMEM30A	TMEM30A_trunc	truncation	trunc,splicesite,spliceregion,startloss	6	1	300000000	-	LOF	TRUE		
+TNFAIP3	TNFAIP3_trunc	truncation	trunc,splicesite,spliceregion	6	1	300000000	+	LOF	TRUE		
+TNFRSF14	TNFRSF14_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	1	1	300000000	+	LOF	TRUE		
+TOX	TOX_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	8	1	300000000	-	LOF	TRUE		
+TP53	TP53_Y220	hotspot	missense,inframe	17	7578190	7578191	-	LOF	TRUE	PMID: 23315175	
+TP53	TP53_Y234	hotspot	missense,inframe	17	7577580	7577581	+		TRUE		
+TP53	TP53_LSH1	region	missense,inframe	17	7578525	7579332	-	LOF	TRUE	PMC2569165	
+TP53	TP53_LoopL3	region	missense,inframe	17	7577532	7577572	-	LOF	TRUE		
+TP53	TP53_LoopL2	region	missense,inframe	17	7578268	7578440	-	LOF	TRUE		
+TP53	TP53_LSH2	region	missense,inframe	17	7577077	7577124	-	LOF	TRUE		
+TP53	TP53_trunc	truncation	trunc	17	1	300000000	-	LOF	TRUE		
+TP53	TP53_R175	hotspot	missense,inframe	17	7578406	7578406	-	LOF	TRUE		
+TP53	TP53_R248	hotspot	missense,inframe	17	7577538	7577539	-	LOF	TRUE		
+TP53	TP53_R282	hotspot	missense,inframe	17	7577094	7577094	-	LOF	TRUE		
+TP53	TP53_R273	hotspot	missense,inframe	17	7577120	7577121	-	LOF	TRUE		
+TP53	TP53_G245	hotspot	missense,inframe	17	7577547	7577548	-	LOF	TRUE		

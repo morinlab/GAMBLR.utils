@@ -1,4 +1,4 @@
-#' Assemble genetic features
+ #' Assemble genetic features
 #'
 #' Build a sample-by-feature matrix from a MAF by annotating curated drivers,
 #' summarizing coding/non-coding status, and collapsing per-gene columns.
@@ -149,89 +149,243 @@ assemble_genetic_features <- function(unannotated_maf,
 
 #' @title Summarize mutation status
 #'
-#' @description Create a wide sample-by-variant matrix summarizing coding,
-#' driver, and hotspot-level mutation status from an annotated MAF.
+#' @description Build a wide sample-by-feature binary (or weighted) matrix from
+#' an annotated MAF. Each column represents one feature — either a gene-level
+#' summary or a specific mutation alias — and each cell contains a numeric
+#' indicator defined by \code{encoding_policy} (0 = absent, non-zero = present).
 #'
-#' @details This function expects output from \code{annotate_curated_drivers()}
-#' (or equivalent) with \code{mutation_alias} and \code{driver_alias}
-#' columns. It produces a wide matrix with 0/1 indicators for each
-#' sample-variant combination, including per-gene coding status, driver status,
-#' and granular hotspot aliases. Indicator values are controlled by
-#' \code{encoding_policy}. If you want to collapse multiple columns for a gene
-#' into a single summary column (e.g., \code{MYC_any}), see
-#' \code{collapse_columns_by_regex()}.
+#' @details
+#' ## Input requirements
+#' The input must be the output of \code{\link{annotate_curated_drivers}}, which
+#' adds the \code{driver_alias}, \code{mutation_alias}, \code{mutation_alias_all},
+#' and \code{hotspot_alias} columns used here.
 #'
-#' @param annotated_maf A data frame in MAF format that includes
-#' \code{Hugo_Symbol}, \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
-#' \code{mutation_alias}, and \code{driver_alias}.
-#' @param genes_coding Optional character vector of genes to include in the
-#' coding summary. Defaults to Tier 1 lymphoma genes.
-#' @param genes_noncoding Optional character vector of genes to include for
-#' non-coding mutation summaries. If NULL, non-coding mutations are not included.
-#' @param gene_reporting_policy Optional named list defining per-gene reporting
-#' mode. Valid keys are \code{detailed} (granular alias columns) and \code{coding}
-#' (keep only \code{GENE_coding}). Genes not listed default to driver/unknown.
+#' ## Column naming conventions
+#' The function produces columns named \code{GENE_suffix}, where the suffix
+#' depends on the gene's reporting policy:
+#'
+#' \describe{
+#'   \item{\code{GENE_coding}}{Any mutation present in the gene (the base
+#'     indicator). Produced for genes with no driver annotations, genes under
+#'     the \code{coding} policy, genes under the \code{detailed} policy that
+#'     lack alias annotations (fallback), and genes under the \code{maximal}
+#'     policy.}
+#'   \item{\code{GENE_driver} / \code{GENE_other}}{Produced for genes that have
+#'     driver alias annotations (e.g. \code{MYD88_L265P}, \code{MYD88_other}).
+#'     \code{_driver} columns reflect the specific annotated driver alias;
+#'     \code{_other} is the catch-all for unannotated mutations.}
+#'   \item{Per-alias columns (e.g. \code{EZH2_Y641}, \code{EZH2_other})}{
+#'     Produced for genes under the \code{detailed} or \code{maximal} policy
+#'     when \code{mutation_alias_all} or \code{hotspot_alias} entries exist.}
+#'   \item{\code{GENE_noncoding}}{Produced when the gene appears in
+#'     \code{genes_noncoding}. Counts mutations with
+#'     \code{Variant_Classification} NOT in \code{vc_nonSynonymous} (i.e.
+#'     Silent, UTR, Flank). The input MAF must include these classes.}
+#'   \item{\code{GENE_any}}{Produced only for genes under the \code{maximal}
+#'     policy. The element-wise maximum across all \code{GENE_*} columns for
+#'     that gene, including \code{GENE_noncoding} when the gene is also in
+#'     \code{genes_noncoding}.}
+#' }
+#'
+#' ## Default reporting behaviour
+#' Genes with driver alias annotations (i.e. \code{driver_alias} contains a
+#' \code{_driver} suffix entry) produce \code{GENE_driver}/\code{GENE_other}
+#' columns and do \strong{not} get a \code{GENE_coding} column. Genes without
+#' driver annotations produce only \code{GENE_coding}. Use
+#' \code{gene_reporting_policy} to override this per gene.
+#'
+#' ## Policy interactions with \code{genes_coding}
+#' Genes listed under any \code{gene_reporting_policy} key are automatically
+#' added to the internal coding gene universe regardless of whether they appear
+#' in \code{genes_coding}. This means you do not need to manually add policy
+#' genes to \code{genes_coding}.
+#'
+#' @param annotated_maf A data frame in MAF format produced by
+#'   \code{\link{annotate_curated_drivers}}. Must include \code{Hugo_Symbol},
+#'   \code{Tumor_Sample_Barcode}, \code{Variant_Classification},
+#'   \code{driver_alias}, \code{mutation_alias}, \code{mutation_alias_all},
+#'   and \code{hotspot_alias}.
+#' @param genes_coding Optional character vector of genes for which to produce
+#'   \code{GENE_coding} or driver-alias columns. Defaults to all Tier 1
+#'   lymphoma genes. Genes from \code{gene_reporting_policy} are unioned into
+#'   this set automatically.
+#' @param genes_noncoding Optional character vector of genes for which to also
+#'   count non-coding mutations. Produces a \code{GENE_noncoding} column.
+#'   When \code{noncoding_maf} is \code{NULL}, non-coding mutations are taken
+#'   from \code{annotated_maf} by excluding rows whose
+#'   \code{Variant_Classification} is in \code{vc_nonSynonymous} (Silent, UTR,
+#'   Flank), so the input MAF must include those classes. When
+#'   \code{noncoding_maf} is provided, all rows in that MAF for genes in
+#'   \code{genes_noncoding} are counted regardless of
+#'   \code{Variant_Classification}. Default \code{NULL} (no non-coding
+#'   columns).
+#' @param noncoding_maf Optional MAF data frame supplying non-coding mutations
+#'   separately from \code{annotated_maf}. Must contain at least
+#'   \code{Hugo_Symbol} and \code{Tumor_Sample_Barcode}. Intended for
+#'   region-restricted non-coding mutation sets (e.g. aSHM hotspot windows)
+#'   where extracting non-coding variants for all genes from a single MAF
+#'   would be inefficient. When provided, every row whose \code{Hugo_Symbol}
+#'   is in \code{genes_noncoding} contributes to the \code{GENE_noncoding}
+#'   count; no \code{Variant_Classification} filter is applied. Ignored if
+#'   \code{genes_noncoding} is \code{NULL}. Default \code{NULL}.
+#' @param gene_reporting_policy Optional named list controlling per-gene column
+#'   output. Valid keys:
+#'   \describe{
+#'     \item{\code{detailed}}{Produce per-alias columns (from
+#'       \code{mutation_alias_all} and \code{hotspot_alias}) plus a
+#'       \code{GENE_other} catch-all for mutations that match no alias.
+#'       Genes with no alias data at all fall back to \code{_coding} with a
+#'       warning.}
+#'     \item{\code{coding}}{Produce only \code{GENE_coding}, suppressing
+#'       driver-alias columns. Useful to coarsen a gene that has driver
+#'       annotations but where you do not want alias-level resolution.}
+#'     \item{\code{maximal}}{Produce the full column set: \code{GENE_coding},
+#'       per-alias columns, \code{GENE_driver}/\code{GENE_other}, and
+#'       \code{GENE_any}. If the gene is also in \code{genes_noncoding},
+#'       \code{GENE_noncoding} is included in \code{GENE_any}.}
+#'   }
+#'   A gene may appear under only one key. Default \code{NULL} (all genes use
+#'   the default driver/coding behaviour).
 #' @param genes_drop_unannotated Optional character vector of genes for which
-#' catch-all columns (e.g. \code{GENE_other}) should be dropped from the output.
-#' Mutually exclusive with \code{gene_drop_policy}.
-#' @param gene_drop_policy Optional named list defining gene drop policies, e.g.
-#' \code{list(all = c("IGLL5"), unannotated = c("KMT2D"))}. Valid keys are
-#' \code{all} (drop all columns for those genes) and \code{unannotated} (drop only
-#' catch-all columns). Mutually exclusive with \code{genes_drop_unannotated}.
-#' @param encoding_policy Named list controlling the numeric values used for
-#' coding, non-coding, and driver indicators. Default is
-#' \code{list(coding = 2, noncoding = 1, driver = 2)}.
-#' @param verbose Logical. If TRUE, prints messages describing which columns
-#' will be dropped based on reporting and drop policies.
+#'   the catch-all \code{GENE_other} column should be removed from the output.
+#'   Shorthand for \code{gene_drop_policy = list(unannotated = ...)}.
+#'   Mutually exclusive with \code{gene_drop_policy}.
+#' @param gene_drop_policy Optional named list with keys \code{all} and/or
+#'   \code{unannotated}. \code{all}: remove every \code{GENE_*} column for the
+#'   listed genes. \code{unannotated}: remove only the \code{GENE_other}
+#'   catch-all column. Mutually exclusive with \code{genes_drop_unannotated}.
+#' @param genes_use_counts Optional character vector of gene symbols for which
+#'   every \code{GENE_*} column reports the raw number of distinct mutation
+#'   occurrences observed in that sample, instead of the fixed
+#'   \code{encoding_policy} value. For example, if a sample has 3 separate
+#'   \code{KMT2D_trunc} mutations, \code{KMT2D_trunc} is \code{3} for that
+#'   sample rather than \code{encoding_policy$driver}. Genes not listed here
+#'   are unaffected and continue to use \code{encoding_policy} as usual. Under
+#'   the \code{maximal} policy, \code{GENE_any} is still the element-wise
+#'   maximum across that gene's columns, so it becomes the largest single
+#'   per-feature count rather than a binary indicator. Default \code{NULL}
+#'   (all genes use \code{encoding_policy}).
+#' @param encoding_policy Named list of numeric values for each indicator type.
+#'   Default \code{list(coding = 2, noncoding = 1, driver = 2)}. Setting all
+#'   values to 1 produces a standard binary 0/1 matrix.
+#' @param use_all_aliases Logical. If \code{TRUE} (default), per-alias columns
+#'   are built from \code{mutation_alias_all} (semicolon-separated specific
+#'   aliases, no catch-alls). If \code{FALSE}, uses \code{mutation_alias}
+#'   (which may contain \code{GENE_other} catch-all values and produce fewer
+#'   specific alias columns).
+#' @param include_hotspot_alias Logical. If \code{TRUE} (default), also builds
+#'   alias columns from \code{hotspot_alias} for genes under the \code{detailed}
+#'   or \code{maximal} policy, and for all other annotated genes via a separate
+#'   \code{hotspot_count} table. Default \code{TRUE}.
+#' @param verbose Logical. If \code{TRUE}, prints messages about which policy
+#'   and drop decisions are being applied. Default \code{FALSE}.
+#' @param these_samples_metadata Optional data frame with a \code{sample_id}
+#'   column defining the complete sample universe. When supplied: (1) any
+#'   \code{Tumor_Sample_Barcode} in the MAF that is absent from
+#'   \code{sample_id} is dropped with a warning; (2) every \code{sample_id}
+#'   present in the metadata receives a row in the output, filled with 0 for
+#'   all features if no mutations were observed. Default \code{NULL} (sample
+#'   universe derived from the MAF).
 #'
-#' @return A wide data frame (matrix-like) with rows as samples and columns as
-#' variant categories, containing numeric indicators defined by
-#' \code{encoding_policy}.
+#' @return A data frame with one row per sample (row names = sample IDs) and
+#'   one column per feature. Cell values are 0 (absent) or a positive integer
+#'   set by \code{encoding_policy}. Column types that may appear:
+#'   \code{GENE_coding}, \code{GENE_noncoding}, \code{GENE_driver},
+#'   \code{GENE_other}, per-alias columns (e.g. \code{EZH2_Y641}),
+#'   \code{GENE_any} (maximal policy only).
 #'
 #' @import dplyr tidyr
 #' @export
 #'
 #' @examples
 #' \dontrun{
+#' # Basic usage: default Tier 1 genes, driver-alias columns where available
 #' maf = GAMBLR.open::get_coding_ssm(
 #'   these_samples_metadata = GAMBLR.open::get_gambl_metadata(),
 #'   this_seq_type = "capture"
 #' )
 #' maf_anno = annotate_curated_drivers(maf)
-#' summary_mat = summarise_mutation_status(maf_anno)
-#' summary_mat[1:5, 1:5]
+#' mat = summarise_mutation_status(maf_anno)
+#' # Each row is a sample; columns like MYD88_L265P, MYD88_other, TP53_coding
+#' mat[1:5, 1:8]
 #' }
 #'
 #' \dontrun{
+#' # Per-gene reporting policies:
+#' #   EZH2 -> maximal: gets _coding, per-alias, _driver, _other, _any columns
+#' #   MYD88 -> detailed: gets only per-alias columns (MYD88_L265P, etc.)
+#' #   NOTCH1 -> coding: collapses everything to a single NOTCH1_coding column
+#' # Genes not listed (TP53, KMT2D, ...) use default driver/coding behaviour.
+#' # Drop the unannotated catch-all for KMT2D to keep only annotated drivers.
 #' maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm())
-#' summary_mat = summarise_mutation_status(
+#' mat = summarise_mutation_status(
 #'   maf_anno,
-#'   genes_coding = c("MYD88","NOTCH1","FOXO1"),
-#'   gene_reporting_policy = list(detailed = c("FOXO1"), coding = c("EZH2")),
-#'   genes_drop_unannotated = c("NOTCH1")
+#'   gene_reporting_policy = list(
+#'     maximal  = c("EZH2"),
+#'     detailed = c("MYD88"),
+#'     coding   = c("NOTCH1")
+#'   ),
+#'   gene_drop_policy = list(unannotated = c("KMT2D"))
 #' )
+#' grep("EZH2", colnames(mat), value = TRUE)
+#' # [1] "EZH2_coding" "EZH2_Y641"  "EZH2_A677"  "EZH2_driver" "EZH2_other" "EZH2_any"
 #' }
 #'
 #' \dontrun{
-#' # Include selected non-coding genes and custom indicator values
-#' maf_anno = annotate_curated_drivers(GAMBLR.open::get_coding_ssm(include_silent=TRUE))
-#' summary_mat = summarise_mutation_status(
+#' # Non-coding mutations for aSHM target genes.
+#' # The input MAF must include non-coding variant classes (Silent, UTR, Flank).
+#' maf_full = GAMBLR.open::get_ssm_by_samples(
+#'   these_samples_metadata = GAMBLR.open::get_gambl_metadata(),
+#'   coding_only = FALSE
+#' )
+#' maf_anno = annotate_curated_drivers(maf_full)
+#' mat = summarise_mutation_status(
 #'   maf_anno,
-#'   genes_noncoding = c("PIM1","SOCS1"),
-#'   encoding_policy = list(coding = 2, noncoding = 1, driver = 1)
+#'   genes_noncoding = c("PIM1", "SOCS1", "BCL6"),
+#'   # use binary encoding for all indicator types
+#'   encoding_policy = list(coding = 1, noncoding = 1, driver = 1)
+#' )
+#' # PIM1_coding: any coding mutation in PIM1
+#' # PIM1_noncoding: Silent/UTR/Flank mutations in PIM1
+#' grep("PIM1", colnames(mat), value = TRUE)
+#' }
+#'
+#' \dontrun{
+#' # Report raw occurrence counts for KMT2D instead of the encoding_policy
+#' # value. A sample with 3 separate KMT2D_trunc mutations gets 3, not 2.
+#' # All other genes are unaffected and still use encoding_policy.
+#' mat = summarise_mutation_status(
+#'   maf_anno,
+#'   genes_use_counts = c("KMT2D")
 #' )
 #' }
 #'
 summarise_mutation_status = function(annotated_maf,
                                      genes_coding = NULL,
                                      genes_noncoding = NULL,
+                                     noncoding_maf = NULL,
                                      gene_reporting_policy = NULL,
                                      genes_drop_unannotated = NULL,
                                      gene_drop_policy = NULL,
                                      encoding_policy = list(coding = 2, noncoding = 1, driver = 2),
+                                     genes_use_counts = NULL,
                                      use_all_aliases = TRUE,
                                      include_hotspot_alias = TRUE,
-                                     verbose = FALSE){
+                                     verbose = FALSE,
+                                     these_samples_metadata = NULL){
+
+  # per-row "mutated" value: the raw occurrence count for genes listed in
+  # genes_use_counts, otherwise the fixed encoding_policy value. Gene is
+  # recovered from the variant name's prefix (e.g. "KMT2D_trunc" -> "KMT2D"),
+  # which holds for both GENE_<suffix> columns and alias strings alike.
+  resolve_mutated_value = function(variant, n, policy_value, genes_use_counts){
+    if(is.null(genes_use_counts) || length(genes_use_counts) == 0){
+      return(rep(policy_value, length(variant)))
+    }
+    gene = sub("_.*$", "", variant)
+    ifelse(gene %in% genes_use_counts, n, policy_value)
+  }
+
   if(is.null(genes_coding)){
     genes_coding = lymphoma_genes %>%
     dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
@@ -251,9 +405,17 @@ summarise_mutation_status = function(annotated_maf,
   if(is.null(coding_policy_genes)){
     coding_policy_genes = character(0)
   }
+  maximal_genes = gene_reporting_policy$maximal
+  if(is.null(maximal_genes)){
+    maximal_genes = character(0)
+  }
   overlap = intersect(detailed_genes, coding_policy_genes)
   if(length(overlap) > 0){
     stop(paste0("Genes cannot be in both gene_reporting_policy$detailed and $coding: ", paste(overlap, collapse=", ")))
+  }
+  overlap = intersect(maximal_genes, union(detailed_genes, coding_policy_genes))
+  if(length(overlap) > 0){
+    stop(paste0("Genes cannot be in gene_reporting_policy$maximal and another policy: ", paste(overlap, collapse=", ")))
   }
 
   if(verbose){
@@ -263,6 +425,9 @@ summarise_mutation_status = function(annotated_maf,
     }
     if(length(coding_policy_genes) > 0){
       message("Will keep _coding columns (and drop driver/other and detailed) for genes: ", paste(coding_policy_genes, collapse = ", "))
+    }
+    if(length(maximal_genes) > 0){
+      message("Will produce maximal columns (_coding, _driver, _other, aliases, _any) for genes: ", paste(maximal_genes, collapse = ", "))
     }
   }
 
@@ -284,20 +449,40 @@ summarise_mutation_status = function(annotated_maf,
   }
 
 
+  # ── sample universe from metadata ─────────────────────────────────────────
+  meta_sample_ids = NULL
+  if (!is.null(these_samples_metadata)) {
+    if (!"sample_id" %in% colnames(these_samples_metadata)) {
+      stop("these_samples_metadata must contain a 'sample_id' column.")
+    }
+    meta_sample_ids = these_samples_metadata$sample_id
+    extra = setdiff(unique(annotated_maf$Tumor_Sample_Barcode), meta_sample_ids)
+    if (length(extra) > 0) {
+      warning(
+        length(extra), " Tumor_Sample_Barcode(s) in MAF absent from metadata; dropped."
+      )
+      annotated_maf = dplyr::filter(annotated_maf, Tumor_Sample_Barcode %in% meta_sample_ids)
+    }
+  }
+
   #expects the output of Annotate curated drivers
-  #drop Silent and hang onto them for later
   if(!is.null(genes_noncoding) && length(genes_noncoding) > 0){
 
-    noncoding_maf = dplyr::filter(annotated_maf, ! Variant_Classification %in% vc_nonSynonymous,Hugo_Symbol %in% genes_noncoding)
+    noncoding_source = if (!is.null(noncoding_maf)) {
+      dplyr::filter(noncoding_maf, Hugo_Symbol %in% genes_noncoding)
+    } else {
+      dplyr::filter(annotated_maf,
+                    !Variant_Classification %in% vc_nonSynonymous,
+                    Hugo_Symbol %in% genes_noncoding)
+    }
 
-    noncoding_count = noncoding_maf %>%
+    noncoding_count = noncoding_source %>%
       dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-      unique() %>%
+      dplyr::count(Hugo_Symbol, Tumor_Sample_Barcode, name = "n") %>%
       mutate(Variant=paste0(Hugo_Symbol,"_noncoding")) %>%
-      ungroup() %>%
       dplyr::select(-Hugo_Symbol) %>%
-      mutate(mutated = encoding_policy$noncoding) # will fill missing with 0 at the join stage
+      mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$noncoding, genes_use_counts)) %>%
+      dplyr::select(-n) # will fill missing with 0 at the join stage
 
   }
 
@@ -310,30 +495,42 @@ summarise_mutation_status = function(annotated_maf,
   # - non-drivers
   # - each distinct hotspot
 
+  # genes under any reporting policy must be in coding_maf so that detailed-policy
+  # genes with no aliases can fall back to _coding and coding-policy genes are
+  # always represented
+  genes_coding = union(genes_coding,
+                       union(detailed_genes, union(coding_policy_genes, maximal_genes)))
+
   coding_maf = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% genes_coding) %>%
     strip_genomic_classes()
 
   
 
+  # detailed_maf: detailed_genes only (used for skip_genes_coding fallback check)
   detailed_maf = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% detailed_genes)
 
-  if(use_all_aliases && "mutation_alias_all" %in% colnames(detailed_maf)){
-    detailed_alias_long = detailed_maf %>%
+  # alias_maf: detailed + maximal genes both get per-alias columns
+  alias_genes = union(detailed_genes, maximal_genes)
+  alias_maf = coding_maf %>%
+    dplyr::filter(Hugo_Symbol %in% alias_genes)
+
+  if(use_all_aliases && "mutation_alias_all" %in% colnames(alias_maf)){
+    detailed_alias_long = alias_maf %>%
       dplyr::select(mutation_alias_all, Tumor_Sample_Barcode) %>%
       tidyr::separate_rows(mutation_alias_all, sep = ";") %>%
       dplyr::mutate(mutation_alias_all = trimws(mutation_alias_all)) %>%
       dplyr::filter(!is.na(mutation_alias_all), mutation_alias_all != "") %>%
       dplyr::rename(mutation_alias = mutation_alias_all)
   }else{
-    detailed_alias_long = detailed_maf %>%
+    detailed_alias_long = alias_maf %>%
       dplyr::select(mutation_alias, Tumor_Sample_Barcode) %>%
       dplyr::filter(!is.na(mutation_alias), mutation_alias != "")
   }
 
-  if(include_hotspot_alias && "hotspot_alias" %in% colnames(detailed_maf)){
-    hotspot_alias_long = detailed_maf %>%
+  if(include_hotspot_alias && "hotspot_alias" %in% colnames(alias_maf)){
+    hotspot_alias_long = alias_maf %>%
       dplyr::select(hotspot_alias, Tumor_Sample_Barcode) %>%
       dplyr::filter(!is.na(hotspot_alias), hotspot_alias != "") %>%
       dplyr::rename(mutation_alias = hotspot_alias)
@@ -341,10 +538,11 @@ summarise_mutation_status = function(annotated_maf,
   }
 
   detailed_driver_count = detailed_alias_long %>%
-    group_by(mutation_alias, Tumor_Sample_Barcode) %>%
-    unique() %>%
+    dplyr::count(mutation_alias, Tumor_Sample_Barcode, name = "n") %>%
     rename(Variant=mutation_alias) %>%
-    mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
+    mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>%
+    dplyr::select(-n) # will fill missing with 0 at the join stage
+
   driver_report_genes = dplyr::filter(coding_maf, grepl("_driver", driver_alias)) %>%
     pull(Hugo_Symbol) %>%
     unique()
@@ -354,41 +552,121 @@ summarise_mutation_status = function(annotated_maf,
   if(length(coding_policy_genes) > 0){
     driver_report_genes = setdiff(driver_report_genes, coding_policy_genes)
   }
+  if(length(maximal_genes) > 0){
+    driver_report_genes = setdiff(driver_report_genes, maximal_genes)
+  }
   driver_count = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% driver_report_genes) %>%
     dplyr::select(driver_alias, Tumor_Sample_Barcode) %>%
-    group_by(driver_alias, Tumor_Sample_Barcode) %>%
-    unique() %>%
+    dplyr::count(driver_alias, Tumor_Sample_Barcode, name = "n") %>%
     rename(Variant=driver_alias) %>%
-    mutate(mutated = encoding_policy$driver) # will fill missing with 0 at the join stage
-  
+    mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>%
+    dplyr::select(-n) # will fill missing with 0 at the join stage
+
+  # maximal genes: count all driver_alias values (_driver and _other)
+  maximal_driver_count = NULL
+  if(length(maximal_genes) > 0){
+    maximal_driver_count = coding_maf %>%
+      dplyr::filter(Hugo_Symbol %in% maximal_genes,
+                    !is.na(driver_alias), driver_alias != "") %>%
+      dplyr::select(driver_alias, Tumor_Sample_Barcode) %>%
+      dplyr::count(driver_alias, Tumor_Sample_Barcode, name = "n") %>%
+      rename(Variant = driver_alias) %>%
+      mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>%
+      dplyr::select(-n)
+  }
+
   hotspot_count = NULL
   if(include_hotspot_alias && "hotspot_alias" %in% colnames(annotated_maf)){
     hotspot_count = annotated_maf %>%
-      dplyr::filter(!is.na(hotspot_alias), hotspot_alias != "") %>%
+      dplyr::filter(!is.na(hotspot_alias), hotspot_alias != "",
+                    !Hugo_Symbol %in% detailed_genes,
+                    !Hugo_Symbol %in% maximal_genes) %>%
       dplyr::select(hotspot_alias, Tumor_Sample_Barcode) %>%
-      group_by(hotspot_alias, Tumor_Sample_Barcode) %>%
-      unique() %>%
+      dplyr::count(hotspot_alias, Tumor_Sample_Barcode, name = "n") %>%
       rename(Variant=hotspot_alias) %>%
-      mutate(mutated = encoding_policy$driver) # use driver encoding for hotspot
+      mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$driver, genes_use_counts)) %>% # use driver encoding for hotspot
+      dplyr::select(-n)
   }
 
-  skip_genes_coding = union(driver_report_genes, detailed_genes)
+  # only exclude detailed_genes that actually have alias coverage; genes with no
+  # mutation_alias or hotspot_alias in the data fall back to _coding reporting.
+  # use the same column that detailed_alias_long was built from: mutation_alias_all
+  # when use_all_aliases is TRUE (mutation_alias may contain catch-all "_other"
+  # values that produce no rows in detailed_alias_long)
+  if (use_all_aliases && "mutation_alias_all" %in% colnames(detailed_maf)) {
+    has_mutation_alias <- !is.na(detailed_maf$mutation_alias_all) &
+      detailed_maf$mutation_alias_all != ""
+  } else {
+    has_mutation_alias <- !is.na(detailed_maf$mutation_alias) &
+      detailed_maf$mutation_alias != ""
+  }
+  if (include_hotspot_alias && "hotspot_alias" %in% colnames(detailed_maf)) {
+    has_hotspot_alias <- !is.na(detailed_maf$hotspot_alias) &
+      detailed_maf$hotspot_alias != ""
+  } else {
+    has_hotspot_alias <- logical(nrow(detailed_maf))
+  }
+  detailed_genes_with_aliases <- unique(
+    detailed_maf$Hugo_Symbol[has_mutation_alias | has_hotspot_alias]
+  )
+  detailed_genes_fallback <- setdiff(detailed_genes, detailed_genes_with_aliases)
+  if (length(detailed_genes_fallback) > 0) {
+    warning(
+      "No aliases found for detailed genes; falling back to _coding for: ",
+      paste(detailed_genes_fallback, collapse = ", ")
+    )
+  }
+  skip_genes_coding <- union(driver_report_genes, detailed_genes_with_aliases)
+
+  # catch-all for detailed genes: mutations with no alias coverage become GENE_other.
+  # Without this, samples with unannotated mutations in a detailed gene are silently
+  # dropped (they appear 0 in all alias columns and don't get a _coding fallback).
+  detailed_other_count = NULL
+  if (length(detailed_genes_with_aliases) > 0) {
+    detailed_sub = alias_maf %>%
+      dplyr::filter(Hugo_Symbol %in% detailed_genes_with_aliases)
+
+    if (use_all_aliases && "mutation_alias_all" %in% colnames(detailed_sub)) {
+      no_alias = is.na(detailed_sub$mutation_alias_all) | detailed_sub$mutation_alias_all == ""
+    } else {
+      no_alias = is.na(detailed_sub$mutation_alias) |
+                 detailed_sub$mutation_alias == "" |
+                 grepl("_other$", detailed_sub$mutation_alias)
+    }
+    if (include_hotspot_alias && "hotspot_alias" %in% colnames(detailed_sub)) {
+      has_hotspot = !is.na(detailed_sub$hotspot_alias) & detailed_sub$hotspot_alias != ""
+      no_alias = no_alias & !has_hotspot
+    }
+
+    unaliased = detailed_sub[no_alias, ]
+    if (nrow(unaliased) > 0) {
+      detailed_other_count = unaliased %>%
+        dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
+        dplyr::count(Hugo_Symbol, Tumor_Sample_Barcode, name = "n") %>%
+        dplyr::mutate(Variant = paste0(Hugo_Symbol, "_other")) %>%
+        dplyr::select(-Hugo_Symbol) %>%
+        dplyr::mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$coding, genes_use_counts)) %>%
+        dplyr::select(-n)
+    }
+  }
+
   coding_count = coding_maf %>%
     dplyr::filter(!Hugo_Symbol %in% skip_genes_coding) %>%
     dplyr::select(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    group_by(Hugo_Symbol, Tumor_Sample_Barcode) %>%
-    unique() %>%
+    dplyr::count(Hugo_Symbol, Tumor_Sample_Barcode, name = "n") %>%
     mutate(Variant=paste0(Hugo_Symbol,"_coding")) %>%
-    ungroup() %>%
     dplyr::select(-Hugo_Symbol) %>%
-    mutate(mutated = encoding_policy$coding) # will fill missing with 0 at the join stage
+    mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$coding, genes_use_counts)) %>%
+    dplyr::select(-n) # will fill missing with 0 at the join stage
   
   if(!is.null(genes_noncoding) && length(genes_noncoding) > 0){
     long = bind_rows(
       noncoding_count,
       coding_count,
       detailed_driver_count,
+      detailed_other_count,
+      maximal_driver_count,
       driver_count,
       hotspot_count
     )
@@ -396,19 +674,44 @@ summarise_mutation_status = function(annotated_maf,
     long = bind_rows(
       coding_count,
       detailed_driver_count,
+      detailed_other_count,
+      maximal_driver_count,
       driver_count,
       hotspot_count
     )
   }
 
 
-  all_samples = distinct(coding_maf, Tumor_Sample_Barcode)
+  all_samples = if (!is.null(meta_sample_ids)) {
+    tibble::tibble(Tumor_Sample_Barcode = meta_sample_ids)
+  } else {
+    dplyr::distinct(coding_maf, Tumor_Sample_Barcode)
+  }
   all_variants = distinct(long, Variant)
 
   wide = long %>%
     tidyr::complete(all_samples, all_variants, fill = list(mutated = 0)) %>%
     tidyr::pivot_wider(names_from = Variant, values_from = mutated, values_fill = 0) %>%
     column_to_rownames("Tumor_Sample_Barcode")
+
+  # maximal policy: collapse all GENE_* columns into GENE_any; _noncoding is
+  # included automatically if the gene is also in genes_noncoding (it then has
+  # a GENE_noncoding column that matches the regex), otherwise it is excluded
+  if(length(maximal_genes) > 0){
+    maximal_present = intersect(
+      maximal_genes,
+      unique(sub("_[^_]+$", "", colnames(wide)))
+    )
+    if(length(maximal_present) > 0){
+      wide = collapse_columns_by_regex(
+        wide,
+        genes        = maximal_present,
+        suffix       = "_any",
+        drop_sources = FALSE,
+        agg_fn       = max
+      )
+    }
+  }
 
   if(length(gene_drop_policy) > 0){
     drop_cols = character(0)
@@ -808,6 +1111,7 @@ annotate_curated_drivers = function(maf_data,
                            existing_values_action = "clobber",
                            class_priority = c("hotspot", "truncation", "region")){
   original_has_maf_class = "maf_data" %in% class(maf_data)
+  annotated_maf = strip_genomic_classes(maf_data)
   if(missing(genome_build)){
     if("maf_data" %in% class(maf_data)){
       genome_build = get_genome_build(maf_data)
@@ -953,6 +1257,7 @@ annotate_curated_drivers = function(maf_data,
       dplyr::mutate(
         hot_spot = "FALSE",
         driver = "FALSE",
+        mutation_alias = paste0(Hugo_Symbol, "_other"),
         mutation_alias_all = NA_character_,
         hotspot_alias = NA_character_,
         driver_alias = paste0(Hugo_Symbol, "_other")

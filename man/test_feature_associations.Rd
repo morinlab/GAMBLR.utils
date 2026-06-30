@@ -5,15 +5,18 @@
 \title{Test feature associations between two or more groups}
 \usage{
 test_feature_associations(
-  maf,
+  maf = NULL,
   metadata,
   comparison_column,
+  feature_matrix = NULL,
+  sample_id_column = "Tumor_Sample_Barcode",
   comparison_values = NULL,
   genes = NULL,
   maf_column = "Hugo_Symbol",
   fallback_column = "Hugo_Symbol",
   min_samples = 2,
   test = "fisher",
+  contrast = "pairwise",
   p_adjust_method = "BH",
   restrict_to_maf = TRUE,
   verbose = FALSE
@@ -21,19 +24,34 @@ test_feature_associations(
 }
 \arguments{
 \item{maf}{A MAF-format data frame. Must contain at least
-\code{Hugo_Symbol} and \code{Tumor_Sample_Barcode}.}
+\code{Hugo_Symbol} and \code{Tumor_Sample_Barcode}. Mutually exclusive with
+\code{feature_matrix}.}
 
 \item{metadata}{A sample metadata data frame. Must contain
 \code{Tumor_Sample_Barcode} and \code{comparison_column}.}
 
 \item{comparison_column}{Name of the metadata column that defines groups.}
 
+\item{feature_matrix}{Optional sample-by-feature matrix or data frame where
+rows are samples and columns are features (e.g. genes or mutation categories).
+Values should be numeric; anything greater than zero is treated as mutated.
+Either supply a \code{sample_id_column} column or set
+\code{sample_id_column = NULL} to use rownames. Mutually exclusive with
+\code{maf}.}
+
+\item{sample_id_column}{Name of the column in \code{feature_matrix} that
+holds sample identifiers. Defaults to \code{"Tumor_Sample_Barcode"}. Set to
+\code{NULL} to use rownames instead.}
+
 \item{comparison_values}{Optional character vector of group values to
-include. For \code{test = "fisher"} exactly two values are required.
-Defaults to all unique values in \code{comparison_column}.}
+include. For \code{test = "fisher"} with exactly two values, one comparison
+is run. With three or more values all C(k, 2) pairwise comparisons are run
+and a \code{comparison} column is added to the output. Defaults to all
+unique values in \code{comparison_column}.}
 
 \item{genes}{Optional character vector of \code{Hugo_Symbol} values to
-restrict testing to. Defaults to all genes present in \code{maf}.}
+restrict testing to. Ignored (with a warning) when \code{feature_matrix} is
+supplied — subset the matrix columns directly instead.}
 
 \item{maf_column}{The MAF column whose unique values define features.
 Default is \code{"Hugo_Symbol"} (one test per gene). Set to
@@ -41,17 +59,29 @@ Default is \code{"Hugo_Symbol"} (one test per gene). Set to
 to use sub-gene categories from
 \code{\link[GAMBLR.utils]{annotate_curated_drivers}}. Setting
 \code{"hot_spot"} derives labels as \code{<Hugo_Symbol>HOTSPOT} for TRUE
-rows and \code{Hugo_Symbol} for FALSE rows.}
+rows and \code{Hugo_Symbol} for FALSE rows. Ignored when
+\code{feature_matrix} is supplied.}
 
 \item{fallback_column}{MAF column to use per-gene when \code{maf_column}
 yields no features with at least \code{min_samples} mutated samples.
-Default is \code{"Hugo_Symbol"}.}
+Default is \code{"Hugo_Symbol"}. Ignored when \code{feature_matrix} is
+supplied.}
 
 \item{min_samples}{Minimum number of mutated samples required for a
 feature to be tested. Default is 2.}
 
-\item{test}{Statistical test to apply. One of \code{"fisher"} (default,
-requires exactly 2 groups) or \code{"chi_square"} (supports >2 groups).}
+\item{test}{Statistical test to apply. One of \code{"fisher"} (default;
+runs all pairwise comparisons when more than 2 comparison values are
+supplied) or \code{"chi_square"} (single omnibus test across all groups).}
+
+\item{contrast}{How to define comparisons. One of \code{"pairwise"}
+(default; all C(k, 2) group pairs) or \code{"one_vs_rest"} (each group
+tested against all remaining samples pooled together). In
+\code{"one_vs_rest"} mode the output contains k comparisons labelled
+\code{"<group> vs rest"} and the OR represents enrichment in \code{<group>}
+relative to the pooled rest. This produces a single signed estimate per
+feature per group with no directionality ambiguity, making the results
+particularly suitable for heatmap visualisation.}
 
 \item{p_adjust_method}{Multiple testing correction method passed to
 \code{\link[stats]{p.adjust}}. Default is \code{"BH"}.}
@@ -60,53 +90,68 @@ requires exactly 2 groups) or \code{"chi_square"} (supports >2 groups).}
 group is restricted to samples present in both \code{maf} and
 \code{metadata}. Set to FALSE to use all metadata samples regardless of
 MAF presence; a warning is emitted because samples absent from the MAF are
-treated as wild-type, which may be unsafe if they were not sequenced.}
+treated as wild-type, which may be unsafe if they were not sequenced.
+Ignored when \code{feature_matrix} is supplied.}
 
 \item{verbose}{If TRUE, messages which genes fell back to
-\code{fallback_column}.}
+\code{fallback_column}. Ignored when \code{feature_matrix} is supplied.}
 }
 \value{
-A tibble with one row per tested feature. Always present:
-\code{gene} (Hugo_Symbol), \code{feature} (value from \code{maf_column}
-or \code{fallback_column}), \code{used_fallback} (logical),
-\code{p_value}, \code{q_value}, \code{n_mutated}.
+A tibble with one row per tested feature (or one row per feature
+per pairwise comparison when more than two groups are supplied with
+\code{test = "fisher"}). Always present: \code{gene} (Hugo_Symbol, or
+equal to \code{feature} in matrix mode), \code{feature},
+\code{used_fallback} (always FALSE in matrix mode), \code{p_value},
+\code{q_value}, \code{n_mutated}.
 Fisher-only columns: \code{OR}, \code{conf_low}, \code{conf_high}, and
 per-group count columns \code{n_mutated_<group>} and denominator columns
 \code{n_total_<group>} (e.g. \code{n_mutated_FL}, \code{n_total_FL}).
+In pairwise or one-vs-rest mode a \code{comparison} column
+(e.g. \code{"FL vs DLBCL"} or \code{"FL vs rest"}) identifies the
+comparison; \code{n_mutated_<group>} columns cover all original groups.
 Chi-square-only column: \code{statistic}.
 }
 \description{
 Run per-feature statistical tests comparing mutation status
-across two (Fisher's exact) or more (chi-square) groups, with optional
-per-gene fallback when the requested MAF column yields no testable features.
+across two or more groups. Accepts either a MAF data frame or a pre-built
+sample-by-feature matrix. When \code{test = "fisher"} and more than two
+\code{comparison_values} are supplied, all pairwise Fisher tests are run
+automatically and the results include a \code{comparison} column identifying
+each pair. For a single omnibus test across all groups, use
+\code{test = "chi_square"}.
 }
 \details{
-Each unique value in \code{maf_column} for a given gene becomes
-one feature, and one test is run per feature. For example, with
+\strong{MAF input:} Each unique value in \code{maf_column} for a given gene
+becomes one feature, and one test is run per feature. For example, with
 \code{maf_column = "mutation_alias"} and genes \code{c("TP53", "EZH2")},
 features such as \code{TP53_trunc}, \code{TP53_R175}, and \code{EZH2_Y641}
 each receive their own contingency table and test. NA values in
-\code{maf_column} are silently dropped (e.g. \code{hotspot_alias} is NA
-for non-hotspot mutations).
+\code{maf_column} are silently dropped.
 
 When a gene produces no features with at least \code{min_samples} mutated
-samples under \code{maf_column} (e.g. TP53 has no \code{hotspot_alias}
-entries because all its drivers are truncations), the gene is retested
-using \code{fallback_column} instead, and \code{used_fallback} is set to
-TRUE in the output.
+samples under \code{maf_column}, the gene is retested using
+\code{fallback_column} instead, and \code{used_fallback} is set to TRUE in
+the output.
+
+\strong{Matrix input:} Each column of \code{feature_matrix} is tested as a
+feature. Values greater than zero are treated as mutated (i.e. counts are
+acceptable; they are coerced to binary internally). Samples present in the
+matrix but absent from \code{metadata} are silently excluded. Features with
+fewer than \code{min_samples} non-zero rows are skipped. The \code{gene}
+column in the output is set equal to \code{feature} (the column name).
 }
 \examples{
 \dontrun{
 suppressPackageStartupMessages(library(GAMBLR.open))
 
 meta = get_gambl_metadata()
-fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL")) \%>\%
+fl_dlbcl_meta = dplyr::filter(meta, pathology \%in\% c("FL", "DLBCL","BL")) \%>\%
   GAMBLR.helpers::check_and_clean_metadata(duplicate_action = "keep_first")
 
 maf = get_all_coding_ssm(fl_dlbcl_meta)
 maf = annotate_curated_drivers(
   maf,
-  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2")
+  genes_of_interest = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC")
 )
 
 # Fine-grained: one test per mutation alias category
@@ -114,14 +159,13 @@ results = test_feature_associations(
   maf = maf,
   metadata = fl_dlbcl_meta,
   comparison_column = "pathology",
-  comparison_values = c("FL", "DLBCL"),
-  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2"),
+  comparison_values = c("FL", "DLBCL","BL"),
+  genes = c("EZH2", "CREBBP", "TP53", "MYD88", "NOTCH1", "NOTCH2","DDX3X","MYC"),
   maf_column = "mutation_alias"
 )
 dplyr::arrange(results, q_value)
 
 # With fallback: use hotspot_alias where available, Hugo_Symbol otherwise
-# (e.g. TP53 falls back because it has no hotspot_alias entries)
 results_fb = test_feature_associations(
   maf = maf,
   metadata = fl_dlbcl_meta,
@@ -132,7 +176,32 @@ results_fb = test_feature_associations(
   fallback_column = "mutation_alias",
   verbose = TRUE
 )
-dplyr::filter(results_fb, used_fallback)
+
+# Pre-built feature matrix via assemble_genetic_features
+# assemble_genetic_features returns a sample x feature matrix with rownames
+# as sample IDs and integer-encoded mutation status (0 = absent, >0 = present).
+coding_genes = c("EZH2", "CREBBP", "KMT2D", "TP53", "MYD88",
+                 "NOTCH1", "NOTCH2", "DDX3X", "MYC", "BCL2")
+nc_genes = intersect(coding_genes,
+                     unique(GAMBLR.data::grch37_ashm_regions$gene))
+
+raw_maf = get_all_coding_ssm(fl_dlbcl_meta)
+
+# Create a GENE_alias column for each distinct annotation category (e.g. "mutation_alias", "hotspot_alias", "driver_alias")
+feat_mat  = summarise_mutation_status(
+   annotated_maf
+ )
+head(colnames(feat_mat))
+
+# sample IDs are rownames — pass sample_id_column = NULL
+results_mat = test_feature_associations(
+  feature_matrix     = feat_mat,
+  sample_id_column   = NULL,
+  metadata           = fl_dlbcl_meta,
+  comparison_column  = "pathology",
+  comparison_values  = c("FL", "DLBCL", "BL")
+)
+dplyr::arrange(results_mat, q_value)
 }
 
 }

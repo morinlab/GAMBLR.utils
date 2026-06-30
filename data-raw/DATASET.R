@@ -10,10 +10,11 @@ aliases = read_tsv("inst/extdata/aliases.tsv")
 
 usethis::use_data(aliases,overwrite = T)
 
-hotspot_regions_grch37 =  read_tsv("inst/extdata/hotspot_regions.grch37.tsv")
+hotspot_regions_grch37 =  read_tsv("inst/extdata/hotspot_regions.grch37.tsv") %>%
+  dplyr::filter(include == TRUE)
 usethis::use_data(hotspot_regions_grch37,overwrite = T)
 
-col_ord = colnames(hotspot_regions_grch37)
+dcol_ord = colnames(hotspot_regions_grch37)
 
 hotspot_regions_grch37_bed = hotspot_regions_grch37 %>%
   select(chrom,start,end,strand,any_of(colnames(hotspot_regions_grch37))) %>%
@@ -25,10 +26,24 @@ hotspot_regions_grch37_bed = hotspot_regions_grch37 %>%
 hotspot_regions_hg38 = liftover(hotspot_regions_grch37_bed,
                                 target_build = "hg38",
                                 mode="bed")
+
 hotspot_regions_hg38 = mutate(hotspot_regions_hg38,
                               end=ifelse(fake_e,300000000,end),
                               start=ifelse(fake_s,1,start))
 
-hotspot_regions_hg38 = select(hotspot_regions_hg38,all_of(col_ord)) 
+hotspot_regions_hg38 = select(hotspot_regions_hg38,all_of(col_ord))
+
+#lost during liftover due to fake start-end
+missing_hg38 = filter(hotspot_regions_grch37,
+                      !alias %in% hotspot_regions_hg38$alias)
+
+
+#add prefix
+missing_hg38 = mutate(missing_hg38,chrom = paste0("chr",chrom))
+
+
+hotspot_regions_hg38 = bind_rows(hotspot_regions_hg38,
+                                 missing_hg38)
+
 
 usethis::use_data(hotspot_regions_hg38,overwrite = T)
