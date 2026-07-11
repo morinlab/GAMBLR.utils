@@ -1,43 +1,19 @@
-#' @title Fread MAF.
+#' @title MAF Column Classes.
 #'
-#' @description Read a MAF into R with options for what columns to keep (default all columns will be returned).
+#' @description The canonical R type for every standard MAF/VEP column, as a
+#' named character vector (names = column names, values = one of "character",
+#' "integer", "numeric", "logical"). Used by [GAMBLR.utils::fread_maf] to set
+#' `colClasses` at read time, and by [GAMBLR.results::get_ssm_by_sample] to
+#' coerce columns to a consistent type *after* a lenient `data.table::fread()`
+#' read (whose per-file type inference can otherwise disagree across samples
+#' for sparsely-populated columns, e.g. gnomAD_* frequencies, breaking
+#' `bind_rows()` when per-sample MAFs are combined).
 #'
-#' @details This function lets the user specify a path to a MAF file on disk, this function then reads this MAF into R.
-#' The user has the option to keep specific columns from the incoming MAF file (default is to keep all columns).
-#' To return all available columns, set `return_cols = TRUE`. For specifying columns of interest, refer to the `select_cols` parameter.
-#' For more information, refer to the parameter descriptions as well as function examples.
+#' @return A named character vector.
 #'
-#' @param maf_file_path Path to maf that is about to be read.
-#' @param select_cols Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.
-#' @param return_cols Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.
-#'
-#' @return A data frame containing MAF data from a MAF file.
-#'
-#' @import dplyr readr
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' #read a maf into R with all columns kept
-#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf")
-#'
-#' #return what columns are available
-#' maf_cols = fread_maf(return_cols = TRUE)
-#'
-#' #read maf with only a selection of columns
-#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf",
-#'                    select_cols = c(Hugo_Symbol = "character",
-#'                                    Chromosome = "character",
-#'                                    Start_Position = "integer",
-#'                                    End_Position = "integer",
-#'                                    Variant_Type = "character"))
-#' }
-#'
-fread_maf = function(maf_file_path,
-                     select_cols,
-                     return_cols = FALSE){
-
-  colClasses=c(Hugo_Symbol="character",
+maf_column_classes = function(){
+  c(Hugo_Symbol="character",
                Entrez_Gene_Id="integer",
                Center="character",
                NCBI_Build="character",
@@ -153,6 +129,48 @@ fread_maf = function(maf_file_path,
                vcf_pos="integer",
                gnomADg_AF="character",
                blacklist_count="numeric")
+}
+
+#' @title Fread MAF.
+#'
+#' @description Read a MAF into R with options for what columns to keep (default all columns will be returned).
+#'
+#' @details This function lets the user specify a path to a MAF file on disk, this function then reads this MAF into R.
+#' The user has the option to keep specific columns from the incoming MAF file (default is to keep all columns).
+#' To return all available columns, set `return_cols = TRUE`. For specifying columns of interest, refer to the `select_cols` parameter.
+#' For more information, refer to the parameter descriptions as well as function examples.
+#'
+#' @param maf_file_path Path to maf that is about to be read.
+#' @param select_cols Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.
+#' @param return_cols Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.
+#'
+#' @return A data frame containing MAF data from a MAF file.
+#'
+#' @import dplyr readr
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' #read a maf into R with all columns kept
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf")
+#'
+#' #return what columns are available
+#' maf_cols = fread_maf(return_cols = TRUE)
+#'
+#' #read maf with only a selection of columns
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf",
+#'                    select_cols = c(Hugo_Symbol = "character",
+#'                                    Chromosome = "character",
+#'                                    Start_Position = "integer",
+#'                                    End_Position = "integer",
+#'                                    Variant_Type = "character"))
+#' }
+#'
+fread_maf = function(maf_file_path,
+                     select_cols,
+                     return_cols = FALSE){
+
+  colClasses = maf_column_classes()
 
   if(missing(select_cols)){
     #get all column names from the variable that defines the classes
