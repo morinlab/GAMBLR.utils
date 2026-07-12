@@ -53,8 +53,34 @@ gene_to_region = function(gene_symbol,
   # Subset the coordinate table to only the requested genes, and record any symbols
   # not found so they can be reported to the user.
   if(!missing(gene_symbol) && missing(ensembl_id)){
-    gene_coordinates = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
-    genes_not_vailable = gene_symbol[!gene_symbol %in% gene_coordinates$hugo_symbol]
+    matched = dplyr::filter(gene_coordinates, hugo_symbol %in% gene_symbol)
+    genes_not_vailable = gene_symbol[!gene_symbol %in% matched$hugo_symbol]
+
+    # HGNC renamed several genes (notably the histone family, e.g. HIST1H1C
+    # -> H1-2), and grch37_gene_coordinates/hg38_gene_coordinates don't
+    # consistently agree on which name they use -- a symbol found under one
+    # nomenclature in one build can be missing under that same name in the
+    # other. Retry unresolved symbols through `aliases` (hg19/hg38 columns,
+    # checked in both directions since the caller's gene list may itself mix
+    # old- and new-style names), then relabel any resolved rows back to the
+    # symbol the caller actually asked for -- not the table's native name --
+    # so downstream Hugo_Symbol-based matching (e.g. against a caller's own
+    # gene list) stays consistent regardless of which build was queried.
+    if(length(genes_not_vailable) > 0){
+      alias_lookup = c(
+        setNames(aliases$hg38, aliases$hg19),
+        setNames(aliases$hg19, aliases$hg38)
+      )
+      translated = unname(alias_lookup[genes_not_vailable])
+      has_alias = !is.na(translated)
+
+      aliased = dplyr::filter(gene_coordinates, hugo_symbol %in% translated[has_alias])
+      aliased$hugo_symbol = genes_not_vailable[has_alias][match(aliased$hugo_symbol, translated[has_alias])]
+
+      matched = dplyr::bind_rows(matched, aliased)
+      genes_not_vailable = gene_symbol[!gene_symbol %in% matched$hugo_symbol]
+    }
+    gene_coordinates = matched
   }
   if(missing(gene_symbol) && !missing(ensembl_id)){
     gene_coordinates = dplyr::filter(gene_coordinates, ensembl_gene_id %in% ensembl_id)
