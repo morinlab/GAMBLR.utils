@@ -67,9 +67,13 @@ gene_to_region = function(gene_symbol,
     # so downstream Hugo_Symbol-based matching (e.g. against a caller's own
     # gene list) stays consistent regardless of which build was queried.
     if(length(genes_not_vailable) > 0){
+      # Qualified: lazy-loaded data/*.rda objects are not reliably bound in
+      # the package namespace itself for a bare reference from code defined
+      # in this same package -- see GAMBLR.utils::expand_gene_aliases().
+      al = GAMBLR.utils::aliases
       alias_lookup = c(
-        setNames(aliases$hg38, aliases$hg19),
-        setNames(aliases$hg19, aliases$hg38)
+        setNames(al$hg38, al$hg19),
+        setNames(al$hg19, al$hg38)
       )
       translated = unname(alias_lookup[genes_not_vailable])
       has_alias = !is.na(translated)

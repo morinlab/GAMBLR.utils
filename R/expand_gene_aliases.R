@@ -28,9 +28,16 @@
 #' expand_gene_aliases(c("HIST1H1C", "TP53"))
 #'
 expand_gene_aliases = function(gene_symbol){
+  # Qualified even though this function lives in the same package: lazy-loaded
+  # data/*.rda objects are not reliably bound in the package namespace itself
+  # (only via the search path once the package is attached, or via an
+  # explicit pkg::name lookup), so a bare `aliases` reference here can fail
+  # with "object 'aliases' not found" depending on how GAMBLR.utils was
+  # installed/loaded, even when GAMBLR.utils::aliases resolves fine.
+  al = GAMBLR.utils::aliases
   alias_lookup = c(
-    setNames(aliases$hg38, aliases$hg19),
-    setNames(aliases$hg19, aliases$hg38)
+    setNames(al$hg38, al$hg19),
+    setNames(al$hg19, al$hg38)
   )
   extra = unname(alias_lookup[gene_symbol])
   extra = extra[!is.na(extra)]
