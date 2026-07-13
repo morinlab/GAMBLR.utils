@@ -389,7 +389,8 @@ summarise_mutation_status = function(annotated_maf,
   if(is.null(genes_coding)){
     genes_coding = lymphoma_genes %>%
     dplyr::filter(FL_Tier==1 | MCL_Tier== 1 | BL_Tier==1 | DLBCL_Tier==1) %>%
-    pull(Gene)
+    pull(Gene) %>%
+    expand_gene_aliases()
   }
 
   # TODO similarly fill in counts for aSHM genes (should restrict to aSHM coordinates)
@@ -1211,20 +1212,25 @@ annotate_curated_drivers = function(maf_data,
   }
 
   if(!missing(genes_of_interest) && !is.null(genes_of_interest)){
-    supported_genes = sort(unique(coordinates$Hugo_Symbol))
-    if (length(intersect(supported_genes, genes_of_interest))==0){
+    # Expanded to include known aliases (e.g. old/new HGNC histone names) on
+    # both sides of the comparison, since `coordinates` (bundled curated
+    # data) and a caller-supplied `genes_of_interest` aren't guaranteed to
+    # use the same nomenclature for a given gene.
+    supported_genes = sort(unique(expand_gene_aliases(coordinates$Hugo_Symbol)))
+    genes_of_interest_expanded = expand_gene_aliases(genes_of_interest)
+    if (length(intersect(supported_genes, genes_of_interest_expanded))==0){
         stop(paste0("Currently only ",  paste(supported_genes, collapse=", "),
                     " are supported. Please specify one of these genes."))
     }
-    if (length(setdiff(genes_of_interest, supported_genes))>0){
+    if (length(setdiff(genes_of_interest_expanded, supported_genes))>0){
         message(strwrap(paste0("Currently only ", paste(supported_genes, collapse=", "),
                                " are supported. By default only these genes from the",
                                " supplied list will be reviewed. Reviewing hotspots for genes ",
-                               paste(intersect(supported_genes, genes_of_interest),
+                               paste(intersect(supported_genes, genes_of_interest_expanded),
                                      collapse = ", "), ", it will take a second ...")))
     }
     coordinates = coordinates %>%
-      dplyr::filter(Hugo_Symbol %in% genes_of_interest)
+      dplyr::filter(Hugo_Symbol %in% genes_of_interest_expanded)
   }
 
   coordinates = coordinates %>%
@@ -1244,10 +1250,14 @@ annotate_curated_drivers = function(maf_data,
       dplyr::mutate(chrom = as.character(chrom))
   }
 
+  # Expanded to include known aliases so a maf row annotated under a gene's
+  # other name (e.g. old/new HGNC histone names) isn't misclassified as
+  # having no driver/hotspot coordinates.
+  coordinates_genes = expand_gene_aliases(coordinates$Hugo_Symbol)
   maf_keep = annotated_maf %>%
-    dplyr::filter(Hugo_Symbol %in% coordinates$Hugo_Symbol)
+    dplyr::filter(Hugo_Symbol %in% coordinates_genes)
   maf_skip = annotated_maf %>%
-    dplyr::filter(!Hugo_Symbol %in% coordinates$Hugo_Symbol)
+    dplyr::filter(!Hugo_Symbol %in% coordinates_genes)
 
   if (nrow(maf_keep) == 0){
     warning("No mutations found in genes of interest; i.e no hotspot or driver genes. Skipping hotspot and driver annotations.")
