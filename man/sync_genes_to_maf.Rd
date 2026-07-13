@@ -64,11 +64,14 @@ decision explicitly by renaming the rows you consider equivalent, e.g.
 genome_meta = get_gambl_metadata() \%>\%
   filter(pathology=="FL",seq_type=="genome")
 maf_grch37 = get_coding_ssm(these_samples_metadata = genome_meta, projection = "grch37")
+maf_hg38 = get_coding_ssm(these_samples_metadata = genome_meta, projection = "hg38")
 candidates <- expand_gene_aliases(c("C10orf12", "MYD88", "FAKEGENE"))
 found_genes <- sync_genes_to_maf(maf_grch37, candidates)
 cat(found_genes)
 
 # same query genes, but as per-gene coding variant counts
 sync_genes_to_maf(maf_grch37, candidates, summarize = TRUE)
+# Notice how the counts differ between genome builds, even for the same samples.
+sync_genes_to_maf(maf_hg38, candidates, summarize = TRUE)
 }
 }
