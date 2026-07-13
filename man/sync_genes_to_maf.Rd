@@ -42,7 +42,11 @@ decision explicitly by renaming the rows you consider equivalent, e.g.
 }
 \examples{
 \dontrun{
-candidates <- expand_gene_aliases(c("C10orf12", "MYD88"))
-locked_in <- sync_genes_to_maf(my_maf, candidates)
+genome_meta = GAMBLR.data::genome_samples_metadata() \%>\% 
+  filter(pathology=="FL",seq_type=="genome")
+maf_maf = get_coding_ssm(these_samples_metadata = genome_meta, projection = "grch37")
+candidates <- expand_gene_aliases(c("C10orf12", "MYD88", "FAKEGENE"))
+found_genes <- sync_genes_to_maf(my_maf, candidates)
+cat(found_genes)
 }
 }

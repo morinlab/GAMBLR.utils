@@ -33,8 +33,12 @@
 #'
 #' @examples
 #' \dontrun{
-#' candidates <- expand_gene_aliases(c("C10orf12", "MYD88"))
-#' locked_in <- sync_genes_to_maf(my_maf, candidates)
+#' genome_meta = get_gambl_metadata() %>% 
+#'   filter(pathology=="FL",seq_type=="genome")
+#' maf_grch37 = get_coding_ssm(these_samples_metadata = genome_meta, projection = "grch37")
+#' candidates <- expand_gene_aliases(c("C10orf12", "MYD88", "FAKEGENE"))
+#' found_genes <- sync_genes_to_maf(maf_grch37, candidates)
+#' cat(found_genes)
 #' }
 sync_genes_to_maf = function(maf_data, genes){
   if(!"Hugo_Symbol" %in% colnames(maf_data)){
