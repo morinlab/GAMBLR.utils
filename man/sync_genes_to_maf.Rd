@@ -4,18 +4,37 @@
 \alias{sync_genes_to_maf}
 \title{Sync Genes To MAF.}
 \usage{
-sync_genes_to_maf(maf_data, genes)
+sync_genes_to_maf(
+  maf_data,
+  genes,
+  summarize = FALSE,
+  coding_classes = GAMBLR.helpers::coding_vc
+)
 }
 \arguments{
 \item{maf_data}{A data frame (or \code{maf_data} object) with a
-\code{Hugo_Symbol} column.}
+\code{Hugo_Symbol} column (and, if \code{summarize = TRUE}, a
+\code{Variant_Classification} column).}
 
 \item{genes}{A character vector of candidate gene symbols to check, e.g.
 \code{expand_gene_aliases(my_genes)}.}
+
+\item{summarize}{Default FALSE (return the character vector described
+below). If TRUE, instead return a data frame with the number of coding
+variants per gene -- useful for judging, at a glance, whether a gene
+that's technically "present" actually has meaningful coding variant
+support in this MAF, rather than just a handful of non-coding calls.}
+
+\item{coding_classes}{Variant_Classification values counted as coding
+when \code{summarize = TRUE}. Default \code{GAMBLR.helpers::coding_vc}.}
 }
 \value{
-The subset of \code{genes} that appear at least once in
-\code{maf_data$Hugo_Symbol}, in the same order as supplied.
+If \code{summarize = FALSE} (the default): the subset of
+\code{genes} that appear at least once in \code{maf_data$Hugo_Symbol}, in
+the same order as supplied. If \code{summarize = TRUE}: a data frame with
+one row per gene in that subset and a column \code{n_coding} giving its
+count of coding variants (0 if the gene is present but only via
+non-coding rows), sorted descending by \code{n_coding}.
 }
 \description{
 Given a MAF-like data frame and a candidate gene list (which
@@ -42,11 +61,14 @@ decision explicitly by renaming the rows you consider equivalent, e.g.
 }
 \examples{
 \dontrun{
-genome_meta = GAMBLR.data::genome_samples_metadata() \%>\% 
+genome_meta = get_gambl_metadata() \%>\%
   filter(pathology=="FL",seq_type=="genome")
-maf_maf = get_coding_ssm(these_samples_metadata = genome_meta, projection = "grch37")
+maf_grch37 = get_coding_ssm(these_samples_metadata = genome_meta, projection = "grch37")
 candidates <- expand_gene_aliases(c("C10orf12", "MYD88", "FAKEGENE"))
-found_genes <- sync_genes_to_maf(my_maf, candidates)
+found_genes <- sync_genes_to_maf(maf_grch37, candidates)
 cat(found_genes)
+
+# same query genes, but as per-gene coding variant counts
+sync_genes_to_maf(maf_grch37, candidates, summarize = TRUE)
 }
 }
