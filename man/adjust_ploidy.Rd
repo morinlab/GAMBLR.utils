@@ -42,13 +42,15 @@ multi-sample seg file. The telomeres are always excluded from calculation, and s
 The chromosome prefix is handled internally per projection and does not need to be consistent.
 }
 \examples{
-all_sample_seg = GAMBLR.data::sample_data$grch37$seg
+cell_line_meta <- GAMBLR.open::get_gambl_metadata() \%>\%
+     dplyr::filter(cohort == "DLBCL_cell_lines")
+all_sample_seg = GAMBLR.open::get_cn_segments(these_samples_metadata = cell_line_meta)
 all_sample_seg = dplyr::rename(all_sample_seg, "sample" = "ID")
 
-sample_seg = dplyr::filter(all_sample_seg, sample == "02-13135T")
+sample_seg = dplyr::filter(all_sample_seg, sample == "DOHH-2")
 adjust_ploidy(this_seg = sample_seg)
 
-multi_sample_seg = dplyr::filter(all_sample_seg, sample  \%in\% c("02-13135T", "SU-DHL-4"))
+multi_sample_seg = dplyr::filter(all_sample_seg, sample \%in\% c("DOHH-2", "SU-DHL-4"))
 adjust_ploidy(this_seg = multi_sample_seg)
 
 }
