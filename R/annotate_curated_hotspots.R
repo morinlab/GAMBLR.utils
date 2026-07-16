@@ -1075,17 +1075,16 @@ order_features_by_gene = function(gene_order,
 #'                                    include_silent=TRUE)
 #'
 #' # annotate known driver mutations using bundled annotations
-#' # WARNING: currently hg38 annotations are out of sync with grch37
-#' # Stick with grch37 for now
 #' dlbcl_coding = annotate_curated_drivers(maf_data=dlbcl_coding)
 #'
 #' #look at the new columns we have
 #' dplyr::filter(dlbcl_coding,
+#'              Hugo_Symbol %in% c("CD58","BTG2","ITPKB","NFKBIZ","CCND3","FOXO1","CD79B"),
 #'              !grepl("other",mutation_alias)) %>%
 #'  dplyr::select(Chromosome,Start_Position,Variant_Classification,HGVSp_Short,hot_spot,mutation_alias,driver_alias)
 #'
 #' # Annotate TP53 driver categories across all available samples
-#' all_meta = suppressMessages(GAMBLR.open::get_gambl_metadata())
+#' all_meta = suppressMessages(GAMBLR.open::get_gambl_metadata()) 
 #' all_maf = GAMBLR.open::get_all_coding_ssm(all_meta)
 #'
 #' all_maf_tp53 = annotate_curated_drivers(
