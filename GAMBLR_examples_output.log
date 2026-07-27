@@ -1,48 +1,8 @@
-[1] "=== STARTED AT 2026-06-30 13:17:54.384989 ==="
+[1] "=== STARTED AT 2026-07-16 06:34:13 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 52 example files ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
-
-> all_sample_seg = GAMBLR.data::sample_data$grch37$seg
-
-> all_sample_seg = dplyr::rename(all_sample_seg, sample = "ID")
-
-> sample_seg = dplyr::filter(all_sample_seg, sample == 
-+     "02-13135T")
-
-> adjust_ploidy(this_seg = sample_seg)
-# A tibble: 144 × 6
-   sample    chrom     start       end LOH_flag log.ratio
-   <chr>     <chr>     <dbl>     <dbl>    <dbl>     <dbl>
- 1 02-13135T 1         10001    762600        0     0    
- 2 02-13135T 1        762601 121500000        0     0    
- 3 02-13135T 1     142600000 161506889        0     0    
- 4 02-13135T 1     161506890 161652716        0     0    
- 5 02-13135T 1     161652717 162110568        0     0.585
- 6 02-13135T 1     162110569 162111399        0     0    
- 7 02-13135T 1     162111400 249203757        0     0    
- 8 02-13135T 1     249203758 249250620        0     0    
- 9 02-13135T 2         10001     11319        0     0    
-10 02-13135T 2         11320  90500000        0     0    
-# ℹ 134 more rows
-
-> multi_sample_seg = dplyr::filter(all_sample_seg, sample %in% 
-+     c("02-13135T", "SU-DHL-4"))
-
-> adjust_ploidy(this_seg = multi_sample_seg)
-# A tibble: 144 × 6
-   sample    chrom     start       end LOH_flag log.ratio
-   <chr>     <chr>     <dbl>     <dbl>    <dbl>     <dbl>
- 1 02-13135T 1         10001    762600        0     0    
- 2 02-13135T 1        762601 121500000        0     0    
- 3 02-13135T 1     142600000 161506889        0     0    
- 4 02-13135T 1     161506890 161652716        0     0    
- 5 02-13135T 1     161652717 162110568        0     0.585
- 6 02-13135T 1     162110569 162111399        0     0    
- 7 02-13135T 1     162111400 249203757        0     0    
- 8 02-13135T 1     249203758 249250620        0     0    
- 9 02-13135T 2         10001     11319        0     0    
-10 02-13135T 2         11320  90500000        0     0    
-# ℹ 134 more rows
+Writing NAMESPACE
+Writing NAMESPACE
+── Running 57 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
 
 > dlbcl_meta = GAMBLR.open::get_gambl_metadata() %>% 
 +     dplyr::filter(pathology == "DLBCL")
@@ -52,23 +12,25 @@
 
 > dlbcl_coding = annotate_curated_drivers(maf_data = dlbcl_coding)
 
-> dplyr::filter(dlbcl_coding, !grepl("other", mutation_alias)) %>% 
-+     dplyr::select(Chromosome, Start_Position, Variant_Classification, 
-+         HGVSp_Short, hot_spot, mutation_alias, driver_alias)
+> dplyr::filter(dlbcl_coding, Hugo_Symbol %in% c("CD58", 
++     "BTG2", "ITPKB", "NFKBIZ", "CCND3", "FOXO1", "CD79B"), !grepl("other", 
++     mutation_alias)) %>% dplyr::select(Chromosome, Start_Position, 
++     Variant_Classification, HGVSp_Short, hot_spot, mutation_alias, 
++     driver_alias)
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-   Chromosome Start_Position Variant_Classification HGVSp_Short hot_spot mutation_alias  driver_alias
-1           1      117113520          Splice_Region        <NA>    FALSE     CD58_trunc   CD58_driver
-2           1      203274831      Nonsense_Mutation      p.Q33*    FALSE     BTG2_trunc   BTG2_driver
-3           1      203274883          Splice_Region        <NA>    FALSE     BTG2_trunc   BTG2_driver
-4           1      203276251      Nonsense_Mutation      p.W54*    FALSE     BTG2_trunc   BTG2_driver
-5           1      226924745      Nonsense_Mutation     p.Q139*    FALSE    ITPKB_trunc  ITPKB_driver
-6           3      101578252                  3'UTR        <NA>    FALSE     NFKBIZ_UTR NFKBIZ_driver
-7           3      101578255                  3'UTR        <NA>    FALSE     NFKBIZ_UTR NFKBIZ_driver
-8           6       41903731      Nonsense_Mutation     p.Q276*    FALSE    CCND3_trunc  CCND3_driver
-9          13       41239891      Missense_Mutation     p.S153R    FALSE      FOXO1_DBD  FOXO1_driver
-10         17       62006819      Missense_Mutation     p.G190A    FALSE     CD79B_ITAM  CD79B_driver
+   Chromosome Start_Position Variant_Classification  HGVSp_Short hot_spot mutation_alias driver_alias
+1          13       41240279      Missense_Mutation       p.T24I    FALSE    FOXO1_Nterm FOXO1_driver
+2           1      117113520          Splice_Region         <NA>    FALSE     CD58_trunc  CD58_driver
+3           1      117113520          Splice_Region         <NA>    FALSE     CD58_trunc  CD58_driver
+4           1      117113520          Splice_Region         <NA>    FALSE     CD58_trunc  CD58_driver
+5           6       41903745        Frame_Shift_Ins p.R271Pfs*53    FALSE    CCND3_trunc CCND3_driver
+6          17       62006799      Missense_Mutation      p.Y197H    FALSE     CD79B_ITAM CD79B_driver
+7           1      203276231            Splice_Site p.X48_splice    FALSE     BTG2_trunc  BTG2_driver
+8          17       62006655      Nonsense_Mutation      p.Y208*    FALSE    CD79B_trunc CD79B_driver
+9          17       62006798      Missense_Mutation      p.Y197S    FALSE     CD79B_ITAM CD79B_driver
+10          1      117087122        Frame_Shift_Ins   p.Q59Tfs*4    FALSE     CD58_trunc  CD58_driver
 
 > all_meta = suppressMessages(GAMBLR.open::get_gambl_metadata())
 
@@ -84,17 +46,17 @@ Showing first 10 rows:
 genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
-   Tumor_Sample_Barcode Variant_Classification HGVSp_Short hot_spot mutation_alias driver_alias
-1           DLBCL10456T      Missense_Mutation     p.R282W     TRUE      TP53_R282  TP53_driver
-2           DLBCL10460T      Missense_Mutation     p.Y126D    FALSE      TP53_LSH1  TP53_driver
-3           DLBCL10462T      Nonsense_Mutation     p.R196*    FALSE     TP53_trunc  TP53_driver
-4           DLBCL10466T      Missense_Mutation     p.V216M    FALSE     TP53_other   TP53_other
-5           DLBCL10475T      Missense_Mutation     p.E258D    FALSE     TP53_other   TP53_other
-6           DLBCL10477T      Nonsense_Mutation     p.R209*    FALSE     TP53_trunc  TP53_driver
-7           DLBCL10478T      Missense_Mutation     p.Y220C     TRUE      TP53_Y220  TP53_driver
-8           DLBCL10479T      Nonsense_Mutation     p.Q136*    FALSE     TP53_trunc  TP53_driver
-9           DLBCL10488T                 Intron        <NA>    FALSE     TP53_other   TP53_other
-10          DLBCL10490T      Missense_Mutation     p.P151H    FALSE     TP53_other   TP53_other
+   Tumor_Sample_Barcode Variant_Classification   HGVSp_Short hot_spot mutation_alias driver_alias
+1       04-11038_tumorA            Splice_Site p.X331_splice    FALSE     TP53_trunc  TP53_driver
+2       04-11038_tumorB          Splice_Region          <NA>    FALSE     TP53_other   TP53_other
+3           1033700677T        Frame_Shift_Ins  p.M133Ifs*17    FALSE     TP53_trunc  TP53_driver
+4       11-31342_tumorA      Missense_Mutation       p.P278R    FALSE      TP53_LSH2  TP53_driver
+5       11-31342_tumorB      Missense_Mutation       p.P278R    FALSE      TP53_LSH2  TP53_driver
+6       11-31342_tumorC      Missense_Mutation       p.P278R    FALSE      TP53_LSH2  TP53_driver
+7           1102500143T      Missense_Mutation       p.R249G    FALSE    TP53_LoopL3  TP53_driver
+8           1102500143T      Missense_Mutation       p.P152L    FALSE     TP53_other   TP53_other
+9           1102500153T      Missense_Mutation       p.C176S    FALSE    TP53_LoopL2  TP53_driver
+10          1102503011T      Missense_Mutation       p.R248Q     TRUE      TP53_R248  TP53_driver
 
 > dplyr::filter(all_maf_tp53, Hugo_Symbol == "TP53") %>% 
 +     dplyr::count(mutation_alias, sort = TRUE)
@@ -102,16 +64,16 @@ genomic_data Object
 Genome Build: grch37 
 Showing first 10 rows:
    mutation_alias   n
-1      TP53_other 412
-2      TP53_trunc 116
-3       TP53_R248  59
-4     TP53_LoopL2  51
-5     TP53_LoopL3  47
-6       TP53_R273  44
-7       TP53_LSH1  38
-8       TP53_R175  37
-9       TP53_LSH2  34
-10      TP53_G245  18
+1      TP53_other 147
+2      TP53_trunc  99
+3       TP53_R248  50
+4     TP53_LoopL2  48
+5     TP53_LoopL3  41
+6       TP53_R273  35
+7       TP53_LSH2  30
+8       TP53_LSH1  29
+9       TP53_R175  29
+10      TP53_Y234  16
 
 > library(GAMBLR.data)
 
@@ -152,6 +114,9 @@ Showing first 10 rows:
 > get_genome_build(gene_regions)
 [1] "hg38"
 
+> expand_gene_aliases(c("HIST1H1C", "TP53"))
+[1] "HIST1H1C" "TP53"     "H1-2"    
+
 > bcl2_region = gene_to_region(gene_symbol = "BCL2", 
 +     projection = "grch37")
 
@@ -175,16 +140,20 @@ Showing first 10 rows:
 > chr8q_bins = region_to_bins(chromosome = "8", start = 48100000, 
 +     end = 146364022, bin_size = 20000)
 
-> genes_of_interest = gene_to_region(gene_symbol = c("MYC", 
+> regions_of_interest = gene_to_region(gene_symbol = c("MYC", 
 +     "BCL2"), projection = "grch37", return_as = "df")
 
-> in_my_region = region_to_gene(region = genes_of_interest)
+> regions_of_interest
+  chromosome     start       end gene_name hugo_symbol ensembl_gene_id
+1          8 128747680 128753674       MYC         MYC ENSG00000136997
+2         18  60790579  60987361      BCL2        BCL2 ENSG00000171791
 
-> print(in_my_region)
-  chromosome     start       end hugo_symbol region_start region_end
-1       chr8 128747680 128753674         MYC    128747680  128753674
+> cell_line_meta <- GAMBLR.open::get_gambl_metadata() %>% 
++     dplyr::filter(cohort == "DLBCL_cell_lines")
 
-> safe_oncomatrix_path <- sanitize_maf_data(mutation_maf_data = GAMBLR.data::sample_data$grch37$maf, 
+> cell_line_maf <- GAMBLR.open::get_coding_ssm(these_samples_metadata = cell_line_meta)
+
+> safe_oncomatrix_path <- sanitize_maf_data(mutation_maf_data = cell_line_maf, 
 +     genes_keep = c("MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", 
 +         "IGLL5"))
 
@@ -194,4 +163,4 @@ Showing first 10 rows:
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-06-30 13:19:22.071843 ==="
+[1] "=== COMPLETED AT 2026-07-16 06:36:32 ==="

@@ -39,13 +39,13 @@ Note, if the user provides a data frame with regions, any regions that no genes 
 }
 \examples{
 #get a region, used for input in Example 1
-genes_of_interest = gene_to_region(gene_symbol = c("MYC", "BCL2"),
+regions_of_interest = gene_to_region(gene_symbol = c("MYC", "BCL2"),
                                    projection = "grch37",
                                    return_as = "df")
 
-#Example 1 - Use a data frame with 1 region:
-in_my_region = region_to_gene(region = genes_of_interest)
-print(in_my_region)
+regions_of_interest
+
+
                         
 \dontrun{
 #Example 2 - Use a region specified as a vector of characters:

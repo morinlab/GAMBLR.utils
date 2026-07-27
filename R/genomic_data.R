@@ -82,6 +82,105 @@ preserve_genomic_attributes <- function(new_data, old_data) {
 
 
 
+#' Canonical column types for standard MAF columns.
+#'
+#' Readers that auto-detect column types (e.g. data.table::fread) can infer
+#' a different type for the same column in different files - most commonly,
+#' a column that is entirely NA in one sample's MAF gets typed "logical"
+#' while the same column has real values (and a different type) in another
+#' sample's MAF. That inconsistency breaks rbind/bind_rows when merging
+#' MAFs across samples. This table is the single source of truth for what
+#' type each standard MAF column should be, used by
+#' \code{\link{enforce_maf_column_types}}.
+#'
+#' Only columns that are actually used numerically elsewhere in the package
+#' (genomic coordinates, read counts, and a handful of numeric VEP fields)
+#' are typed as integer/numeric here. Everything else - including
+#' population allele-frequency columns, which can hold comma-separated
+#' multi-allelic values - is typed character, since character is the only
+#' type guaranteed not to lose information or fail to coerce.
+#' @keywords internal
+maf_column_types <- c(
+  Hugo_Symbol = "character", Entrez_Gene_Id = "integer", Center = "character",
+  NCBI_Build = "character", Chromosome = "character", Start_Position = "integer",
+  End_Position = "integer", Strand = "character", Variant_Classification = "character",
+  Variant_Type = "character", Reference_Allele = "character",
+  Tumor_Seq_Allele1 = "character", Tumor_Seq_Allele2 = "character",
+  dbSNP_RS = "character", dbSNP_Val_Status = "character",
+  Tumor_Sample_Barcode = "character", Matched_Norm_Sample_Barcode = "character",
+  Match_Norm_Seq_Allele1 = "character", Match_Norm_Seq_Allele2 = "character",
+  Tumor_Validation_Allele1 = "character", Tumor_Validation_Allele2 = "character",
+  Match_Norm_Validation_Allele1 = "character", Match_Norm_Validation_Allele2 = "character",
+  Verification_Status = "character", Validation_Status = "character",
+  Mutation_Status = "character", Sequencing_Phase = "character",
+  Sequence_Source = "character", Validation_Method = "character", Score = "character",
+  BAM_File = "character", Sequencer = "character", Tumor_Sample_UUID = "character",
+  Matched_Norm_Sample_UUID = "character", HGVSc = "character", HGVSp = "character",
+  HGVSp_Short = "character", Transcript_ID = "character", Exon_Number = "character",
+  t_depth = "integer", t_ref_count = "integer", t_alt_count = "integer",
+  n_depth = "integer", n_ref_count = "integer", n_alt_count = "integer",
+  all_effects = "character", Allele = "character", Gene = "character",
+  Feature = "character", Feature_type = "character", Consequence = "character",
+  cDNA_position = "character", CDS_position = "character", Protein_position = "character",
+  Amino_acids = "character", Codons = "character", Existing_variation = "character",
+  ALLELE_NUM = "integer", DISTANCE = "numeric", STRAND_VEP = "numeric",
+  SYMBOL = "character", SYMBOL_SOURCE = "character", HGNC_ID = "character",
+  BIOTYPE = "character", CANONICAL = "character", CCDS = "character",
+  ENSP = "character", SWISSPROT = "character", TREMBL = "character",
+  UNIPARC = "character", RefSeq = "character", SIFT = "character",
+  PolyPhen = "character", EXON = "character", INTRON = "character",
+  DOMAINS = "character", AF = "character", AFR_AF = "character", AMR_AF = "character",
+  ASN_AF = "character", EAS_AF = "character", EUR_AF = "character", SAS_AF = "character",
+  AA_AF = "character", EA_AF = "character", CLIN_SIG = "character", SOMATIC = "character",
+  PUBMED = "character", MOTIF_NAME = "character", MOTIF_POS = "numeric",
+  HIGH_INF_POS = "character", MOTIF_SCORE_CHANGE = "numeric", IMPACT = "character",
+  PICK = "numeric", VARIANT_CLASS = "character", TSL = "character",
+  HGVS_OFFSET = "character", PHENO = "character", MINIMISED = "numeric",
+  GENE_PHENO = "numeric", FILTER = "character", flanking_bps = "character",
+  vcf_id = "character", vcf_qual = "character", gnomAD_AF = "character",
+  gnomAD_AFR_AF = "character", gnomAD_AMR_AF = "character", gnomAD_ASJ_AF = "character",
+  gnomAD_EAS_AF = "character", gnomAD_FIN_AF = "character", gnomAD_NFE_AF = "character",
+  gnomAD_OTH_AF = "character", gnomAD_SAS_AF = "character", vcf_pos = "integer",
+  gnomADg_AF = "character", blacklist_count = "numeric"
+)
+
+#' Coerce standard MAF columns to their canonical types.
+#'
+#' For every column present in both \code{maf_df} and
+#' \code{\link{maf_column_types}}, coerce it to the canonical type if it
+#' isn't already that type. Coercion failures (e.g. genuinely
+#' non-numeric text in a numeric column) become NA, matching normal R
+#' \code{as.integer()}/\code{as.numeric()} behaviour. Columns not in the
+#' canonical table (e.g. columns added by downstream annotation steps) are
+#' left untouched.
+#'
+#' @param maf_df A data frame (or data.table) of MAF data.
+#' @return \code{maf_df} with canonical column types enforced.
+#' @export
+#' @keywords internal
+enforce_maf_column_types <- function(maf_df) {
+  shared_cols <- intersect(names(maf_df), names(maf_column_types))
+  for (col in shared_cols) {
+    target <- maf_column_types[[col]]
+    current <- maf_df[[col]]
+    already_target <- switch(target,
+      character = is.character(current),
+      integer   = is.integer(current),
+      numeric   = is.double(current),
+      TRUE
+    )
+    if (already_target) next
+    converted <- switch(target,
+      character = as.character(current),
+      integer   = suppressWarnings(as.integer(current)),
+      numeric   = suppressWarnings(as.numeric(current)),
+      current
+    )
+    data.table::set(maf_df, j = col, value = converted)
+  }
+  maf_df
+}
+
 #' Create MAF Data
 #'
 #' This function creates MAF (Mutation Annotation Format) data from the given input.
@@ -94,7 +193,9 @@ preserve_genomic_attributes <- function(new_data, old_data) {
 create_maf_data <- function(maf_df, genome_build) {
   if (!inherits(maf_df, "data.frame")) stop("data must be a data frame")
   if (!genome_build %in% c("grch37", "hg38")) stop("Invalid genome build")
-  
+
+  maf_df <- enforce_maf_column_types(maf_df)
+
   structure(maf_df,
             class = c("genomic_data", "maf_data", class(maf_df)),  #  "genomic_data" for generic methods
             genome_build = genome_build)

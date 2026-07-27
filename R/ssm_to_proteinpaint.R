@@ -103,9 +103,11 @@ ssm_to_proteinpaint = function(maf_data,
   # filter maf according to the samples in the metadata
   maf_data = dplyr::filter(maf_data, Tumor_Sample_Barcode %in% these_samples_metadata$sample_id)
   
-  # keep only those ssms in lymphoma genes
+  # keep only those ssms in lymphoma genes. Expanded to include known aliases
+  # (e.g. old/new HGNC histone names) so rows annotated under a gene's other
+  # name aren't silently dropped.
   if( ! is.null(these_genes) ){
-    maf_data = filter(maf_data, Hugo_Symbol %in% these_genes)
+    maf_data = filter(maf_data, Hugo_Symbol %in% expand_gene_aliases(these_genes))
   }
   
   # add metadata columns to maf_data

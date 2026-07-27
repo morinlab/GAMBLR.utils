@@ -21,8 +21,11 @@
 #' @export
 #'
 #' @examples
+#' cell_line_meta <- GAMBLR.open::get_gambl_metadata() %>%
+#'      dplyr::filter(cohort == "DLBCL_cell_lines")
+#' cell_line_maf <- GAMBLR.open::get_coding_ssm(these_samples_metadata = cell_line_meta)
 #' safe_oncomatrix_path <- sanitize_maf_data(
-#'      mutation_maf_data = GAMBLR.data::sample_data$grch37$maf,
+#'      mutation_maf_data = cell_line_maf,
 #'      genes_keep = c(
 #'          "MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", "IGLL5"
 #'      )
