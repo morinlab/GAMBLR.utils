@@ -15,6 +15,7 @@ segmented_data_to_cn_matrix(
   fill_missing_with = "diploid",
   max_CN_allowed = 6,
   adjust_for_ploidy = FALSE,
+  ploidy_baseline_autosomes_only = TRUE,
   genome_build,
   gistic_lesions_file,
   match_peak_direction = TRUE,
@@ -41,7 +42,29 @@ segmented_data_to_cn_matrix(
 
 \item{max_CN_allowed}{CN values higher than this will be set to this value. Default 6.}
 
-\item{adjust_for_ploidy}{Whether to adjust for high ploidy}
+\item{adjust_for_ploidy}{Set to TRUE to recentre each sample's CN values
+on 2 using its own baseline ploidy. The dominant CN level -- whichever
+(rounded) CN level covers the most total genomic length -- is found as a
+length-weighted mode, not a length-weighted mean: the mean isn't robust
+to a skewed CN distribution (a sample that's genuinely diploid at
+baseline but carries a real gain burden gets its mean pulled above 2 by
+those gains alone, which then over-corrects and pushes its truly-neutral
+majority into "loss" territory). The shift applied is the continuous,
+length-weighted mean CN of the segments within that dominant level, not
+the rounded level itself -- a sample whose dominant level rounds to 2
+but whose actual values there cluster at, say, 1.9 (common for
+low-signal/"boring" samples, where the caller's own neutral reference
+may be off by a similar amount) still gets shifted back to a true 2.0,
+instead of silently receiving no correction. See
+\code{ploidy_baseline_autosomes_only}. This is the same approach
+\code{GAMBLR.viz::segments_to_exact_cn_matrix()} uses, validated there on
+real cohort data before being ported here.}
+
+\item{ploidy_baseline_autosomes_only}{When \code{adjust_for_ploidy = TRUE},
+exclude chrX/chrY segments from the baseline calculation. Default TRUE:
+sex chromosome copy number reflects patient sex, not tumour biology, and
+would bias the baseline for roughly half of a mixed-sex cohort. The
+resulting (autosome-derived) shift is still applied to X/Y segments.}
 
 \item{genome_build}{Specify the genome build (usually not required)}
 

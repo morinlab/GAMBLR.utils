@@ -136,7 +136,28 @@ process_cn_segments_by_region = function(seg_data,
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param use_gistic_name When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates
 #' @param fill_missing_with Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")
-#' @param adjust_for_ploidy Whether to adjust for high ploidy
+#' @param adjust_for_ploidy Set to TRUE to recentre each sample's CN values
+#' on 2 using its own baseline ploidy. The dominant CN level -- whichever
+#' (rounded) CN level covers the most total genomic length -- is found as a
+#' length-weighted mode, not a length-weighted mean: the mean isn't robust
+#' to a skewed CN distribution (a sample that's genuinely diploid at
+#' baseline but carries a real gain burden gets its mean pulled above 2 by
+#' those gains alone, which then over-corrects and pushes its truly-neutral
+#' majority into "loss" territory). The shift applied is the continuous,
+#' length-weighted mean CN of the segments within that dominant level, not
+#' the rounded level itself -- a sample whose dominant level rounds to 2
+#' but whose actual values there cluster at, say, 1.9 (common for
+#' low-signal/"boring" samples, where the caller's own neutral reference
+#' may be off by a similar amount) still gets shifted back to a true 2.0,
+#' instead of silently receiving no correction. See
+#' `ploidy_baseline_autosomes_only`. This is the same approach
+#' `GAMBLR.viz::segments_to_exact_cn_matrix()` uses, validated there on
+#' real cohort data before being ported here.
+#' @param ploidy_baseline_autosomes_only When `adjust_for_ploidy = TRUE`,
+#' exclude chrX/chrY segments from the baseline calculation. Default TRUE:
+#' sex chromosome copy number reflects patient sex, not tumour biology, and
+#' would bias the baseline for roughly half of a mixed-sex cohort. The
+#' resulting (autosome-derived) shift is still applied to X/Y segments.
 #' @param max_CN_allowed CN values higher than this will be set to this value. Default 6.
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
 #' @param match_peak_direction Additional argument. TODO
@@ -182,6 +203,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                             fill_missing_with = "diploid",
                             max_CN_allowed = 6,
                             adjust_for_ploidy=FALSE,
+                            ploidy_baseline_autosomes_only = TRUE,
                             genome_build,
                             gistic_lesions_file,
                             match_peak_direction = TRUE,
@@ -271,6 +293,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          regions = regions_bed,
                                          fill_missing_with = fill_missing_with,
                                          adjust_for_ploidy = adjust_for_ploidy,
+                                         ploidy_baseline_autosomes_only = ploidy_baseline_autosomes_only,
                                          these = these_samples_metadata,
                                          genome_build = genome_build,
                                          verbose=verbose)
@@ -311,14 +334,46 @@ segmented_data_to_cn_matrix = function(seg_data,
   }
 
   if(adjust_for_ploidy){
-    seg_data = mutate(seg_data,
-      size=end-start,
-      CN=ifelse(CN>max_CN_allowed,
-              max_CN_allowed,CN),
-              weighted = CN*size) %>%
-      group_by(ID) %>% 
-      mutate(average=sum(weighted)/sum(size)) %>%
-      mutate(CN=2+CN-average)
+    seg_data = seg_data %>%
+      mutate(
+        CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN),
+        .size = end - start
+      )
+
+    # Baseline ploidy per sample: the length-weighted MODE of (rounded) CN,
+    # not the length-weighted mean -- see the adjust_for_ploidy roxygen
+    # above, and segments_to_exact_cn_matrix() in GAMBLR.viz (where this
+    # approach was developed and validated on real cohort data before being
+    # ported here) for the full rationale.
+    baseline_segs = seg_data
+    if(ploidy_baseline_autosomes_only){
+      baseline_segs = filter(
+        baseline_segs, !grepl("^(chr)?[XY]$", chrom, ignore.case = TRUE)
+      )
+    }
+    baseline_df = baseline_segs %>%
+      mutate(CN_level = round(CN)) %>%
+      group_by(ID, CN_level) %>%
+      summarise(
+        total_length = sum(.size),
+        level_CN = stats::weighted.mean(CN, .size),
+        .groups = "drop"
+      ) %>%
+      arrange(CN_level) %>%
+      group_by(ID) %>%
+      slice_max(total_length, n = 1, with_ties = FALSE) %>%
+      ungroup() %>%
+      select(ID, .baseline = level_CN)
+
+    seg_data = seg_data %>%
+      left_join(baseline_df, by = "ID") %>%
+      mutate(
+        # a sample with no segments left after the autosome filter (shouldn't
+        # normally happen) falls back to no adjustment rather than erroring
+        .baseline = ifelse(is.na(.baseline), 2, .baseline),
+        CN = 2 + CN - .baseline
+      ) %>%
+      select(-.size, -.baseline)
   }
 
   #retrieve the CN value for this region for every segment that overlaps it
