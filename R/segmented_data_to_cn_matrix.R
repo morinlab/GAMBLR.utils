@@ -225,40 +225,10 @@ segmented_data_to_cn_matrix = function(seg_data,
       stop("specify genome_build or provide a seg_data object")
     }
   }
-  if (fill_missing_with=="diploid") {
-    
-    
-    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
-    if(verbose){
-        print("Fill with diploid")
-        print(head(dummy_df))
-    }
-  } else if  (fill_missing_with=="avg_ploidy") {
-    #if(!"dummy_segment" %in% colnames(seg_data)){
-    #  stop("avg_ploidy mode only available when there's a dummy_segment column")
-    #}
-    dummy_df = seg_data %>% 
-      mutate(
-          length = end - start + 1,
-          CN_seg = CN * length,
-          logr_seg = log.ratio * length
-        ) %>%
-        group_by(ID) %>%
-        summarise(
-          CN = sum(CN_seg) / sum(length),
-          log.ratio = sum(logr_seg) / sum(length)
-        ) # actual average per base
-    if(verbose){
-      print(head(dummy_df))
-    }
-    
-  }else if(fill_missing_with == "nothing"){
-    #do nothing
-    if(verbose){
-      print("NOT filling gaps")
-    }
-    
-  }else{
+  # fill_missing_with is validated here (even though dummy_df itself isn't
+  # built until after adjust_for_ploidy, below) so an invalid value is
+  # caught immediately rather than after the GISTIC branch's work.
+  if(!fill_missing_with %in% c("diploid", "avg_ploidy", "nothing")){
     stop("fill_missing_with must be 'nothing', 'diploid' or 'avg_ploidy'")
   }
   if(strategy=="GISTIC"){
@@ -335,35 +305,16 @@ segmented_data_to_cn_matrix = function(seg_data,
 
   if(adjust_for_ploidy){
     seg_data = seg_data %>%
-      mutate(
-        CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN),
-        .size = end - start
-      )
+      mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
 
-    # Baseline ploidy per sample: the length-weighted MODE of (rounded) CN,
-    # not the length-weighted mean -- see the adjust_for_ploidy roxygen
-    # above, and segments_to_exact_cn_matrix() in GAMBLR.viz (where this
-    # approach was developed and validated on real cohort data before being
-    # ported here) for the full rationale.
-    baseline_segs = seg_data
-    if(ploidy_baseline_autosomes_only){
-      baseline_segs = filter(
-        baseline_segs, !grepl("^(chr)?[XY]$", chrom, ignore.case = TRUE)
-      )
-    }
-    baseline_df = baseline_segs %>%
-      mutate(CN_level = round(CN)) %>%
-      group_by(ID, CN_level) %>%
-      summarise(
-        total_length = sum(.size),
-        level_CN = stats::weighted.mean(CN, .size),
-        .groups = "drop"
-      ) %>%
-      arrange(CN_level) %>%
-      group_by(ID) %>%
-      slice_max(total_length, n = 1, with_ties = FALSE) %>%
-      ungroup() %>%
-      select(ID, .baseline = level_CN)
+    # see segmented_data_to_ploidy_estimate for why the mode is used
+    baseline_df = segmented_data_to_ploidy_estimate(
+      seg_data,
+      method = "mode",
+      autosomes_only = ploidy_baseline_autosomes_only,
+      max_CN_allowed = max_CN_allowed
+    ) %>%
+      select(ID = sample_id, .baseline = ploidy)
 
     seg_data = seg_data %>%
       left_join(baseline_df, by = "ID") %>%
@@ -373,7 +324,40 @@ segmented_data_to_cn_matrix = function(seg_data,
         .baseline = ifelse(is.na(.baseline), 2, .baseline),
         CN = 2 + CN - .baseline
       ) %>%
-      select(-.size, -.baseline)
+      select(-.baseline)
+  }
+
+  # Built from seg_data *after* adjust_for_ploidy (if requested), so that a
+  # gap filled via fill_missing_with = "avg_ploidy" lands on that sample's
+  # already-adjusted average rather than its pre-adjustment one -- using the
+  # pre-adjustment value here would leave filled regions inconsistent with
+  # the (shifted) real segments everywhere else in the matrix.
+  if (fill_missing_with=="diploid") {
+    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
+    if(verbose){
+        print("Fill with diploid")
+        print(head(dummy_df))
+    }
+  } else if  (fill_missing_with=="avg_ploidy") {
+    dummy_df = seg_data %>%
+      mutate(
+          length = end - start + 1,
+          CN_seg = CN * length,
+          logr_seg = log.ratio * length
+        ) %>%
+        group_by(ID) %>%
+        summarise(
+          CN = sum(CN_seg) / sum(length),
+          log.ratio = sum(logr_seg) / sum(length)
+        ) # actual average per base
+    if(verbose){
+      print(head(dummy_df))
+    }
+  }else if(fill_missing_with == "nothing"){
+    #do nothing
+    if(verbose){
+      print("NOT filling gaps")
+    }
   }
 
   #retrieve the CN value for this region for every segment that overlaps it
