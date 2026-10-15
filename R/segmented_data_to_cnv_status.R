@@ -631,19 +631,27 @@ segmented_data_to_cnv_status = function(seg_data,
 #' affected, which [segmented_data_to_cnv_status] applies.
 #'
 #' Coordinates are returned after blacklist trimming, so they can differ
-#' from the input.
+#' from the input. With `clip_to_features = TRUE` each supporting segment is
+#' instead cut to the parts covered by the features it supports: overlapping
+#' features (e.g. an arm and a gene on it) are merged into one piece, so
+#' rows never overlap, and a segment supporting separate features gives one
+#' row per piece, each listing the events it overlaps. This is useful for
+#' showing only the driver regions, e.g. via [segmented_data_to_cn_matrix].
 #'
 #' Only grch37/hg19 is currently supported.
 #'
 #' @inheritParams segmented_data_to_cnv_status
 #' @param keep_all Set to TRUE to also return segments that support no
-#' events. Default FALSE.
+#' events. Default FALSE. Can't be combined with `clip_to_features`.
+#' @param clip_to_features Set to TRUE to trim each supporting segment to
+#' the features it supports (see Details). Default FALSE.
 #' @param gene_labels Set to TRUE to add each feature's representative_gene
 #' to the event names, e.g. "2p16.1~REL_gain". Default FALSE.
 #' @param gene_separator Separator between the region and the gene when
 #' `gene_labels = TRUE`. Default "~".
 #'
-#' @return The segments with added columns cnv_value (the centred copy number
+#' @return The segments (or, with `clip_to_features = TRUE`, the clipped
+#' pieces of them) with added columns cnv_value (the centred copy number
 #' change) and `<type>_events` for each feature type.
 #'
 #' @import dplyr
@@ -653,6 +661,14 @@ segmented_data_to_cnv_status = function(seg_data,
 #' \dontrun{
 #' segs = GAMBLR.open::get_cn_segments(these = dlbcl_meta)
 #' annotated = annotate_cnv(segs, genome_build = "grch37")
+#'
+#' # heatmap of only the parts of segments that support curated events
+#' driver_segs = annotate_cnv(segs, genome_build = "grch37",
+#'                            clip_to_features = TRUE)
+#' cn_mat = segmented_data_to_cn_matrix(driver_segs,
+#'                                      these_samples_metadata = dlbcl_meta,
+#'                                      fill_missing_with = "diploid",
+#'                                      genome_build = "grch37")
 #' }
 annotate_cnv = function(seg_data,
                         cnv_features = NULL,
@@ -667,8 +683,12 @@ annotate_cnv = function(seg_data,
                         blacklist_min_feature_overlap = 0.01,
                         blacklist_drop_fraction = 0.8,
                         keep_all = FALSE,
+                        clip_to_features = FALSE,
                         gene_labels = FALSE,
                         gene_separator = "~"){
+  if(keep_all && clip_to_features){
+    stop("keep_all and clip_to_features can't both be TRUE")
+  }
   if(missing(these_samples_metadata)){
     these_samples_metadata = NULL
   }
@@ -698,14 +718,48 @@ annotate_cnv = function(seg_data,
                          .event_value > single_thresh,
                          .event_value < -single_thresh))
 
-  for(t in feature_types){
-    events = supported %>%
-      dplyr::filter(type == t) %>%
+  if(clip_to_features){
+    # each supported feature's part of the segment, merged where they
+    # overlap so the returned pieces of a segment are disjoint
+    parts = supported %>%
+      dplyr::transmute(.seg_row, name, type,
+                       .part_start = pmax(start, f_start),
+                       .part_end = pmin(end, f_end)) %>%
+      dplyr::arrange(.seg_row, .part_start) %>%
       dplyr::group_by(.seg_row) %>%
-      dplyr::summarise(.events = paste(event_names[name], collapse = ";"),
+      dplyr::mutate(.piece = cumsum(
+        .part_start > dplyr::lag(cummax(.part_end), default = -Inf)
+      )) %>%
+      dplyr::ungroup()
+    pieces = parts %>%
+      dplyr::group_by(.seg_row, .piece) %>%
+      dplyr::summarise(.start = min(.part_start), .end = max(.part_end),
                        .groups = "drop")
-    segs[[paste0(t, "_events")]] = events$.events[match(segs$.seg_row,
-                                                        events$.seg_row)]
+    for(t in feature_types){
+      events = parts %>%
+        dplyr::filter(type == t) %>%
+        dplyr::group_by(.seg_row, .piece) %>%
+        dplyr::summarise(.events = paste(event_names[name], collapse = ";"),
+                         .groups = "drop")
+      pieces[[paste0(t, "_events")]] = events$.events[
+        match(paste(pieces$.seg_row, pieces$.piece),
+              paste(events$.seg_row, events$.piece))
+      ]
+    }
+    segs = dplyr::inner_join(segs, pieces, by = ".seg_row") %>%
+      dplyr::mutate(start = .start, end = .end) %>%
+      dplyr::arrange(.seg_row, start) %>%
+      dplyr::select(-.start, -.end, -.piece)
+  }else{
+    for(t in feature_types){
+      events = supported %>%
+        dplyr::filter(type == t) %>%
+        dplyr::group_by(.seg_row) %>%
+        dplyr::summarise(.events = paste(event_names[name], collapse = ";"),
+                         .groups = "drop")
+      segs[[paste0(t, "_events")]] = events$.events[match(segs$.seg_row,
+                                                          events$.seg_row)]
+    }
   }
   event_cols = paste0(feature_types, "_events")
   if(!keep_all){

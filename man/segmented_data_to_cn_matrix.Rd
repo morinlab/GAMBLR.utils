@@ -38,7 +38,7 @@ segmented_data_to_cn_matrix(
 
 \item{use_gistic_name}{When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates}
 
-\item{fill_missing_with}{Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")}
+\item{fill_missing_with}{How to handle sample/region combinations with no segment data: "diploid" (default, CN 2), "avg_ploidy" (the sample's average CN) or "nothing" (leave them NA, and leave out regions with no data in any sample). Filled values are not real copy number: with "diploid", scaling a high-ploidy sample after the matrix is made (e.g. \code{scale_by_sample = TRUE} in \code{GAMBLR.viz::pretty_CN_heatmap()}) turns filled bins into apparent losses. Use \code{adjust_for_ploidy = TRUE} instead, which fills after adjusting; "nothing" additionally shows the gaps as missing.}
 
 \item{max_CN_allowed}{CN values higher than this will be set to this value. Default 6.}
 
@@ -58,7 +58,11 @@ may be off by a similar amount) still gets shifted back to a true 2.0,
 instead of silently receiving no correction. See
 \code{ploidy_baseline_autosomes_only}. This is the same approach
 \code{GAMBLR.viz::segments_to_exact_cn_matrix()} uses, validated there on
-real cohort data before being ported here.}
+real cohort data before being ported here.
+This is the recommended way to correct for ploidy in matrices plotted with
+\code{GAMBLR.viz::pretty_CN_heatmap()} or \code{GAMBLR.viz::stacked_CN_heatmap()}:
+use it instead of their \code{scale_by_sample} option, not together with it.
+Bins with no data are filled after the adjustment, so they stay neutral.}
 
 \item{ploidy_baseline_autosomes_only}{When \code{adjust_for_ploidy = TRUE},
 exclude chrX/chrY segments from the baseline calculation. Default TRUE:

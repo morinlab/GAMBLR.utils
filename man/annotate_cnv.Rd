@@ -18,6 +18,7 @@ annotate_cnv(
   blacklist_min_feature_overlap = 0.01,
   blacklist_drop_fraction = 0.8,
   keep_all = FALSE,
+  clip_to_features = FALSE,
   gene_labels = FALSE,
   gene_separator = "~"
 )
@@ -87,7 +88,10 @@ the DLBCL-Classifier repository as
 \item{blacklist_drop_fraction}{Default 0.8. See Details.}
 
 \item{keep_all}{Set to TRUE to also return segments that support no
-events. Default FALSE.}
+events. Default FALSE. Can't be combined with \code{clip_to_features}.}
+
+\item{clip_to_features}{Set to TRUE to trim each supporting segment to
+the features it supports (see Details). Default FALSE.}
 
 \item{gene_labels}{Set to TRUE to add each feature's representative_gene
 to the event names, e.g. "2p16.1~REL_gain". Default FALSE.}
@@ -96,7 +100,8 @@ to the event names, e.g. "2p16.1~REL_gain". Default FALSE.}
 \code{gene_labels = TRUE}. Default "~".}
 }
 \value{
-The segments with added columns cnv_value (the centred copy number
+The segments (or, with \code{clip_to_features = TRUE}, the clipped
+pieces of them) with added columns cnv_value (the centred copy number
 change) and \verb{<type>_events} for each feature type.
 }
 \description{
@@ -114,7 +119,12 @@ has the event also depends on coverage and the fraction of the feature
 affected, which \link{segmented_data_to_cnv_status} applies.
 
 Coordinates are returned after blacklist trimming, so they can differ
-from the input.
+from the input. With \code{clip_to_features = TRUE} each supporting segment is
+instead cut to the parts covered by the features it supports: overlapping
+features (e.g. an arm and a gene on it) are merged into one piece, so
+rows never overlap, and a segment supporting separate features gives one
+row per piece, each listing the events it overlaps. This is useful for
+showing only the driver regions, e.g. via \link{segmented_data_to_cn_matrix}.
 
 Only grch37/hg19 is currently supported.
 }
@@ -122,5 +132,13 @@ Only grch37/hg19 is currently supported.
 \dontrun{
 segs = GAMBLR.open::get_cn_segments(these = dlbcl_meta)
 annotated = annotate_cnv(segs, genome_build = "grch37")
+
+# heatmap of only the parts of segments that support curated events
+driver_segs = annotate_cnv(segs, genome_build = "grch37",
+                           clip_to_features = TRUE)
+cn_mat = segmented_data_to_cn_matrix(driver_segs,
+                                     these_samples_metadata = dlbcl_meta,
+                                     fill_missing_with = "diploid",
+                                     genome_build = "grch37")
 }
 }

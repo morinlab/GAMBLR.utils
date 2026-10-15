@@ -66,6 +66,11 @@ process_cn_segments_by_region = function(seg_data,
       print(paste("NO values found for",region))
     }
     #there is no data from any patients within this region!
+    if(missing(filler_values)){
+      # fill_missing_with = "nothing": no rows, so the region is left out
+      # of the matrix rather than filled with an assumed value
+      return(data.frame(ID = character(0), CN = numeric(0)))
+    }
     dummy_full = mutate(filler_values,
       chrom=chromosome,start=qstart,end=qend)
     return(dummy_full)
@@ -135,7 +140,7 @@ process_cn_segments_by_region = function(seg_data,
 #' @param n_bins_split Split genome into N equally sized bins
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param use_gistic_name When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates
-#' @param fill_missing_with Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")
+#' @param fill_missing_with How to handle sample/region combinations with no segment data: "diploid" (default, CN 2), "avg_ploidy" (the sample's average CN) or "nothing" (leave them NA, and leave out regions with no data in any sample). Filled values are not real copy number: with "diploid", scaling a high-ploidy sample after the matrix is made (e.g. `scale_by_sample = TRUE` in `GAMBLR.viz::pretty_CN_heatmap()`) turns filled bins into apparent losses. Use `adjust_for_ploidy = TRUE` instead, which fills after adjusting; "nothing" additionally shows the gaps as missing.
 #' @param adjust_for_ploidy Set to TRUE to recentre each sample's CN values
 #' on 2 using its own baseline ploidy. The dominant CN level -- whichever
 #' (rounded) CN level covers the most total genomic length -- is found as a
@@ -153,6 +158,10 @@ process_cn_segments_by_region = function(seg_data,
 #' `ploidy_baseline_autosomes_only`. This is the same approach
 #' `GAMBLR.viz::segments_to_exact_cn_matrix()` uses, validated there on
 #' real cohort data before being ported here.
+#' This is the recommended way to correct for ploidy in matrices plotted with
+#' `GAMBLR.viz::pretty_CN_heatmap()` or `GAMBLR.viz::stacked_CN_heatmap()`:
+#' use it instead of their `scale_by_sample` option, not together with it.
+#' Bins with no data are filled after the adjustment, so they stay neutral.
 #' @param ploidy_baseline_autosomes_only When `adjust_for_ploidy = TRUE`,
 #' exclude chrX/chrY segments from the baseline calculation. Default TRUE:
 #' sex chromosome copy number reflects patient sex, not tumour biology, and
