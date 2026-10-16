@@ -95,20 +95,26 @@ the DLBCL-Classifier repository as
 event's copy number change, NA when the feature isn't covered).}
 
 \item{output_format}{"matrix" (default; samples as rows, features named by
-\code{name} as columns) or "gsm" (DLBClass layout: a classifier_name column
-using \code{dlbclass_name}, then one column per sample).}
+\code{name} as columns), "long" (one row per sample and feature, with columns
+sample_id, name, chrom, start and end, then the call in a column named
+after \code{encoding}: level, binary or value; useful e.g. for accounting for
+features that share a chromosome when modelling) or "gsm" (DLBClass
+layout: a classifier_name column using \code{dlbclass_name}, then one column
+per sample).}
 
 \item{gene_labels}{Set to TRUE to add each feature's representative_gene
 to its name, e.g. "2p16.1_gain" becomes "2p16.1~REL_gain". Features
 without a representative gene keep their name. Ignored for
-\code{output_format = "gsm"}, which always uses the DLBClass names. Default
-FALSE.}
+\code{output_format = "gsm"}, which always uses the DLBClass names. With
+\code{output_format = "long"}, name keeps the feature name and the labelled
+name goes in an added label column. Default FALSE.}
 
 \item{gene_separator}{Separator between the region and the gene when
 \code{gene_labels = TRUE}. Default "~".}
 }
 \value{
-A data frame in the requested format.
+A data frame in the requested format. The "long" format is sorted
+by sample, then by feature in the order of \code{cnv_features}.
 }
 \description{
 Call copy number events defined in a feature table (by
@@ -172,5 +178,9 @@ gsm = segmented_data_to_cnv_status(
   blacklist = dlbclass_blacklist,
   output_format = "gsm"
 )
+
+# one row per sample and feature, with the feature coordinates
+cnv_long = segmented_data_to_cnv_status(segs, genome_build = "grch37",
+                                        output_format = "long")
 }
 }

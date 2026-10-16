@@ -8,10 +8,12 @@ calculate_pga(
   this_seg,
   seg_path,
   projection = "grch37",
-  cutoff = 0.56,
+  cutoff = NULL,
   exclude_sex = TRUE,
   exclude_centromeres = TRUE,
-  per_chromosome = FALSE
+  per_chromosome = FALSE,
+  value_scale = "log_ratio",
+  centering = "none"
 )
 }
 \arguments{
@@ -23,22 +25,39 @@ calculate_pga(
 determine chr prefix, chromosome coordinates, and genome size. Default
 is grch37, but hg38 is also accepted.}
 
-\item{cutoff}{The minimum log.ratio for the segment to be considered as CNV.
-Default is 0.56, which is 1 copy. This value is expected to be a
-positive float of log.ratio for both deletions and amplifications.}
+\item{cutoff}{The minimum difference from the sample's baseline for a
+segment to be considered as CNV, on the scale of \code{value_scale}.
+Default NULL: 0.56 for "log_ratio" (about 1 copy) and 0.5 for "CN".
+This value is expected to be a positive number and applies to both
+deletions and amplifications.}
 
 \item{exclude_sex}{Boolean argument specifying whether to exclude sex
-chromosomes from calculation. Default is TRUE.}
+chromosomes from calculation (and from the baseline). Default is TRUE.}
 
 \item{exclude_centromeres}{Boolean argument specifying whether to exclude
-centromeres from calculation. Default is TRUE.}
+centromeres from calculation: TRUE (default) measures the chromosome
+arms only, FALSE measures each chromosome from the start of its p arm
+to the end of its q arm.}
 
 \item{per_chromosome}{Boolean argument definint whether the PGA should be
 calculated per total genome size (default) or per each individual
 chromosome.}
+
+\item{value_scale}{"log_ratio" (default; uses the log.ratio column) or "CN"
+(uses the CN column).}
+
+\item{centering}{Baseline each sample is centred on before calling
+altered segments: "none" (default; diploid), "median" (the sample's
+length-weighted median, as in \link{segmented_data_to_cnv_status}) or
+"mode" (the dominant CN level from \link{segmented_data_to_ploidy_estimate};
+requires \code{value_scale = "CN"}).}
 }
 \value{
-data frame
+A data frame with sample_id, PGA (the fraction of the genome
+altered), PGA_gain and PGA_loss (the fractions gained and lost,
+relative to the sample's baseline). With \code{per_chromosome = TRUE}, the
+same per chromosome: chr\if{html}{\out{<N>}}_pga, then chr\if{html}{\out{<N>}}_pga_gain and
+chr\if{html}{\out{<N>}}_pga_loss.
 }
 \description{
 \code{calculate_pga} returns a data.frame with estimated proportion
@@ -52,10 +71,21 @@ there is an option to calculate PGA per each chromosome individually by
 setting the argument "per_chromosome" to TRUE.
 The input is expected to be a seg file. The path to a local SEG file can also
 be provided. If The custom seg file is provided, the minimum required columns
-are sample, chrom, start, end, and log.ratio.
+are sample (or ID), chrom, start, end, and log.ratio (or CN with
+\code{value_scale = "CN"}).
 The function can work with either individual or multi-sample seg files.
 The telomeres are always excluded from calculation, and centromeres/sex
-chromosomes can be optionally included or excluded.
+chromosomes can be optionally included or excluded. Segments are clipped to
+the regions measured, so each base counts at most once.
+
+A segment counts as altered when its value differs from the sample's
+baseline by at least \code{cutoff}. With \code{centering = "none"} (default) the
+baseline is diploid (log.ratio 0 or CN 2). With "median" or "mode", each
+sample is first centred on its own baseline, exactly as in
+\link{segmented_data_to_cnv_status}, so that a sample whose whole genome is
+shifted (e.g. by ploidy or normalisation) isn't counted as altered
+throughout. Use the same centring as the CNV calls when using PGA as a
+covariate for them (e.g. the burden in \link{pairwise_event_association}).
 }
 \examples{
 \dontrun{
@@ -65,13 +95,16 @@ seg <- get_sample_cn_segments(
         "DOHH-2"
     )
 )
-seg <- dplyr::rename(seg, "sample" = "ID")
 
 total_pga <- calculate_pga(this_seg = seg)
 per_chromosome_pga <- calculate_pga(
      this_seg = seg,
      per_chromosome = TRUE
 )
+
+# centred like segmented_data_to_cnv_status, e.g. as a burden covariate
+centred_pga <- calculate_pga(this_seg = seg, centering = "median",
+                             cutoff = 0.1)
 }
 
 }

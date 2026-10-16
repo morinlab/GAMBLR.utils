@@ -258,6 +258,48 @@
 # Returns the (blacklist-trimmed) segments with .value, the centred copy
 # number change relative to the sample baseline, plus per-sample arm levels
 # for features called relative to their arm.
+# Baseline ("centre") of each segment's sample, on the scale of its values:
+# the sample's length-weighted median ("median"), its dominant CN level
+# ("mode", CN only) or the diploid level ("none"). segs needs ID and chrom;
+# values and lengths are aligned to its rows. Shared by
+# segmented_data_to_cnv_status and calculate_pga so both centre the same way.
+.cnv_sample_centre = function(segs, values, lengths, value_scale, centering,
+                              autosomes_only){
+  if(!centering %in% c("median", "mode", "none")){
+    stop("centering must be \"median\", \"mode\" or \"none\"")
+  }
+  if(centering == "mode" && value_scale != "CN"){
+    stop("centering = \"mode\" requires value_scale = \"CN\"")
+  }
+  diploid = ifelse(value_scale == "log_ratio", 0, 2)
+  if(nrow(segs) == 0){
+    return(numeric(0))
+  }
+  if(centering == "mode"){
+    baseline = segmented_data_to_ploidy_estimate(
+      data.frame(ID = segs$ID, chrom = segs$chrom,
+                 start = segs$start, end = segs$end, CN = values),
+      method = "mode", autosomes_only = autosomes_only
+    )
+    centre = baseline$ploidy[match(segs$ID, baseline$sample_id)]
+  }else if(centering == "median"){
+    in_baseline = rep(TRUE, nrow(segs))
+    if(autosomes_only){
+      in_baseline = !grepl("^(chr)?[XY]$", segs$chrom)
+    }
+    rows = seq_len(nrow(segs))[in_baseline]
+    medians = vapply(split(rows, segs$ID[in_baseline]),
+                     function(ix) .weighted_region_value(values[ix], lengths[ix],
+                                                         0.5, FALSE),
+                     numeric(1))
+    centre = unname(medians[as.character(segs$ID)])
+  }else{
+    centre = rep(diploid, nrow(segs))
+  }
+  centre[is.na(centre)] = diploid
+  centre
+}
+
 .prepare_cnv_segments = function(seg_data, cnv_features, genome_build,
                                  these_samples_metadata, value_scale,
                                  centering, centering_autosomes_only,
@@ -314,26 +356,8 @@
   seg_len = segs$end - segs$start
   raw = segs[[value_col]]
 
-  if(centering == "mode"){
-    baseline = segmented_data_to_ploidy_estimate(
-      segs, method = "mode", autosomes_only = centering_autosomes_only
-    )
-    centre = baseline$ploidy[match(segs$ID, baseline$sample_id)]
-    centre[is.na(centre)] = 2
-  }else if(centering == "median"){
-    in_baseline = rep(TRUE, nrow(segs))
-    if(centering_autosomes_only){
-      in_baseline = !grepl("^[XY]$", segs$chrom)
-    }
-    medians = vapply(split(seq_len(nrow(segs))[in_baseline], segs$ID[in_baseline]),
-                     function(ix) .weighted_region_value(raw[ix], seg_len[ix],
-                                                         0.5, FALSE),
-                     numeric(1))
-    centre = medians[segs$ID]
-    centre[is.na(centre)] = ifelse(value_scale == "log_ratio", 0, 2)
-  }else{
-    centre = rep(ifelse(value_scale == "log_ratio", 0, 2), nrow(segs))
-  }
+  centre = .cnv_sample_centre(segs, raw, seg_len, value_scale, centering,
+                              centering_autosomes_only)
 
   if(value_scale == "log_ratio"){
     # copy number change relative to diploid, as in DLBClass
@@ -479,17 +503,23 @@
 #' @param encoding "level" (0/1/2, default), "binary" (0/1) or "value" (the
 #' event's copy number change, NA when the feature isn't covered).
 #' @param output_format "matrix" (default; samples as rows, features named by
-#' `name` as columns) or "gsm" (DLBClass layout: a classifier_name column
-#' using `dlbclass_name`, then one column per sample).
+#' `name` as columns), "long" (one row per sample and feature, with columns
+#' sample_id, name, chrom, start and end, then the call in a column named
+#' after `encoding`: level, binary or value; useful e.g. for accounting for
+#' features that share a chromosome when modelling) or "gsm" (DLBClass
+#' layout: a classifier_name column using `dlbclass_name`, then one column
+#' per sample).
 #' @param gene_labels Set to TRUE to add each feature's representative_gene
 #' to its name, e.g. "2p16.1_gain" becomes "2p16.1~REL_gain". Features
 #' without a representative gene keep their name. Ignored for
-#' `output_format = "gsm"`, which always uses the DLBClass names. Default
-#' FALSE.
+#' `output_format = "gsm"`, which always uses the DLBClass names. With
+#' `output_format = "long"`, name keeps the feature name and the labelled
+#' name goes in an added label column. Default FALSE.
 #' @param gene_separator Separator between the region and the gene when
 #' `gene_labels = TRUE`. Default "~".
 #'
-#' @return A data frame in the requested format.
+#' @return A data frame in the requested format. The "long" format is sorted
+#' by sample, then by feature in the order of `cnv_features`.
 #'
 #' @import dplyr
 #' @export
@@ -510,6 +540,10 @@
 #'   blacklist = dlbclass_blacklist,
 #'   output_format = "gsm"
 #' )
+#'
+#' # one row per sample and feature, with the feature coordinates
+#' cnv_long = segmented_data_to_cnv_status(segs, genome_build = "grch37",
+#'                                         output_format = "long")
 #' }
 segmented_data_to_cnv_status = function(seg_data,
                                         cnv_features = NULL,
@@ -531,8 +565,8 @@ segmented_data_to_cnv_status = function(seg_data,
   if(!encoding %in% c("level", "binary", "value")){
     stop("encoding must be \"level\", \"binary\" or \"value\"")
   }
-  if(!output_format %in% c("matrix", "gsm")){
-    stop("output_format must be \"matrix\" or \"gsm\"")
+  if(!output_format %in% c("matrix", "long", "gsm")){
+    stop("output_format must be \"matrix\", \"long\" or \"gsm\"")
   }
   if(missing(these_samples_metadata)){
     these_samples_metadata = NULL
@@ -611,8 +645,26 @@ segmented_data_to_cnv_status = function(seg_data,
     rownames(gsm) = NULL
     return(gsm)
   }
-  colnames(result) = .label_cnv_feature_names(cnv_features, gene_labels,
-                                              gene_separator)
+  feature_labels = .label_cnv_feature_names(cnv_features, gene_labels,
+                                            gene_separator)
+  if(output_format == "long"){
+    n_samples = length(all_samples)
+    n_features = nrow(cnv_features)
+    feature_ix = rep(seq_len(n_features), times = n_samples)
+    long = data.frame(sample_id = rep(all_samples, each = n_features),
+                      name = cnv_features$name[feature_ix],
+                      stringsAsFactors = FALSE)
+    if(gene_labels){
+      long$label = feature_labels[feature_ix]
+    }
+    long$chrom = cnv_features$chrom[feature_ix]
+    long$start = cnv_features$start[feature_ix]
+    long$end = cnv_features$end[feature_ix]
+    # rows are sample-major, so read the matrix row by row
+    long[[encoding]] = as.vector(t(result))
+    return(long)
+  }
+  colnames(result) = feature_labels
   as.data.frame(result)
 }
 
