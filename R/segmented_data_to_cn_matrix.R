@@ -458,6 +458,18 @@ segmented_data_to_cn_matrix = function(seg_data,
       region_names = names(regions)
     }
   }
+  # regions are matched to segments by exact chromosome name, so use the
+  # segments' chr-prefix convention in case the two differ (e.g. "chr19"
+  # regions with "19" segments); names are kept
+  if(is.character(regions) && length(regions) > 0){
+    segments_have_prefix = any(grepl("^chr", unique(seg_data$chrom)))
+    regions_have_prefix = grepl("^chr", regions)
+    if(!segments_have_prefix && any(regions_have_prefix)){
+      regions[] = sub("^chr", "", regions)
+    }else if(segments_have_prefix && any(!regions_have_prefix)){
+      regions[!regions_have_prefix] = paste0("chr", regions[!regions_have_prefix])
+    }
+  }
   if(!missing(these_samples_metadata)){
       #subset to the samples in the provided
       seg_data = dplyr::filter(seg_data,ID %in% these_samples_metadata$sample_id)
