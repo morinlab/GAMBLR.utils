@@ -10,6 +10,7 @@ assemble_genetic_features(
   genes_noncoding,
   genes_hotspot = c("MYD88"),
   genes_driver = c("CD79B", "EZH2", "NOTCH1", "NOTCH2"),
+  gene_reporting_policy = NULL,
   encoding_policy = list(coding = 2, driver = 2, noncoding = 1, sv = 2),
   these_samples_metadata = NULL,
   sv_from_metadata = c(BCL2 = "bcl2_ba", BCL6 = "bcl6_ba", MYC = "myc_ba"),
@@ -29,9 +30,20 @@ assemble_genetic_features(
 
 \item{genes_driver}{Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).}
 
+\item{gene_reporting_policy}{Optional named list of per-gene column output,
+passed to \code{\link{summarise_mutation_status}}. For example
+\code{list(detailed = "CREBBP")} gives one column per mutation alias
+(\code{CREBBP_KAT}, \code{CREBBP_trunc}) plus \code{CREBBP_other} for
+mutations matching no alias. Genes under \code{detailed} or \code{maximal}
+keep these columns (they are not collapsed into one gene column; a
+\code{GENE_noncoding} column, if any, stays separate). A gene can't be both
+under a policy and in \code{genes_hotspot} or \code{genes_driver}.}
+
 \item{encoding_policy}{Named list of values used for coding/driver/noncoding/SV indicators.}
 
-\item{these_samples_metadata}{Optional metadata for samples. If provided with
+\item{these_samples_metadata}{Optional metadata for samples. Its sample_id
+column defines the rows: samples without mutations get all zeros, and MAF
+samples not in the metadata are dropped. If provided with
 \code{sv_from_metadata}, SV status columns are appended via
 \code{encode_sv_status()}.}
 

@@ -148,8 +148,10 @@ The function produces columns named \code{GENE_suffix}, where the suffix
 depends on the gene's reporting policy:
 
 \describe{
-\item{\code{GENE_coding}}{Any mutation present in the gene (the base
-indicator). Produced for genes with no driver annotations, genes under
+\item{\code{GENE_coding}}{Any non-synonymous mutation in the gene
+(\code{Variant_Classification} in \code{vc_nonSynonymous}; the base
+indicator). Silent, UTR and Flank mutations are only counted in
+\code{GENE_noncoding}. Produced for genes with no driver annotations, genes under
 the \code{coding} policy, genes under the \code{detailed} policy that
 lack alias annotations (fallback), and genes under the \code{maximal}
 policy.}

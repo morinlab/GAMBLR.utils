@@ -8,8 +8,18 @@
 #' @param genes_noncoding Character vector of genes to include for non-coding mutations.
 #' @param genes_hotspot Character vector of genes with hotspot annotations (default: MYD88).
 #' @param genes_driver Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).
+#' @param gene_reporting_policy Optional named list of per-gene column output,
+#' passed to \code{\link{summarise_mutation_status}}. For example
+#' \code{list(detailed = "CREBBP")} gives one column per mutation alias
+#' (\code{CREBBP_KAT}, \code{CREBBP_trunc}) plus \code{CREBBP_other} for
+#' mutations matching no alias. Genes under \code{detailed} or \code{maximal}
+#' keep these columns (they are not collapsed into one gene column; a
+#' \code{GENE_noncoding} column, if any, stays separate). A gene can't be both
+#' under a policy and in \code{genes_hotspot} or \code{genes_driver}.
 #' @param encoding_policy Named list of values used for coding/driver/noncoding/SV indicators.
-#' @param these_samples_metadata Optional metadata for samples. If provided with
+#' @param these_samples_metadata Optional metadata for samples. Its sample_id
+#' column defines the rows: samples without mutations get all zeros, and MAF
+#' samples not in the metadata are dropped. If provided with
 #' \code{sv_from_metadata}, SV status columns are appended via
 #' \code{encode_sv_status()}.
 #' @param sv_from_metadata Named vector or list mapping new SV column names to
@@ -58,6 +68,7 @@ assemble_genetic_features <- function(unannotated_maf,
                                      genes_noncoding,
                                      genes_hotspot = c("MYD88"),
                                      genes_driver = c("CD79B","EZH2","NOTCH1","NOTCH2"),
+                                     gene_reporting_policy = NULL,
                                      encoding_policy = list(coding=2,driver=2,noncoding=1,sv=2),
                                      these_samples_metadata = NULL,
                                      sv_from_metadata = c(BCL2="bcl2_ba", BCL6="bcl6_ba", MYC="myc_ba"),
@@ -75,13 +86,25 @@ assemble_genetic_features <- function(unannotated_maf,
   # EZH2: SET domain
   # 
   # 
+  .validate_gene_reporting_policy(gene_reporting_policy)
+  policy_genes = unique(unlist(gene_reporting_policy))
+  overlap = intersect(policy_genes, c(genes_hotspot, genes_driver))
+  if(length(overlap) > 0){
+    stop(paste0("genes can't be both in gene_reporting_policy and in ",
+                "genes_hotspot or genes_driver: ",
+                paste(overlap, collapse = ", ")))
+  }
+  # genes reported per alias keep their alias columns rather than being
+  # collapsed into one gene column
+  alias_genes = unique(unlist(gene_reporting_policy[c("detailed", "maximal")]))
   if(verbose){
     message("Annotating hotspots and drivers using annotate_curated_drivers...")
   }
   annotated_maf= annotate_curated_drivers(maf_data = unannotated_maf,
                                            genes_of_interest = unique(c(genes_hotspot,
-                                                                        genes_driver)))
-  genes_full = unique(c(genes_coding, genes_hotspot, genes_driver))
+                                                                        genes_driver,
+                                                                        policy_genes)))
+  genes_full = unique(c(genes_coding, genes_hotspot, genes_driver, policy_genes))
   if(verbose){
     message("Summarizing mutation status into a wide matrix with summarise_mutation_status...")
     message("encoding policy: coding=", encoding_policy$coding, ", driver=", encoding_policy$driver, ", noncoding=", encoding_policy$noncoding)
@@ -90,10 +113,13 @@ assemble_genetic_features <- function(unannotated_maf,
     annotated_maf,
     genes_coding = genes_coding,
     genes_noncoding = genes_noncoding,
-    encoding_policy = encoding_policy
+    gene_reporting_policy = gene_reporting_policy,
+    encoding_policy = encoding_policy,
+    these_samples_metadata = these_samples_metadata
   )
   collapse_genes = setdiff(genes_full, genes_hotspot)
   collapse_genes = setdiff(collapse_genes, genes_driver)
+  collapse_genes = setdiff(collapse_genes, alias_genes)
   
   
   status_collapse  = collapse_columns_by_regex(
@@ -165,8 +191,10 @@ assemble_genetic_features <- function(unannotated_maf,
 #' depends on the gene's reporting policy:
 #'
 #' \describe{
-#'   \item{\code{GENE_coding}}{Any mutation present in the gene (the base
-#'     indicator). Produced for genes with no driver annotations, genes under
+#'   \item{\code{GENE_coding}}{Any non-synonymous mutation in the gene
+#'     (\code{Variant_Classification} in \code{vc_nonSynonymous}; the base
+#'     indicator). Silent, UTR and Flank mutations are only counted in
+#'     \code{GENE_noncoding}. Produced for genes with no driver annotations, genes under
 #'     the \code{coding} policy, genes under the \code{detailed} policy that
 #'     lack alias annotations (fallback), and genes under the \code{maximal}
 #'     policy.}
@@ -395,6 +423,7 @@ summarise_mutation_status = function(annotated_maf,
 
   # TODO similarly fill in counts for aSHM genes (should restrict to aSHM coordinates)
 
+  .validate_gene_reporting_policy(gene_reporting_policy)
   if(is.null(gene_reporting_policy)){
     gene_reporting_policy = list()
   }
@@ -487,8 +516,9 @@ summarise_mutation_status = function(annotated_maf,
 
   }
 
-  coding_maf = annotated_maf
-  #coding_maf = dplyr::filter(annotated_maf, Variant_Classification %in% vc_nonSynonymous)
+  # coding (and driver/hotspot) counts use non-synonymous mutations only; other
+  # classes (Silent, UTR, Flank) are counted separately as non-coding
+  coding_maf = dplyr::filter(annotated_maf, Variant_Classification %in% vc_nonSynonymous)
 
   #separately count:
   # - coding variants
@@ -1453,3 +1483,29 @@ get_driver_coordinates = function(genome_build){
 
 }
 
+
+
+# gene_reporting_policy must be a list named by policy (detailed, coding,
+# maximal), each holding gene symbols, e.g. list(detailed = "CREBBP")
+.validate_gene_reporting_policy = function(gene_reporting_policy){
+  if(is.null(gene_reporting_policy) || length(gene_reporting_policy) == 0){
+    return(invisible(TRUE))
+  }
+  valid = c("detailed", "coding", "maximal")
+  keys = names(gene_reporting_policy)
+  if(!is.list(gene_reporting_policy) || is.null(keys) || any(keys == "")){
+    stop("gene_reporting_policy must be a named list, e.g. list(detailed = c(\"CREBBP\", \"EZH2\"))")
+  }
+  unknown = setdiff(keys, valid)
+  if(length(unknown) > 0){
+    values = unlist(gene_reporting_policy[unknown])
+    hint = if(all(values %in% valid)){
+      paste0(" It looks inverted: use list(", values[1], " = \"", unknown[1],
+             "\") rather than list(", unknown[1], " = \"", values[1], "\").")
+    }else ""
+    stop(paste0("gene_reporting_policy names must be among ",
+                paste(valid, collapse = ", "), "; got: ",
+                paste(unknown, collapse = ", "), ".", hint))
+  }
+  invisible(TRUE)
+}
