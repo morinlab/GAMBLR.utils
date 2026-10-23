@@ -225,7 +225,7 @@
 #' observed BAF, LogR and LogR-based total copy number `ntot`, its clonal
 #' `major`/`minor`/`total` copy number, whether it is subclonal, and its
 #' `state`: loh_neutral, loh_loss, loh_gain, homdel, imbalance_* or balanced).
-#' The `segments` table is what [GAMBLR.viz::plot_battenberg] plots; it also
+#' The `segments` table is what [GAMBLR.viz::plot_sample_battenberg] plots; it also
 #' has the allele-specific properties (`major_cn`, `minor_cn`, `total_cn`,
 #' `allelic_state`, `cn_change`, `homologues`, `balance`, `assessable`).
 #' Also \code{allelic_states} (genome per allele-specific state per sample)

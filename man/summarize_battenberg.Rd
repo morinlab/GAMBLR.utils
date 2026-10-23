@@ -73,7 +73,7 @@ terminal) and \code{segments} (every autosomal Battenberg segment with its
 observed BAF, LogR and LogR-based total copy number \code{ntot}, its clonal
 \code{major}/\code{minor}/\code{total} copy number, whether it is subclonal, and its
 \code{state}: loh_neutral, loh_loss, loh_gain, homdel, imbalance_* or balanced).
-The \code{segments} table is what \link[GAMBLR.viz:plot_battenberg]{GAMBLR.viz::plot_battenberg} plots; it also
+The \code{segments} table is what \link[GAMBLR.viz:plot_sample_battenberg]{GAMBLR.viz::plot_sample_battenberg} plots; it also
 has the allele-specific properties (\code{major_cn}, \code{minor_cn}, \code{total_cn},
 \code{allelic_state}, \code{cn_change}, \code{homologues}, \code{balance}, \code{assessable}).
 Also \code{allelic_states} (genome per allele-specific state per sample)

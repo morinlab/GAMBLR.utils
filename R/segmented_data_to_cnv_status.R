@@ -49,10 +49,9 @@
       format(example$end, scientific = FALSE), " > ",
       format(chrom_len[beyond[1]], scientific = FALSE),
       "). These look like hg38 coordinates, which are ",
-      "not supported yet. Affected samples: ",
-      paste(utils::head(affected, 10), collapse = ", "),
-      ifelse(length(affected) > 10, ", ...", "")
-    ))
+      "not supported yet. Affected samples:\n  ", .list_ids(affected), "\n",
+      .remove_failing_hint(check = "build_ok")
+    ), call. = FALSE)
   }
   invisible(genome_build)
 }

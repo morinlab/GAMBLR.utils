@@ -173,27 +173,36 @@ resolve_segment_overlaps = function(seg_data, method = "trim", by = NULL,
 .segment_overlap_rows = function(s, by, tolerance){
   n = nrow(s)
   if(n < 2) return(list(rows = integer(0)))
-  key = do.call(paste, c(s[c(by, "chrom")], sep = "\r"))
-  o = order(key, s$start, s$end)
-  k = key[o]; st = as.numeric(s$start[o]); en = as.numeric(s$end[o])
-  # furthest end reached by the earlier segments of the same profile/chrom
-  first = c(TRUE, k[-1] != k[-n])
-  reach = rep(-Inf, n)
-  run_max = -Inf
-  for(i in seq_len(n)){
-    if(first[i]) run_max = -Inf
-    reach[i] = run_max
-    run_max = max(run_max, en[i])
-  }
-  # shared sequence: up to the earlier reach or this segment's end
-  # (a nested segment overlaps along its whole length)
+  # profile+chromosome groups as integers (no long text keys)
+  group = do.call(interaction, c(lapply(s[c(by, "chrom")], as.character),
+                                 drop = TRUE, lex.order = TRUE))
+  g = as.integer(group)
+  o = order(g, s$start, s$end)
+  g = g[o]; st = as.numeric(s$start[o]); en = as.numeric(s$end[o])
+  # furthest end reached by the earlier segments of the same group: a
+  # running maximum that restarts at each group (groups are offset so the
+  # maximum can't carry across them)
+  offset = (g - 1) * (max(en, na.rm = TRUE) + 1)
+  run = cummax(en + offset) - offset
+  first = c(TRUE, g[-1] != g[-n])
+  reach = c(-Inf, run[-n])
+  reach[first] = -Inf
   overlap_bp = pmin(reach, en) - st
   hit = which(overlap_bp > tolerance)
   if(length(hit) == 0) return(list(rows = integer(0)))
-  coord_key = paste(k, st, en, sep = "\r")
-  same = duplicated(coord_key)[hit]
-  row_key = do.call(paste, c(s[o, , drop = FALSE], sep = "\r"))
-  dup_row = duplicated(row_key)[hit]
+  coord_key = paste(g, st, en, sep = "\r")
+  coord_dup = duplicated(coord_key)
+  same = coord_dup[hit]
+  # identical rows can only be among rows sharing coordinates, so the full
+  # row keys are built for those rows only
+  share = coord_key %in% coord_key[coord_dup]
+  dup_row = rep(FALSE, n)
+  if(any(share)){
+    rows = which(share)
+    row_key = do.call(paste, c(s[o[rows], , drop = FALSE], sep = "\r"))
+    dup_row[rows] = duplicated(row_key)
+  }
+  dup_row = dup_row[hit]
   list(rows = o[hit], overlap_bp = overlap_bp[hit], reach = reach[hit],
        same_coordinates = same, duplicate_row = dup_row)
 }

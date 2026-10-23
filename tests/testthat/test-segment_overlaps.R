@@ -23,7 +23,7 @@ test_that("partial overlaps are trimmed and nested ones dropped", {
                    end = c(100, 200, 150, 600), CN = c(2, 3, 4, 2))
   ov = check_segment_overlaps(seg)
   expect_equal(nrow(ov), 2)
-  expect_equal(ov$overlap_bp, c(10, 80))
+  expect_equal(ov$overlap_bp, c(10, 30))  # the nested segment overlaps along its length
   fixed = suppressMessages(resolve_segment_overlaps(seg))
   expect_equal(fixed$start, c(1, 101, 500))
   expect_equal(nrow(check_segment_overlaps(fixed)), 0)
