@@ -19,7 +19,7 @@ library(dplyr)
 cnv_features_grch37 = read_tsv(
   "inst/extdata/cnv_features.grch37.tsv",
   col_types = cols(chrom = "c", start = "i", end = "i",
-                   include = "l", .default = "c"),
+                   include = "l", lymphgen_level = "i", .default = "c"),
   na = c("", "NA")
 ) %>%
   mutate(min_fraction = as.numeric(min_fraction),
@@ -39,7 +39,11 @@ stopifnot(
   # DLBClass backgrounds come only from the rule applied within the DLBClass
   # set (background = "auto"); an override here would change the DLBClass GSM
   "DLBClass rows must have an empty background_arm" =
-    all(is.na(cnv_features_grch37$background_arm[in_dlbclass]))
+    all(is.na(cnv_features_grch37$background_arm[in_dlbclass])),
+  all(cnv_features_grch37$type %in% c("arm", "focal", "gene", "chromosome")), # Make sure only allowed 
+  all(cnv_features_grch37$lymphgen_level %in% c(1L, 2L, NA)), # Ensure lymphgen_level is 1, 2, or NA (1 for CN=1 or CN=3; 2 for CN=0 or CN=4; NA for features not in the LymphGen feature set)
+  "lymphgen_level only on LymphGen rows" =
+    all(is.na(cnv_features_grch37$lymphgen_level[!grepl("LymphGen", ifelse(is.na(cnv_features_grch37$feature_set), "", cnv_features_grch37$feature_set))]))
 )
 
 usethis::use_data(cnv_features_grch37, overwrite = TRUE)
