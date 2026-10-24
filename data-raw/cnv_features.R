@@ -19,7 +19,7 @@ library(dplyr)
 cnv_features_grch37 = read_tsv(
   "inst/extdata/cnv_features.grch37.tsv",
   col_types = cols(chrom = "c", start = "i", end = "i",
-                   include = "l", .default = "c"),
+                   include = "l", lymphgen_level = "i", .default = "c"),
   na = c("", "NA")
 ) %>%
   mutate(min_fraction = as.numeric(min_fraction),
