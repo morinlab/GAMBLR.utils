@@ -274,17 +274,19 @@
   if(nrow(segs) == 0){
     return(numeric(0))
   }
+  # placeholder rows (dummy_segment == 1) never count towards the baseline
+  real = .real_segments(segs)
   if(centering == "mode"){
     baseline = segmented_data_to_ploidy_estimate(
       data.frame(ID = segs$ID, chrom = segs$chrom,
-                 start = segs$start, end = segs$end, CN = values),
+                 start = segs$start, end = segs$end, CN = values)[real, , drop = FALSE],
       method = "mode", autosomes_only = autosomes_only
     )
     centre = baseline$ploidy[match(segs$ID, baseline$sample_id)]
   }else if(centering == "median"){
-    in_baseline = rep(TRUE, nrow(segs))
+    in_baseline = real
     if(autosomes_only){
-      in_baseline = !grepl("^(chr)?[XY]$", segs$chrom)
+      in_baseline = in_baseline & .is_autosome(segs$chrom)
     }
     rows = seq_len(nrow(segs))[in_baseline]
     medians = vapply(split(rows, segs$ID[in_baseline]),
@@ -468,9 +470,10 @@
 #'   \item "none": no sample-specific baseline; values are relative to
 #'     diploid (log.ratio 0 or CN 2).
 #' }
-#' @param centering_autosomes_only Exclude chrX/chrY when computing the
-#' sample baseline (passed as `autosomes_only` for "mode"). Default FALSE, as
-#' in DLBClass.
+#' @param centering_autosomes_only Use autosomes (1-22) only when computing
+#' the sample baseline, as every other GAMBLR baseline does. Default TRUE.
+#' `output_format = "gsm"` always uses FALSE (all chromosomes), as DLBClass
+#' does, so its output matches DLBClass's.
 #' @param single_thresh Minimum copy number change for a level 1 event.
 #' Default NULL: 0.1 for `value_scale = "log_ratio"`, 0.5 for "CN".
 #' @param high_thresh Minimum copy number change for a level 2 event.
@@ -550,7 +553,7 @@ segmented_data_to_cnv_status = function(seg_data,
                                         genome_build,
                                         value_scale = "log_ratio",
                                         centering = "median",
-                                        centering_autosomes_only = FALSE,
+                                        centering_autosomes_only = TRUE,
                                         single_thresh = NULL,
                                         high_thresh = NULL,
                                         background = "auto",
@@ -566,6 +569,14 @@ segmented_data_to_cnv_status = function(seg_data,
   }
   if(!output_format %in% c("matrix", "long", "gsm")){
     stop("output_format must be \"matrix\", \"long\" or \"gsm\"")
+  }
+  # DLBClass centres on all chromosomes; the GSM follows it
+  if(output_format == "gsm" && centering_autosomes_only){
+    if(!missing(centering_autosomes_only)){
+      message("output_format = \"gsm\" centres on all chromosomes, as DLBClass does ",
+              "(centering_autosomes_only = TRUE is ignored)")
+    }
+    centering_autosomes_only = FALSE
   }
   if(missing(these_samples_metadata)){
     these_samples_metadata = NULL
@@ -727,7 +738,7 @@ annotate_cnv = function(seg_data,
                         genome_build,
                         value_scale = "log_ratio",
                         centering = "median",
-                        centering_autosomes_only = FALSE,
+                        centering_autosomes_only = TRUE,
                         single_thresh = NULL,
                         background = "auto",
                         blacklist = NULL,

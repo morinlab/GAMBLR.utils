@@ -34,7 +34,8 @@ region or a few chromosomes fail.
 }
 \details{
 Coverage is the union of each sample's autosomal segments
-(overlaps are not double counted) over the autosomal genome size of the
+(overlaps are not double counted; placeholder rows with
+\code{dummy_segment == 1} are left out) over the autosomal genome size of the
 build (from \code{GAMBLR.data} chromosome arm coordinates). Complete GAMBL
 samples typically cover 0.7-0.95 (callers leave centromeres, gaps and
 placeholder regions uncalled); a region covers well under 0.01.

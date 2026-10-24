@@ -15,6 +15,7 @@ segmented_data_to_cn_matrix(
   fill_missing_with = "diploid",
   max_CN_allowed = 6,
   adjust_for_ploidy = FALSE,
+  baseline_method = "mode",
   ploidy_baseline_autosomes_only = TRUE,
   genome_build,
   gistic_lesions_file,
@@ -63,6 +64,14 @@ This is the recommended way to correct for ploidy in matrices plotted with
 \code{GAMBLR.viz::pretty_CN_heatmap()} or \code{GAMBLR.viz::stacked_CN_heatmap()}:
 use it instead of their \code{scale_by_sample} option, not together with it.
 Bins with no data are filled after the adjustment, so they stay neutral.}
+
+\item{baseline_method}{The baseline \code{adjust_for_ploidy} shifts each
+sample by: "mode" (default; described above), "mode_rounded" (the
+dominant state as a whole number, so only whole-copy shifts) or "mean"
+(genome-wide mean). See \link{add_segment_baseline}. A \code{baseline_cn} column of
+that method already on \code{seg_data} (e.g. from
+\code{GAMBLR.results::get_cn_segments(baseline_method = ...)}) is used instead
+of estimating it from the segments.}
 
 \item{ploidy_baseline_autosomes_only}{When \code{adjust_for_ploidy = TRUE},
 exclude chrX/chrY segments from the baseline calculation. Default TRUE:

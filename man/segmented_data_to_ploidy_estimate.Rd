@@ -8,22 +8,24 @@ segmented_data_to_ploidy_estimate(
   seg_data,
   method = "mode",
   autosomes_only = TRUE,
-  max_CN_allowed = 6
+  max_CN_allowed = 20
 )
 }
 \arguments{
 \item{seg_data}{A data frame of segments with columns ID, chrom, start,
-end and CN.}
+end and CN. Placeholder rows (\code{dummy_segment == 1}) are left out.}
 
-\item{method}{Either "mode" (default) or "mean". See Details.}
+\item{method}{"mode" (default), "mode_rounded" or "mean". See Details.}
 
-\item{autosomes_only}{Exclude chrX/chrY segments from the calculation.
-Default TRUE: sex chromosome copy number reflects patient sex, not tumour
+\item{autosomes_only}{Use autosomes (1-22) only: sex chromosomes and any
+other contigs are left out. Default TRUE: sex chromosome copy number reflects patient sex, not tumour
 biology, and would bias the estimate for roughly half of a mixed-sex
 cohort.}
 
 \item{max_CN_allowed}{CN values higher than this are set to this value
-before estimating. Default 6.}
+before estimating. Default 20, as for every baseline in GAMBLR (see
+\link{add_segment_baseline}); it only matters for "mean" or a dominant state
+above the cap.}
 }
 \value{
 A data frame with columns sample_id and ploidy, one row per
@@ -37,7 +39,14 @@ option of \link{segmented_data_to_cn_matrix} and
 used directly, e.g. as a numeric metadata column for plotting.
 }
 \details{
-Two estimators are available:
+The methods are those of \link{add_segment_baseline} (see
+\link{baseline_methods}); "mode_rounded" gives the dominant state as a whole
+number. Samples whose segments all come from controlfreec get 2 (see
+\link{add_segment_baseline}). When the segments already have a \code{baseline_cn} column of the
+method (e.g. region segments from \code{GAMBLR.results::get_cn_segments},
+whose baselines are genome-wide), those values are returned instead of
+an estimate from the segments; a "mode" column also gives
+"mode_rounded".
 
 \code{"mode"} (default): the dominant CN level -- whichever (rounded) CN level
 covers the most total genomic length -- is found as a length-weighted

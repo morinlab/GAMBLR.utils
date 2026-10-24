@@ -31,8 +31,9 @@ Default NULL: 0.56 for "log_ratio" (about 1 copy) and 0.5 for "CN".
 This value is expected to be a positive number and applies to both
 deletions and amplifications.}
 
-\item{exclude_sex}{Boolean argument specifying whether to exclude sex
-chromosomes from calculation (and from the baseline). Default is TRUE.}
+\item{exclude_sex}{Boolean argument specifying whether to use autosomes
+(1-22) only, leaving out sex chromosomes and any other contigs, in
+the calculation and the baseline. Default is TRUE.}
 
 \item{exclude_centromeres}{Boolean argument specifying whether to exclude
 centromeres from calculation: TRUE (default) measures the chromosome

@@ -162,6 +162,13 @@ process_cn_segments_by_region = function(seg_data,
 #' `GAMBLR.viz::pretty_CN_heatmap()` or `GAMBLR.viz::stacked_CN_heatmap()`:
 #' use it instead of their `scale_by_sample` option, not together with it.
 #' Bins with no data are filled after the adjustment, so they stay neutral.
+#' @param baseline_method The baseline `adjust_for_ploidy` shifts each
+#' sample by: "mode" (default; described above), "mode_rounded" (the
+#' dominant state as a whole number, so only whole-copy shifts) or "mean"
+#' (genome-wide mean). See [add_segment_baseline]. A `baseline_cn` column of
+#' that method already on `seg_data` (e.g. from
+#' `GAMBLR.results::get_cn_segments(baseline_method = ...)`) is used instead
+#' of estimating it from the segments.
 #' @param ploidy_baseline_autosomes_only When `adjust_for_ploidy = TRUE`,
 #' exclude chrX/chrY segments from the baseline calculation. Default TRUE:
 #' sex chromosome copy number reflects patient sex, not tumour biology, and
@@ -212,6 +219,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                             fill_missing_with = "diploid",
                             max_CN_allowed = 6,
                             adjust_for_ploidy=FALSE,
+                            baseline_method = "mode",
                             ploidy_baseline_autosomes_only = TRUE,
                             genome_build,
                             gistic_lesions_file,
@@ -221,6 +229,7 @@ segmented_data_to_cn_matrix = function(seg_data,
   if(!is.numeric(max_CN_allowed)){
     stop("max_CN_allowed must be a numeric value")
   }
+  baseline_method = match.arg(baseline_method, baseline_methods())
   if(missing(these_samples_metadata)){
     if(verbose){
       print("missing these_samples_metadata")
@@ -272,6 +281,7 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          regions = regions_bed,
                                          fill_missing_with = fill_missing_with,
                                          adjust_for_ploidy = adjust_for_ploidy,
+                                         baseline_method = baseline_method,
                                          ploidy_baseline_autosomes_only = ploidy_baseline_autosomes_only,
                                          these = these_samples_metadata,
                                          genome_build = genome_build,
@@ -313,17 +323,17 @@ segmented_data_to_cn_matrix = function(seg_data,
   }
 
   if(adjust_for_ploidy){
-    seg_data = seg_data %>%
-      mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
-
-    # see segmented_data_to_ploidy_estimate for why the mode is used
+    # see segmented_data_to_ploidy_estimate for why the mode is the default;
+    # the baseline is estimated before the values are capped at
+    # max_CN_allowed, with the cap every GAMBLR baseline uses
     baseline_df = segmented_data_to_ploidy_estimate(
       seg_data,
-      method = "mode",
-      autosomes_only = ploidy_baseline_autosomes_only,
-      max_CN_allowed = max_CN_allowed
+      method = baseline_method,
+      autosomes_only = ploidy_baseline_autosomes_only
     ) %>%
       select(ID = sample_id, .baseline = ploidy)
+    seg_data = seg_data %>%
+      mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
 
     seg_data = seg_data %>%
       left_join(baseline_df, by = "ID") %>%
@@ -348,7 +358,8 @@ segmented_data_to_cn_matrix = function(seg_data,
         print(head(dummy_df))
     }
   } else if  (fill_missing_with=="avg_ploidy") {
-    dummy_df = seg_data %>%
+    # placeholder rows (dummy_segment == 1) don't count towards the average
+    dummy_df = seg_data[.real_segments(seg_data), , drop = FALSE] %>%
       mutate(
           length = end - start + 1,
           CN_seg = CN * length,

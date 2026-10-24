@@ -11,7 +11,7 @@ segmented_data_to_cnv_status(
   genome_build,
   value_scale = "log_ratio",
   centering = "median",
-  centering_autosomes_only = FALSE,
+  centering_autosomes_only = TRUE,
   single_thresh = NULL,
   high_thresh = NULL,
   background = "auto",
@@ -53,9 +53,10 @@ values (log.ratio or CN, depending on \code{value_scale}).
 diploid (log.ratio 0 or CN 2).
 }}
 
-\item{centering_autosomes_only}{Exclude chrX/chrY when computing the
-sample baseline (passed as \code{autosomes_only} for "mode"). Default FALSE, as
-in DLBClass.}
+\item{centering_autosomes_only}{Use autosomes (1-22) only when computing
+the sample baseline, as every other GAMBLR baseline does. Default TRUE.
+\code{output_format = "gsm"} always uses FALSE (all chromosomes), as DLBClass
+does, so its output matches DLBClass's.}
 
 \item{single_thresh}{Minimum copy number change for a level 1 event.
 Default NULL: 0.1 for \code{value_scale = "log_ratio"}, 0.5 for "CN".}

@@ -6,7 +6,8 @@
 #' region or a few chromosomes fail.
 #'
 #' @details Coverage is the union of each sample's autosomal segments
-#' (overlaps are not double counted) over the autosomal genome size of the
+#' (overlaps are not double counted; placeholder rows with
+#' `dummy_segment == 1` are left out) over the autosomal genome size of the
 #' build (from `GAMBLR.data` chromosome arm coordinates). Complete GAMBL
 #' samples typically cover 0.7-0.95 (callers leave centromeres, gaps and
 #' placeholder regions uncalled); a region covers well under 0.01.
@@ -36,7 +37,7 @@ check_segment_coverage = function(seg_data, genome_build = NULL, min_genome_cove
   if(is.null(genome_build)) genome_build = "grch37"
   autosome_bp = .autosome_length(genome_build)
   s$chrom = gsub("^chr", "", as.character(s$chrom))
-  s = s[s$chrom %in% as.character(1:22), c("ID", "chrom", "start", "end"), drop = FALSE]
+  s = s[.is_autosome(s$chrom) & .real_segments(s), c("ID", "chrom", "start", "end"), drop = FALSE]
   ids = unique(as.character(as.data.frame(seg_data)$ID))
   if(nrow(s) == 0){
     return(data.frame(ID = ids, coverage = 0, n_autosomes = 0L, ok = FALSE))
@@ -69,21 +70,43 @@ check_segment_coverage = function(seg_data, genome_build = NULL, min_genome_cove
 #' @details Segments that already have a `baseline_cn` from the requested
 #' method are returned unchanged (e.g. region segments from
 #' `GAMBLR.results::get_cn_segments(region = ...)`, whose baselines were
-#' computed genome-wide). Otherwise the baseline is computed from the
+#' computed genome-wide); a "mode" baseline is also converted to
+#' "mode_rounded" without recomputing. Otherwise the baseline is computed from the
 #' segments, which is only meaningful for whole-genome data: each sample is
 #' first checked with [check_segment_coverage], and if any falls short (e.g.
 #' the data were filtered to a region) this stops rather than return a
 #' misleading baseline.
 #'
-#' Methods, over autosomal segments weighted by length:
+#' Methods, over autosomal segments weighted by length (placeholder rows
+#' with `dummy_segment == 1` are always left out). These are the same in
+#' every GAMBLR function that takes a baseline or ploidy method (e.g.
+#' [segmented_data_to_ploidy_estimate], [center_segments],
+#' `GAMBLR.results::get_cn_segments`):
 #' \itemize{
-#'   \item "mode": the most common (rounded) copy number state.
-#'   \item "mean": the mean copy number (can be fractional).
+#'   \item "mode": the mean copy number within the sample's dominant copy
+#'     number state (the rounded state covering the most of the genome).
+#'     Robust to a large burden of gains or losses, and continuous, so a
+#'     sample whose neutral level sits at 1.9 gets 1.9. This is the
+#'     baseline `adjust_for_ploidy` in [segmented_data_to_cn_matrix] uses.
+#'   \item "mode_rounded": that dominant state itself, a whole number
+#'     (`round()` of "mode").
+#'   \item "mean": the mean copy number over the genome, which reflects the
+#'     burden of gains and losses (conventional ploidy).
 #' }
+#' Samples whose segments all come from controlfreec (a `module` column of
+#' "controlfreec") get a baseline of 2 under every method, without the
+#' coverage check: controlfreec doesn't report copy-neutral segments, so
+#' most of the genome is missing and an estimate from the rest would be
+#' wrong.
+#'
+#' Ties between dominant states go to the lower state. Only autosomes
+#' (1-22) count, and copy number above 20 counts as 20, in every function
+#' that estimates a baseline (including the cached baselines in
+#' GAMBLR.results), so they all agree.
 #' Copy number is the CN column, or `2 * 2^log.ratio` without one.
 #'
 #' @param seg_data Segments with ID, chrom, start, end and CN or log.ratio.
-#' @param method "mode" (default) or "mean".
+#' @param method "mode" (default), "mode_rounded" or "mean". See Details.
 #' @param genome_build,min_genome_coverage,min_autosomes As in
 #' [check_segment_coverage].
 #'
@@ -97,17 +120,21 @@ check_segment_coverage = function(seg_data, genome_build = NULL, min_genome_cove
 #' add_segment_baseline(seg)
 add_segment_baseline = function(seg_data, method = "mode", genome_build = NULL,
                                 min_genome_coverage = 0.5, min_autosomes = 20){
-  method = match.arg(method, c("mode", "mean"))
-  if(all(c("baseline_cn", "baseline_method") %in% colnames(seg_data)) &&
-     all(seg_data$baseline_method == method, na.rm = TRUE) &&
-     !anyNA(seg_data$baseline_cn)){
+  method = match.arg(method, baseline_methods())
+  existing = .existing_baseline(seg_data, method)
+  if(!is.null(existing)){
+    seg_data$baseline_cn = existing
+    seg_data$baseline_method = method
     return(seg_data)
   }
   if("baseline_method" %in% colnames(seg_data)){
     message("recomputing baseline_cn with method \"", method, "\" (was \"",
             paste(unique(stats::na.omit(seg_data$baseline_method)), collapse = ", "), "\")")
   }
+  fixed = .fixed_baselines(as.data.frame(seg_data))
   cov = check_segment_coverage(seg_data, genome_build, min_genome_coverage, min_autosomes)
+  # samples with a fixed baseline don't need to cover the genome
+  cov$ok[cov$ID %in% names(fixed)] = TRUE
   if(any(!cov$ok)){
     bad = cov[!cov$ok, , drop = FALSE]
     stop(nrow(bad), " sample(s) have segments covering too little of the genome to estimate ",
@@ -120,22 +147,113 @@ add_segment_baseline = function(seg_data, method = "mode", genome_build = NULL,
   }
   s = as.data.frame(seg_data)
   cn = if("CN" %in% colnames(s)) as.numeric(s$CN) else 2 * 2^as.numeric(s$log.ratio)
-  auto = gsub("^chr", "", as.character(s$chrom)) %in% as.character(1:22) & !is.na(cn)
+  auto = .is_autosome(s$chrom) & !is.na(cn) & .real_segments(s)
   base = .baseline_from(s$ID[auto], cn[auto], as.numeric(s$end[auto]) - as.numeric(s$start[auto]),
                         method)
+  base[names(fixed)] = fixed
   seg_data$baseline_cn = unname(base[as.character(s$ID)])
+  if(anyNA(seg_data$baseline_cn)) .stop_missing_baseline(seg_data$ID[is.na(seg_data$baseline_cn)])
   seg_data$baseline_method = method
   seg_data
 }
 
-# Per-sample baseline from segment copy numbers and lengths
-.baseline_from = function(id, cn, len, method){
-  if(method == "mean"){
-    return(tapply(cn * len, id, sum) / tapply(len, id, sum))
+# Autosomes (1-22, with or without a chr prefix): the chromosomes every
+# baseline, ploidy and centring calculation uses (sex chromosomes and other
+# contigs, e.g. unplaced or random ones, never count)
+.is_autosome = function(chrom){
+  gsub("^chr", "", as.character(chrom)) %in% as.character(1:22)
+}
+
+# Modules (callers) whose samples get a fixed baseline instead of an
+# estimate: controlfreec doesn't report copy-neutral segments, so most of
+# its genome is missing and an estimate from what's left is meaningless
+.fixed_baseline_modules = c(controlfreec = 2)
+
+# Fixed baselines, named by sample, for samples whose (real) segments all
+# come from a module in .fixed_baseline_modules
+.fixed_baselines = function(seg){
+  if(!"module" %in% colnames(seg) || nrow(seg) == 0) return(stats::setNames(numeric(0), character(0)))
+  real = .real_segments(seg)
+  ids = as.character(seg$ID[real]); module = as.character(seg$module[real])
+  only = tapply(module, ids, function(m) if(length(unique(m)) == 1) m[1] else NA_character_)
+  only = only[!is.na(only) & only %in% names(.fixed_baseline_modules)]
+  stats::setNames(as.numeric(.fixed_baseline_modules[only]), names(only))
+}
+
+# Highest copy number counted by baseline and ploidy estimates (higher
+# values count as this), so the same sample gets the same baseline whatever
+# cap a function applies to the values it returns
+.baseline_max_cn = 20
+
+# Rows that are real segments rather than placeholders (dummy_segment == 1),
+# which never count towards a sample's baseline, ploidy or coverage
+.real_segments = function(seg){
+  if(!"dummy_segment" %in% colnames(seg)) return(rep(TRUE, nrow(seg)))
+  dummy = suppressWarnings(as.numeric(seg$dummy_segment))
+  is.na(dummy) | dummy != 1
+}
+
+#' @title Baseline (ploidy) methods
+#'
+#' @description The names of the methods for a sample's baseline copy
+#' number used throughout GAMBLR: "mode", "mode_rounded" and "mean". See
+#' [add_segment_baseline] for what each one is.
+#'
+#' @return A character vector.
+#'
+#' @export
+#'
+#' @examples
+#' baseline_methods()
+baseline_methods = function(){
+  c("mode", "mode_rounded", "mean")
+}
+
+# The baseline_cn of the requested method from a baseline already on the
+# segments: as is when the method matches, rounded when "mode_rounded" is
+# wanted from "mode"; NULL when it would have to be recomputed
+.existing_baseline = function(seg_data, method){
+  if(!all(c("baseline_cn", "baseline_method") %in% colnames(seg_data))) return(NULL)
+  have = unique(stats::na.omit(seg_data$baseline_method))
+  base = as.numeric(seg_data$baseline_cn)
+  if(length(have) != 1) return(NULL)
+  if(!(have == method || (have == "mode" && method == "mode_rounded"))) return(NULL)
+  # samples given no baseline (e.g. by GAMBLR.results::get_cn_segments, for
+  # segments too sparse or without CN) can't be used
+  if(anyNA(base)){
+    .stop_missing_baseline(seg_data$ID[is.na(base)])
   }
-  tot = tapply(len, list(id, round(cn)), sum)
+  if(have == method) base else round(base)
+}
+
+# Stop on samples without a baseline, naming them and how to remove them
+.stop_missing_baseline = function(ids){
+  ids = unique(as.character(ids))
+  stop(length(ids), " sample(s) have no baseline_cn (their segments are too sparse, run past ",
+       "the chromosome ends, or have no CN):\n  ", .list_ids(ids), "\n",
+       "Remove them first, e.g. with GAMBLR.results::annotate_cn_availability(metadata) and ",
+       "dplyr::filter(metadata, cn_available) before getting the segments, or ",
+       "seg_data = dplyr::filter(seg_data, !is.na(baseline_cn))", call. = FALSE)
+}
+
+# Per-sample baseline from segment copy numbers and lengths (methods as in
+# add_segment_baseline), with copy number capped at max_cn
+.baseline_from = function(id, cn, len, method, max_cn = .baseline_max_cn){
+  cn = pmin(cn, max_cn)
+  plain = function(x) stats::setNames(as.numeric(x), names(x))
+  if(method == "mean"){
+    return(plain(tapply(cn * len, id, sum) / tapply(len, id, sum)))
+  }
+  state = round(cn)
+  tot = tapply(len, list(id, state), sum)
   tot[is.na(tot)] = 0
-  stats::setNames(as.numeric(colnames(tot))[max.col(tot, ties.method = "first")], rownames(tot))
+  dominant = stats::setNames(as.numeric(colnames(tot))[max.col(tot, ties.method = "first")],
+                             rownames(tot))
+  if(method == "mode_rounded") return(dominant)
+  # mean copy number within the dominant state
+  in_state = state == dominant[as.character(id)]
+  plain(tapply(cn[in_state] * len[in_state], id[in_state], sum) /
+          tapply(len[in_state], id[in_state], sum))
 }
 
 # Autosomal genome length (bp) for a build, from chromosome arm coordinates
@@ -154,7 +272,9 @@ add_segment_baseline = function(seg_data, method = "mode", genome_build = NULL,
 #' samples can be found and removed in one step: genome coverage (enough of
 #' the genome for genome-wide estimates such as a baseline), genome build
 #' (no segments beyond the chromosome ends of `genome_build`, which suggests
-#' coordinates from another build) and overlapping segments.
+#' coordinates from another build) and overlapping segments. Samples whose
+#' segments all come from controlfreec pass the coverage check, since they
+#' get a fixed baseline (see [add_segment_baseline]).
 #'
 #' @param seg_data Segments with ID, chrom, start and end.
 #' @param genome_build "grch37" or "hg38". Default: the genome build of
@@ -187,7 +307,8 @@ check_segments = function(seg_data, genome_build = NULL, min_genome_coverage = 0
   out$n_beyond_chrom_end = as.integer(table(factor(s$ID[beyond], levels = out$ID)))
   ov = check_segment_overlaps(s)
   out$n_overlapping = as.integer(table(factor(ov$ID, levels = out$ID)))
-  out$coverage_ok = out$ok
+  # samples with a fixed baseline (controlfreec) don't need to cover the genome
+  out$coverage_ok = out$ok | out$ID %in% names(.fixed_baselines(s))
   out$build_ok = out$n_beyond_chrom_end == 0
   out$overlap_ok = out$n_overlapping == 0
   out$ok = out$coverage_ok & out$build_ok & out$overlap_ok

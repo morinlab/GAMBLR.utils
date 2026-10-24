@@ -34,7 +34,9 @@ segments and report, for each sample, whether it passes, so that failing
 samples can be found and removed in one step: genome coverage (enough of
 the genome for genome-wide estimates such as a baseline), genome build
 (no segments beyond the chromosome ends of \code{genome_build}, which suggests
-coordinates from another build) and overlapping segments.
+coordinates from another build) and overlapping segments. Samples whose
+segments all come from controlfreec pass the coverage check, since they
+get a fixed baseline (see \link{add_segment_baseline}).
 }
 \examples{
 \dontrun{

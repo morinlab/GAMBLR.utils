@@ -15,7 +15,7 @@ add_segment_baseline(
 \arguments{
 \item{seg_data}{Segments with ID, chrom, start, end and CN or log.ratio.}
 
-\item{method}{"mode" (default) or "mean".}
+\item{method}{"mode" (default), "mode_rounded" or "mean". See Details.}
 
 \item{genome_build, min_genome_coverage, min_autosomes}{As in
 \link{check_segment_coverage}.}
@@ -32,17 +32,39 @@ to call gains and losses relative to the sample rather than to diploid.
 Segments that already have a \code{baseline_cn} from the requested
 method are returned unchanged (e.g. region segments from
 \code{GAMBLR.results::get_cn_segments(region = ...)}, whose baselines were
-computed genome-wide). Otherwise the baseline is computed from the
+computed genome-wide); a "mode" baseline is also converted to
+"mode_rounded" without recomputing. Otherwise the baseline is computed from the
 segments, which is only meaningful for whole-genome data: each sample is
 first checked with \link{check_segment_coverage}, and if any falls short (e.g.
 the data were filtered to a region) this stops rather than return a
 misleading baseline.
 
-Methods, over autosomal segments weighted by length:
+Methods, over autosomal segments weighted by length (placeholder rows
+with \code{dummy_segment == 1} are always left out). These are the same in
+every GAMBLR function that takes a baseline or ploidy method (e.g.
+\link{segmented_data_to_ploidy_estimate}, \link{center_segments},
+\code{GAMBLR.results::get_cn_segments}):
 \itemize{
-\item "mode": the most common (rounded) copy number state.
-\item "mean": the mean copy number (can be fractional).
+\item "mode": the mean copy number within the sample's dominant copy
+number state (the rounded state covering the most of the genome).
+Robust to a large burden of gains or losses, and continuous, so a
+sample whose neutral level sits at 1.9 gets 1.9. This is the
+baseline \code{adjust_for_ploidy} in \link{segmented_data_to_cn_matrix} uses.
+\item "mode_rounded": that dominant state itself, a whole number
+(\code{round()} of "mode").
+\item "mean": the mean copy number over the genome, which reflects the
+burden of gains and losses (conventional ploidy).
 }
+Samples whose segments all come from controlfreec (a \code{module} column of
+"controlfreec") get a baseline of 2 under every method, without the
+coverage check: controlfreec doesn't report copy-neutral segments, so
+most of the genome is missing and an estimate from the rest would be
+wrong.
+
+Ties between dominant states go to the lower state. Only autosomes
+(1-22) count, and copy number above 20 counts as 20, in every function
+that estimates a baseline (including the cached baselines in
+GAMBLR.results), so they all agree.
 Copy number is the CN column, or \code{2 * 2^log.ratio} without one.
 }
 \examples{

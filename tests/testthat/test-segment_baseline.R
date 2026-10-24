@@ -63,3 +63,86 @@ test_that("the baseline error lists the samples and how to remove them", {
   seg = genome_seg("s1"); seg = seg[seg$chrom == "3", ]
   expect_error(add_segment_baseline(seg), "check_segments")
 })
+
+test_that("dummy (placeholder) rows never count towards baseline, ploidy or coverage", {
+  seg = rbind(data.frame(ID = "s1", chrom = as.character(1:22), start = 1, end = 4e7, CN = 3,
+                         dummy_segment = 0),
+              data.frame(ID = "s1", chrom = as.character(1:22), start = 4e7 + 1, end = 1.4e8,
+                         CN = 2, dummy_segment = 1))
+  no_flag = seg[, setdiff(colnames(seg), "dummy_segment")]
+  expect_lt(check_segment_coverage(seg)$coverage, check_segment_coverage(no_flag)$coverage)
+  expect_equal(segmented_data_to_ploidy_estimate(seg)$ploidy, 3)
+  expect_equal(segmented_data_to_ploidy_estimate(no_flag)$ploidy, 2)
+  expect_equal(unique(add_segment_baseline(seg, min_genome_coverage = 0.1)$baseline_cn), 3)
+})
+
+test_that("the three baseline methods differ as documented and are shared", {
+  seg = genome_seg("s1", cn_first = 3.3, cn_rest = 1.9)   # neutral at 1.9
+  expect_equal(unique(add_segment_baseline(seg)$baseline_cn), 1.9)
+  expect_equal(unique(add_segment_baseline(seg, "mode_rounded")$baseline_cn), 2)
+  expect_gt(unique(add_segment_baseline(seg, "mean")$baseline_cn), 1.9)
+  for(m in baseline_methods()){
+    expect_equal(segmented_data_to_ploidy_estimate(seg, method = m)$ploidy,
+                 unique(add_segment_baseline(seg, m)$baseline_cn))
+  }
+  # a "mode" baseline converts to "mode_rounded" without recomputing (works on a region)
+  region = add_segment_baseline(seg)[seg$chrom == "3", ]
+  expect_equal(unique(add_segment_baseline(region, "mode_rounded")$baseline_cn), 2)
+  expect_error(add_segment_baseline(region, "mean"), "covering too little")
+})
+
+test_that("ploidy estimates and cn matrices use the chosen method and existing baselines", {
+  seg = genome_seg("s1", cn_first = 3.3, cn_rest = 1.9)
+  # an existing genome-wide baseline is used on region segments, not re-estimated
+  region = add_segment_baseline(seg)[seg$chrom == "3", ]
+  region$CN = 3; region$log.ratio = log2(3 / 2)
+  expect_equal(segmented_data_to_ploidy_estimate(region)$ploidy, 1.9)
+  expect_equal(segmented_data_to_ploidy_estimate(region, method = "mode_rounded")$ploidy, 2)
+  expect_message(segmented_data_to_ploidy_estimate(region, method = "mean"), "estimated from the segments")
+  bins = data.frame(chrom = "3", start = 1e6, end = 2e6, name = "bin1")
+  cn = function(m) segmented_data_to_cn_matrix(region, strategy = "custom_regions", regions = bins,
+                                               genome_build = "grch37", adjust_for_ploidy = TRUE,
+                                               baseline_method = m, rounded = FALSE)
+  expect_equal(unname(cn("mode")[1, 1]), 3.1)
+  expect_equal(unname(cn("mode_rounded")[1, 1]), 3)
+})
+
+test_that("only autosomes 1-22 count, and copy number is capped at 20, everywhere", {
+  seg = genome_seg("s1")
+  extra = data.frame(ID = "s1", chrom = c("X", "4_GL000008v2_random"), start = 1, end = 5e9, CN = 1)
+  seg = rbind(seg, extra)
+  expect_equal(segmented_data_to_ploidy_estimate(seg)$ploidy, 2)
+  expect_equal(unique(add_segment_baseline(seg)$baseline_cn), 2)
+  amp = genome_seg("s2", cn_first = 50)
+  expect_equal(segmented_data_to_ploidy_estimate(amp, method = "mean")$ploidy,
+               unique(add_segment_baseline(amp, "mean")$baseline_cn))
+})
+
+test_that("samples without a baseline stop the functions that need one, naming them", {
+  seg = rbind(genome_seg("s1"), genome_seg("s2"))
+  seg = add_segment_baseline(seg)
+  seg$baseline_cn[seg$ID == "s2"] = NA
+  expect_error(add_segment_baseline(seg), "s2")
+  expect_error(center_segments(seg), "no baseline_cn")
+  expect_error(segmented_data_to_ploidy_estimate(seg), "no baseline_cn")
+  expect_equal(unique(center_segments(seg[seg$ID == "s1", ])$centre_cn), 2)
+  # a sample whose segments have no CN can't get one either
+  no_cn = genome_seg("s3"); no_cn$CN = NA
+  expect_error(add_segment_baseline(rbind(genome_seg("s1"), no_cn)), "s3")
+})
+
+test_that("controlfreec samples get a baseline of 2 without the coverage check", {
+  cf = genome_seg("cf", cn_first = 3, cn_rest = 3)[1:6, ]   # sparse, gains only
+  cf$module = "controlfreec"
+  bb = genome_seg("bb", cn_first = 3, cn_rest = 4); bb$module = "battenberg"
+  seg = rbind(cf, bb)
+  for(m in baseline_methods()){
+    b = add_segment_baseline(seg, m)
+    expect_equal(unique(b$baseline_cn[b$ID == "cf"]), 2)
+    p = segmented_data_to_ploidy_estimate(seg, method = m)
+    expect_equal(p$ploidy[p$sample_id == "cf"], 2)
+  }
+  expect_equal(unique(add_segment_baseline(seg)$baseline_cn[seg$ID == "bb"]), 4)
+  expect_equal(unique(center_segments(cf)$CN), 3)
+  expect_true(check_segments(seg)$coverage_ok[check_segments(seg)$ID == "cf"])
+})

@@ -36,8 +36,9 @@
 #'      Default NULL: 0.56 for "log_ratio" (about 1 copy) and 0.5 for "CN".
 #'      This value is expected to be a positive number and applies to both
 #'      deletions and amplifications.
-#' @param exclude_sex Boolean argument specifying whether to exclude sex
-#'      chromosomes from calculation (and from the baseline). Default is TRUE.
+#' @param exclude_sex Boolean argument specifying whether to use autosomes
+#'      (1-22) only, leaving out sex chromosomes and any other contigs, in
+#'      the calculation and the baseline. Default is TRUE.
 #' @param exclude_centromeres Boolean argument specifying whether to exclude
 #'      centromeres from calculation: TRUE (default) measures the chromosome
 #'      arms only, FALSE measures each chromosome from the start of its p arm
@@ -116,8 +117,7 @@ calculate_pga = function(this_seg,
 
   # exclude sex chromosomes
   if (exclude_sex) {
-    chr_coordinates = chr_coordinates %>%
-      dplyr::filter(!grepl("X|Y", chromosome))
+    chr_coordinates = chr_coordinates[.is_autosome(chr_coordinates$chromosome), , drop = FALSE]
   }
 
   # with centromeres included, measure each chromosome from the start of its
@@ -173,8 +173,7 @@ calculate_pga = function(this_seg,
 
   # exclude sex chromosomes
   if (exclude_sex) {
-    this_seg = this_seg %>%
-      dplyr::filter(!grepl("X|Y", chrom))
+    this_seg = this_seg[.is_autosome(this_seg$chrom), , drop = FALSE]
   }
   this_seg = this_seg[!is.na(this_seg[[value_col]]), , drop = FALSE]
 
