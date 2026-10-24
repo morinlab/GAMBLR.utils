@@ -77,8 +77,8 @@
 #' result can be used as a template for a custom `cnv_features` table in
 #' [segmented_data_to_cnv_status] and [annotate_cnv].
 #'
-#' @param genome_build Genome build. Only "grch37" (or "hg19") is currently
-#' supported.
+#' @param genome_build Genome build. Default "grch37", the only one (with its
+#' alias "hg19") currently supported.
 #' @param feature_set Optional:
 #' \itemize{
 #'   \item missing (default): the core set, the rows with `core = TRUE`, one
@@ -105,11 +105,8 @@
 #' dlbclass_features = get_cnv_features("grch37", feature_set = "DLBClass")
 #' lymphgen_features = get_cnv_features("grch37", feature_set = "LymphGen")
 #' every_feature = get_cnv_features("grch37", feature_set = "all")
-get_cnv_features = function(genome_build, feature_set,
+get_cnv_features = function(genome_build = "grch37", feature_set,
                             priority = c("curated", "LymphGen", "DLBClass")){
-  if(missing(genome_build)){
-    stop("genome_build must be specified (only \"grch37\" is currently supported)")
-  }
   if(!genome_build %in% c("grch37", "hg19")){
     # TODO(hg38): needs a properly built hg38 table, see data-raw/cnv_features.R
     stop(paste0("CNV features are currently only available for grch37/hg19 ",

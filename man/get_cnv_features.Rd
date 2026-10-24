@@ -5,14 +5,14 @@
 \title{Get curated CNV feature definitions}
 \usage{
 get_cnv_features(
-  genome_build,
+  genome_build = "grch37",
   feature_set,
   priority = c("curated", "LymphGen", "DLBClass")
 )
 }
 \arguments{
-\item{genome_build}{Genome build. Only "grch37" (or "hg19") is currently
-supported.}
+\item{genome_build}{Genome build. Default "grch37", the only one (with its
+alias "hg19") currently supported.}
 
 \item{feature_set}{Optional:
 \itemize{
