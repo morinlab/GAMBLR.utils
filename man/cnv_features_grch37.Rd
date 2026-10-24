@@ -7,12 +7,14 @@
 \format{
 A data frame with one row per feature:
 \describe{
-\item{name}{Unique event name, e.g. "17p_loss" or "2p16.1_gain".}
+\item{name}{Event name, e.g. "17p_loss" or "2p16.1_gain"; unique within
+each feature set and in the default set.}
 \item{type}{Feature type, e.g. "arm" or "focal". \link{annotate_cnv} returns
 one \verb{<type>_events} column per type.}
 \item{region_name}{Arm (e.g. "17p") or cytoband (e.g. "2p16.1").}
-\item{chrom, start, end}{Coordinates (grch37, no chr prefix). The
-DLBClass arm boundaries are the GISTIC ones and include the centromere.}
+\item{chrom, start, end}{Coordinates (grch37, no chr prefix). Arm
+boundaries (in every set) are at the hg19 cytoband centromere, as in
+the DLBClass GISTIC arms, with q arms ending at the chromosome end.}
 \item{direction}{"gain" or "loss".}
 \item{min_fraction}{Fraction of the covered feature length that must pass
 the threshold (0.5 is the length-weighted median).}
@@ -32,11 +34,21 @@ Left empty where no gene is a convincing target. A few lie just
 outside their peak, which \code{summary} notes.}
 \item{genes}{Optional comma-separated additional genes.}
 \item{feature_set}{Comma-separated named sets the feature belongs to,
-e.g. "DLBClass".}
+e.g. "DLBClass" or "LymphGen"; empty for hand-curated features.}
 \item{dlbclass_name}{Feature name in the DLBClass GSM, e.g. "17P.DEL".}
-\item{include}{FALSE retires a feature from the default set without
-deleting it.}
+\item{include}{FALSE retires a row (e.g. a feature redundant with
+another) without deleting it: it is left out of the core set and of
+\code{feature_set = "all"}, but still returned with its own named set, so
+published sets stay complete.}
+\item{core}{TRUE for the rows in the default (core) set returned by
+\link{get_cnv_features} without a \code{feature_set}: a curated starting point
+rather than every feature. Judged per row: marking a feature core on
+one set's row uses that row's settings. Initially the hand-curated
+rows and the (non-retired) DLBClass rows.}
 \item{citation, summary}{Source and description.}
+\item{lymphgen_level}{For LymphGen rows, the magnitude of copy number
+change (in copies) an event must reach to count for LymphGen: 1 or 2.
+Recorded for future use; not yet used when calling features.}
 }
 }
 \usage{
@@ -52,7 +64,16 @@ time. Use \link{get_cnv_features} rather than this object directly.
 \details{
 The rows tagged "DLBClass" were seeded from the DLBClass arm-level and
 focal (GISTIC) definitions and are kept fixed, since the DLBClass model
-was trained on them. They are in DLBClass GSM order.
+was trained on them. They are in DLBClass GSM order. The rows tagged
+"LymphGen" are the LymphGen copy number features (Wright et al. 2020).
+Rows with an empty \code{feature_set} are hand-curated.
+
+A feature in more than one set has one row per set (same \code{name}), so that
+each named set can be returned complete with its own settings. Where rows
+are combined across sets (\link{get_cnv_features} for the core set or "all"),
+one row is kept per name, by priority: hand-curated first, then LymphGen,
+then DLBClass. A curated row for a feature therefore overrides a tool's
+settings for it.
 
 grch37/hg19 only. An hg38 version still needs to be created properly
 (lifted-over focal features and hg38 GISTIC arm boundaries).

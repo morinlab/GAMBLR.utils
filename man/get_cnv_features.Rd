@@ -4,27 +4,47 @@
 \alias{get_cnv_features}
 \title{Get curated CNV feature definitions}
 \usage{
-get_cnv_features(genome_build, feature_set)
+get_cnv_features(
+  genome_build,
+  feature_set,
+  priority = c("curated", "LymphGen", "DLBClass")
+)
 }
 \arguments{
 \item{genome_build}{Genome build. Only "grch37" (or "hg19") is currently
 supported.}
 
-\item{feature_set}{Optional name of a feature set (e.g. "DLBClass"). Named
-sets are returned in full regardless of \code{include}, so they stay stable as
-the curated table changes. When missing, all features with
-\code{include = TRUE} are returned.}
+\item{feature_set}{Optional:
+\itemize{
+\item missing (default): the core set, the rows with \code{core = TRUE}, one
+per feature name (see \code{priority}): a curated starting point;
+\item "all": every feature that isn't retired (\code{include = TRUE}), one
+row per feature name: the core set plus everything else, without
+redundant rows;
+\item a named set ("DLBClass", "LymphGen", or "curated" for the
+hand-curated rows): that set in full, regardless of \code{include} and
+\code{core}, so published sets stay complete.
+}}
+
+\item{priority}{For the core set and "all", the order in which a
+feature's rows from different sets are preferred: "curated" (rows with
+an empty feature_set) and set names. Default c("curated", "LymphGen",
+"DLBClass"): a hand-curated row overrides a tool's settings, and LymphGen
+settings are used over DLBClass ones. Sets not listed come last.}
 }
 \value{
 A data frame of CNV features (see \link{cnv_features_grch37}).
 }
 \description{
-Return the curated CNV feature table for a genome build,
-either the current default set or a named set such as "DLBClass". The
+Return CNV feature definitions for a genome build: the core
+set (default), every non-redundant feature ("all"), or a named set such
+as "DLBClass", "LymphGen" or "curated". The
 result can be used as a template for a custom \code{cnv_features} table in
 \link{segmented_data_to_cnv_status} and \link{annotate_cnv}.
 }
 \examples{
 cnv_features = get_cnv_features("grch37")
 dlbclass_features = get_cnv_features("grch37", feature_set = "DLBClass")
+lymphgen_features = get_cnv_features("grch37", feature_set = "LymphGen")
+every_feature = get_cnv_features("grch37", feature_set = "all")
 }
