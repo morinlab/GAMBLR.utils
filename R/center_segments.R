@@ -52,8 +52,12 @@
 #' @export
 #'
 #' @examples
-#' seg = data.frame(ID = "s1", chrom = as.character(1:22), start = 1, end = 5e7,
-#'                  CN = c(3, rep(4, 21)))
+#' # one segment per autosome, spanning each whole chromosome (a baseline
+#' # needs segments covering at least half of the autosomal genome)
+#' arms = GAMBLR.data::chromosome_arms_grch37
+#' chrom_end = tapply(arms$end, arms$chromosome, max)[as.character(1:22)]
+#' seg = data.frame(ID = "s1", chrom = as.character(1:22), start = 1,
+#'                  end = as.numeric(chrom_end), CN = c(3, rep(4, 21)))
 #' centred = center_segments(seg)
 #' head(centred[, c("ID", "chrom", "CN", "CN_uncentered", "centre_cn")])
 center_segments = function(seg_data, method = "mode", center_log_ratio = FALSE){

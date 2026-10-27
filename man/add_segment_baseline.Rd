@@ -68,7 +68,11 @@ GAMBLR.results), so they all agree.
 Copy number is the CN column, or \code{2 * 2^log.ratio} without one.
 }
 \examples{
-seg = data.frame(ID = "s1", chrom = as.character(1:22), start = 1, end = 5e7,
-                 CN = c(3, rep(2, 21)))
+# one segment per autosome, spanning each whole chromosome (the baseline
+# needs segments covering at least half of the autosomal genome)
+arms = GAMBLR.data::chromosome_arms_grch37
+chrom_end = tapply(arms$end, arms$chromosome, max)[as.character(1:22)]
+seg = data.frame(ID = "s1", chrom = as.character(1:22), start = 1,
+                 end = as.numeric(chrom_end), CN = c(3, rep(2, 21)))
 add_segment_baseline(seg)
 }
