@@ -3,9 +3,40 @@
 #' Build a sample-by-feature matrix from a MAF by annotating curated drivers,
 #' summarizing coding/non-coding status, and collapsing per-gene columns.
 #'
-#' @param unannotated_maf MAF data frame to annotate and summarize.
+#' @param unannotated_maf MAF data frame to annotate and summarize. Its
+#' coding mutations give the coding indicators and, unless
+#' \code{noncoding_maf} is given, its non-coding mutations the non-coding
+#' ones. A MAF from \code{get_ssm_by_genes} (GAMBLR.open or GAMBLR.results)
+#' has both, so it's all that's needed; a coding MAF (e.g.
+#' \code{get_all_coding_ssm(include_silent = TRUE)}) only has silent and
+#' splice region mutations to offer as non-coding ones.
 #' @param genes_coding Character vector of genes to include for coding mutations.
-#' @param genes_noncoding Character vector of genes to include for non-coding mutations.
+#' @param genes_noncoding Character vector of genes whose non-coding mutations
+#' also count (see \code{noncoding_window}). Each gene's column takes the
+#' highest of its indicators, so with the default \code{encoding_policy} it's 2
+#' for a coding mutation and otherwise 1 for a non-coding one (the separate
+#' \code{GENE_coding} and \code{GENE_noncoding} indicators are in
+#' \code{full_status} with \code{return_everything = TRUE}).
+#' @param noncoding_window Optional window around each gene's transcription
+#' start site, \code{c(start, end)} in bp as for \code{\link{subset_ssm_by_tss}}
+#' (0 is the TSS, positive values are into the gene, negative values
+#' upstream), e.g. \code{c(0, 4000)} for the first 4 kb of the gene (the
+#' LymphGen Synon window). With a window, the non-coding mutations
+#' (\code{Variant_Classification} not in \code{GAMBLR.helpers::vc_nonSynonymous})
+#' are passed through \code{\link{subset_ssm_by_tss}} for \code{genes_noncoding}:
+#' only those in a gene's window count as its non-coding mutations, and
+#' they're assigned to genes by position rather than by
+#' \code{Hugo_Symbol} (so an upstream mutation annotated to a neighbouring
+#' gene still counts). Coding mutations, and so every other column, are
+#' unaffected. Default NULL counts non-coding mutations anywhere in the gene,
+#' by \code{Hugo_Symbol}. To count intronic and flanking mutations, the MAF
+#' must include them (e.g. from \code{get_ssm_by_genes}); a coding MAF with
+#' silent mutations only offers silent and UTR mutations.
+#' @param noncoding_maf Optional MAF to take the non-coding mutations from
+#' instead of \code{unannotated_maf}, e.g. \code{get_ssm_by_genes} for
+#' \code{genes_noncoding} alongside a coding MAF for many more genes. Its
+#' coding mutations are ignored, as are \code{unannotated_maf}'s non-coding
+#' ones. Default NULL uses \code{unannotated_maf} for both.
 #' @param genes_hotspot Character vector of genes with hotspot annotations (default: MYD88).
 #' @param genes_driver Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).
 #' @param gene_reporting_policy Optional named list of per-gene column output,
@@ -19,13 +50,31 @@
 #' @param encoding_policy Named list of values used for coding/driver/noncoding/SV indicators.
 #' @param these_samples_metadata Optional metadata for samples. Its sample_id
 #' column defines the rows: samples without mutations get all zeros, and MAF
-#' samples not in the metadata are dropped. If provided with
-#' \code{sv_from_metadata}, SV status columns are appended via
-#' \code{encode_sv_status()}.
-#' @param sv_from_metadata Named vector or list mapping new SV column names to
-#' metadata fields. If names do not end with \code{_SV}, that suffix is added.
+#' samples not in the metadata are dropped. With \code{sv_from_metadata},
+#' SV status columns are added (see \code{sv_data}).
+#' @param sv_from_metadata Named vector or list mapping SV genes to metadata
+#' fields (e.g. break-apart FISH), default
+#' \code{c(BCL2 = "bcl2_ba", BCL6 = "bcl6_ba", MYC = "myc_ba")}. Its names
+#' are the genes that get an SV status column, named \code{GENE_SV} (the
+#' \code{_SV} suffix is added if missing). NULL for no SV columns.
 #' @param sv_positive_values Values in metadata fields that indicate positive SV
 #' status (default: \code{"POS"}).
+#' @param sv_data Optional SV calls in bedpe format (e.g. from
+#' \code{GAMBLR.results::get_combined_sv} or \code{get_manta_sv}), either
+#' already annotated by \code{\link{annotate_sv}} (with \code{gene} and
+#' \code{partner} columns) or raw, in which case \code{annotate_sv} is run on
+#' them. A sample is SV positive for a gene when an SV rearranges it (the
+#' gene is in the \code{gene} column and a partner was annotated), or its
+#' metadata field (\code{sv_from_metadata}) is positive. A gene named as the
+#' \code{partner} (the locus driving the rearranged gene, e.g. BCL6 in a
+#' BCL6-MYC) doesn't count, and neither do SVs without an annotated partner. This fills in samples whose
+#' metadata status is missing (e.g. no FISH). Samples positive in neither
+#' source are encoded as 0.
+#' @param genome_build Genome build of the MAF and \code{sv_data}, for
+#' \code{\link{annotate_curated_drivers}}, \code{noncoding_window} and
+#' \code{\link{annotate_sv}}. Default: the MAF's \code{genome_build}
+#' attribute (set by GAMBLR's MAF getters) if it has one, otherwise
+#' \code{"grch37"}.
 #' @param verbose Logical. If TRUE, prints progress messages.
 #' @param return_everything Logical. If TRUE, return a list with
 #' \code{annotated_maf}, \code{full_status}, and \code{collapsed_status}.
@@ -37,35 +86,87 @@
 
 #'
 #' @examples
+#' library(dplyr)
+#' # public data from GAMBLR.open: a few DLBCL genomes, which have break-apart
+#' # FISH results (bcl2_ba, bcl6_ba, myc_ba) as well as SV calls
+#' meta = GAMBLR.open::get_gambl_metadata() %>%
+#'   filter(pathology == "DLBCL", seq_type == "genome") %>%
+#'   head(40)
+#' genes = c("EZH2", "CREBBP", "KMT2D", "MYD88", "CD79B", "BCL2", "PIM1")
+#'
+#' # every mutation in these genes, coding and non-coding
+#' maf = GAMBLR.open::get_ssm_by_genes(genes, these_samples_metadata = meta)
+#' sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
+#'
+#' # - coding mutations for every gene (2), and for BCL2 and PIM1 also
+#' #   non-coding ones (1), counting only those in the first 4 kb of the gene
+#' #   (LymphGen's Synon window); the MAF is split and windowed internally
+#' # - BCL2_SV, BCL6_SV and MYC_SV are positive when FISH or the SV calls
+#' #   show the rearrangement, so each fills in for the other. Only the
+#' #   rearranged gene counts, with an annotated partner, so e.g. BCL6 as the
+#' #   partner of a MYC rearrangement isn't a BCL6 SV.
+#' features = assemble_genetic_features(
+#'   maf,
+#'   genes_coding = genes,
+#'   genes_noncoding = c("BCL2", "PIM1"),
+#'   noncoding_window = c(0, 4000),
+#'   these_samples_metadata = meta,
+#'   sv_data = sv,
+#'   verbose = TRUE   # e.g. SV positives from metadata, SV calls and both
+#' )
+#' head(features)
+#'
+#' # For many genes, a coding MAF (e.g. GAMBLR.open::get_all_coding_ssm) can
+#' # supply the coding mutations and get_ssm_by_genes only the genes in
+#' # genes_noncoding, passed as noncoding_maf. For a simpler option, see further below.
+#'
 #' \dontrun{
-#' dlbcl_meta = get_gambl_metadata() %>%
+#' # Combined exome and genome analysis (full GAMBL data via GAMBLR.results)
+#' dlbcl_meta = GAMBLR.results::get_gambl_metadata() %>%
 #'   filter(seq_type != "mrna", pathology == "DLBCL")
-#' # Get coding AND non-coding variants for all genes (including non-Tier 1)
-#' # to allow for flexible summarization 
-#' 
-#' dlbcl_maf = get_all_coding_ssm(
+#'
+#' # Coding mutations plus silent (and splice region) ones, but no UTR,
+#' # intronic or flanking mutations: those aren't covered consistently by
+#' # exome data, so leaving them out keeps exomes and genomes comparable.
+#' dlbcl_maf_with_silent = GAMBLR.results::get_all_coding_ssm(
 #'   these_samples_metadata = dlbcl_meta,
 #'   include_silent = TRUE
 #' )
+#'
+#' # SV calls exist only for genomes; capture samples rely on FISH in the
+#' # metadata, and samples with neither are 0 (not NA) in the *_SV columns.
+#' dlbcl_sv = GAMBLR.results::get_combined_sv(these_samples_metadata = dlbcl_meta)
+#'
 #' # use the Tier 1 DLBCL list (includes almost all LymphGen features and more)
-#' dlbcl_genes = lymphoma_genes %>%
+#' dlbcl_genes = GAMBLR.data::lymphoma_genes %>%
 #'   filter(DLBCL_Tier == 1) %>%
 #'   pull(Gene)
-#' 
-#' # genes affected by aSHM are not all in the Tier 1 DLBCL list
-#' ashm_genes = unique(grch37_ashm_regions$gene)
+#'
+#' # genes affected by aSHM, from the curated aSHM regions (not all are in the
+#' # Tier 1 DLBCL list)
+#' ashm_genes = unique(GAMBLR.data::grch37_ashm_regions$gene)
 #' ashm_genes = ashm_genes[ashm_genes %in% dlbcl_genes]
 #'
+#' # With this MAF, a gene's non-coding indicator (1) means a silent or splice
+#' # region mutation in the first 4 kb of the gene. That's narrower than
+#' # LymphGen's Synon feature, which also counts 5' UTR mutations, and genes
+#' # whose coding sequence starts more than 4 kb from the TSS can't score at
+#' # all. Leave out noncoding_window to count silent mutations anywhere in
+#' # the gene instead.
 #' assembled = assemble_genetic_features(
-#'   dlbcl_maf,
-#'   dlbcl_genes,
-#'   ashm_genes,
-#'   these_samples_metadata = dlbcl_meta
+#'   unannotated_maf = dlbcl_maf_with_silent,
+#'   genes_coding = dlbcl_genes,
+#'   genes_noncoding = ashm_genes,
+#'   noncoding_window = c(0, 4000),
+#'   these_samples_metadata = dlbcl_meta,
+#'   sv_data = dlbcl_sv
 #' )
 #' }
 assemble_genetic_features <- function(unannotated_maf,
                                      genes_coding,
                                      genes_noncoding,
+                                     noncoding_window = NULL,
+                                     noncoding_maf = NULL,
                                      genes_hotspot = c("MYD88"),
                                      genes_driver = c("CD79B","EZH2","NOTCH1","NOTCH2"),
                                      gene_reporting_policy = NULL,
@@ -73,6 +174,8 @@ assemble_genetic_features <- function(unannotated_maf,
                                      these_samples_metadata = NULL,
                                      sv_from_metadata = c(BCL2="bcl2_ba", BCL6="bcl6_ba", MYC="myc_ba"),
                                      sv_positive_values = "POS",
+                                     sv_data = NULL,
+                                     genome_build = "grch37",
                                      verbose = FALSE,
                                      return_everything = FALSE
                                      ){
@@ -97,13 +200,54 @@ assemble_genetic_features <- function(unannotated_maf,
   # genes reported per alias keep their alias columns rather than being
   # collapsed into one gene column
   alias_genes = unique(unlist(gene_reporting_policy[c("detailed", "maximal")]))
+  # the MAF's own genome_build attribute, unless genome_build is given; it's
+  # passed on explicitly because combining MAFs (e.g. with rbind or
+  # bind_rows, as below) drops the attribute
+  if(missing(genome_build) && !is.null(get_genome_build(unannotated_maf))){
+    genome_build = get_genome_build(unannotated_maf)
+  }
+  use_window = !is.null(noncoding_window) && length(genes_noncoding) > 0
+  if(use_window && (!is.numeric(noncoding_window) || length(noncoding_window) != 2)){
+    stop("noncoding_window must be c(start, end), in bp relative to the TSS")
+  }
+  if(!is.null(noncoding_maf) || use_window){
+    # coding mutations come from unannotated_maf; non-coding ones from
+    # noncoding_maf if given, otherwise also from unannotated_maf
+    maf = as.data.frame(unannotated_maf)
+    was_maf_data = inherits(unannotated_maf, "maf_data")
+    coding_rows = maf[maf$Variant_Classification %in% GAMBLR.helpers::vc_nonSynonymous, , drop = FALSE]
+    noncoding_source = if(is.null(noncoding_maf)) maf else as.data.frame(noncoding_maf)
+    noncoding_rows = noncoding_source[!noncoding_source$Variant_Classification %in%
+                                        GAMBLR.helpers::vc_nonSynonymous, , drop = FALSE]
+    if(use_window){
+      # only non-coding mutations in each gene's TSS window count for it,
+      # assigned to genes by position
+      windowed = subset_ssm_by_tss(noncoding_rows, genes = genes_noncoding,
+                                   start = noncoding_window[1], end = noncoding_window[2],
+                                   genome_build = genome_build)
+      if(verbose){
+        message("noncoding_window: kept ", nrow(windowed), " of ", nrow(noncoding_rows),
+                " non-coding mutations, in the windows of ",
+                length(unique(windowed$tss_gene)), " genes")
+      }
+      windowed$Hugo_Symbol = windowed$tss_gene
+      noncoding_rows = as.data.frame(windowed)[, setdiff(colnames(windowed),
+                                                         c("tss_gene", "tss_distance")), drop = FALSE]
+    }
+    unannotated_maf = as.data.frame(dplyr::bind_rows(coding_rows, noncoding_rows))
+    # rebuild a maf_data input (combining drops its class and genome_build)
+    if(was_maf_data){
+      unannotated_maf = create_maf_data(unannotated_maf, .maf_data_build(genome_build))
+    }
+  }
   if(verbose){
     message("Annotating hotspots and drivers using annotate_curated_drivers...")
   }
   annotated_maf= annotate_curated_drivers(maf_data = unannotated_maf,
                                            genes_of_interest = unique(c(genes_hotspot,
                                                                         genes_driver,
-                                                                        policy_genes)))
+                                                                        policy_genes)),
+                                           genome_build = genome_build)
   genes_full = unique(c(genes_coding, genes_hotspot, genes_driver, policy_genes))
   if(verbose){
     message("Summarizing mutation status into a wide matrix with summarise_mutation_status...")
@@ -139,20 +283,50 @@ assemble_genetic_features <- function(unannotated_maf,
       dplyr::rename(!!!setNames(driver_cols, new_names))
   }
 
-  if (!is.null(these_samples_metadata) && !is.null(sv_from_metadata)) {
+  if (!is.null(sv_from_metadata) &&
+      (!is.null(these_samples_metadata) || !is.null(sv_data))) {
     if (any(grepl("_SV$", names(sv_from_metadata)))) {
       mapping <- as.list(sv_from_metadata)
     } else {
       mapping <- setNames(as.list(sv_from_metadata), paste0(names(sv_from_metadata), "_SV"))
     }
-    sv_mat <- encode_sv_status(
-      mat = status_collapse,
-      metadata = these_samples_metadata,
-      mapping = mapping,
-      positive_values = sv_positive_values,
-      encoding_policy = list(positive = encoding_policy$sv, negative = 0),
-      verbose = verbose
-    )
+    if (is.null(sv_data)) {
+      sv_mat <- encode_sv_status(
+        mat = status_collapse,
+        metadata = these_samples_metadata,
+        mapping = mapping,
+        positive_values = sv_positive_values,
+        encoding_policy = list(positive = encoding_policy$sv, negative = 0),
+        verbose = verbose
+      )
+    } else {
+      # union of SV calls and metadata (e.g. FISH), so either fills in the other
+      sample_ids <- rownames(status_collapse)
+      genes <- sub("_SV$", "", names(mapping))
+      from_calls <- .sv_genes_from_calls(sv_data, sample_ids, genes, genome_build, verbose)
+      sv_mat <- as.data.frame(status_collapse)
+      for (col_name in names(mapping)) {
+        gene <- sub("_SV$", "", col_name)
+        field <- mapping[[col_name]]
+        from_meta <- character(0)
+        if (!is.null(these_samples_metadata)) {
+          if (field %in% colnames(these_samples_metadata)) {
+            from_meta <- as.character(these_samples_metadata$sample_id[
+              these_samples_metadata[[field]] %in% sv_positive_values])
+          } else {
+            warning(paste0("metadata has no ", field, " column; ", col_name,
+                           " is from sv_data only"))
+          }
+        }
+        if (verbose) {
+          message(col_name, ": ", sum(sample_ids %in% from_meta), " positive from metadata, ",
+                  sum(sample_ids %in% from_calls[[gene]]), " from sv_data, ",
+                  sum(sample_ids %in% intersect(from_meta, from_calls[[gene]])), " in both")
+        }
+        sv_mat[[col_name]] <- ifelse(sample_ids %in% union(from_meta, from_calls[[gene]]),
+                                     encoding_policy$sv, 0)
+      }
+    }
     for (col_name in names(mapping)) {
       if (col_name %in% colnames(sv_mat) && all(sv_mat[[col_name]] == 0, na.rm = TRUE)) {
         warning(paste("SV encoding: no POS values found for", col_name))
@@ -168,7 +342,27 @@ assemble_genetic_features <- function(unannotated_maf,
     ))
   }
   return(status_collapse)
-  
+
+}
+
+# For each gene, the samples with an SV rearranging it in sv_data, annotating
+# sv_data with annotate_sv() first if it has no gene and partner columns. Only
+# the gene column counts, with an annotated partner: the partner is the locus
+# (e.g. IGH or the BCL6 super-enhancer) driving the gene, not a rearranged
+# target itself, and SVs without a known partner are not counted.
+.sv_genes_from_calls <- function(sv_data, sample_ids, genes, genome_build, verbose = FALSE) {
+  sv_data <- as.data.frame(sv_data)
+  if (!all(c("gene", "partner") %in% colnames(sv_data))) {
+    if (verbose) {
+      message("Annotating sv_data with annotate_sv...")
+    }
+    sv_data <- annotate_sv(sv_data, genome_build = genome_build)
+  }
+  sv_data <- sv_data[sv_data$tumour_sample_id %in% sample_ids, , drop = FALSE]
+  lapply(setNames(genes, genes), function(gene) {
+    unique(as.character(sv_data$tumour_sample_id[
+      sv_data$gene %in% gene & !is.na(sv_data$partner)]))
+  })
 }
 
 

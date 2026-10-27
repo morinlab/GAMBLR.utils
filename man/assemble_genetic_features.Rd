@@ -8,6 +8,8 @@ assemble_genetic_features(
   unannotated_maf,
   genes_coding,
   genes_noncoding,
+  noncoding_window = NULL,
+  noncoding_maf = NULL,
   genes_hotspot = c("MYD88"),
   genes_driver = c("CD79B", "EZH2", "NOTCH1", "NOTCH2"),
   gene_reporting_policy = NULL,
@@ -15,16 +17,51 @@ assemble_genetic_features(
   these_samples_metadata = NULL,
   sv_from_metadata = c(BCL2 = "bcl2_ba", BCL6 = "bcl6_ba", MYC = "myc_ba"),
   sv_positive_values = "POS",
+  sv_data = NULL,
+  genome_build = "grch37",
   verbose = FALSE,
   return_everything = FALSE
 )
 }
 \arguments{
-\item{unannotated_maf}{MAF data frame to annotate and summarize.}
+\item{unannotated_maf}{MAF data frame to annotate and summarize. Its
+coding mutations give the coding indicators and, unless
+\code{noncoding_maf} is given, its non-coding mutations the non-coding
+ones. A MAF from \code{get_ssm_by_genes} (GAMBLR.open or GAMBLR.results)
+has both, so it's all that's needed; a coding MAF (e.g.
+\code{get_all_coding_ssm(include_silent = TRUE)}) only has silent and
+splice region mutations to offer as non-coding ones.}
 
 \item{genes_coding}{Character vector of genes to include for coding mutations.}
 
-\item{genes_noncoding}{Character vector of genes to include for non-coding mutations.}
+\item{genes_noncoding}{Character vector of genes whose non-coding mutations
+also count (see \code{noncoding_window}). Each gene's column takes the
+highest of its indicators, so with the default \code{encoding_policy} it's 2
+for a coding mutation and otherwise 1 for a non-coding one (the separate
+\code{GENE_coding} and \code{GENE_noncoding} indicators are in
+\code{full_status} with \code{return_everything = TRUE}).}
+
+\item{noncoding_window}{Optional window around each gene's transcription
+start site, \code{c(start, end)} in bp as for \code{\link{subset_ssm_by_tss}}
+(0 is the TSS, positive values are into the gene, negative values
+upstream), e.g. \code{c(0, 4000)} for the first 4 kb of the gene (the
+LymphGen Synon window). With a window, the non-coding mutations
+(\code{Variant_Classification} not in \code{GAMBLR.helpers::vc_nonSynonymous})
+are passed through \code{\link{subset_ssm_by_tss}} for \code{genes_noncoding}:
+only those in a gene's window count as its non-coding mutations, and
+they're assigned to genes by position rather than by
+\code{Hugo_Symbol} (so an upstream mutation annotated to a neighbouring
+gene still counts). Coding mutations, and so every other column, are
+unaffected. Default NULL counts non-coding mutations anywhere in the gene,
+by \code{Hugo_Symbol}. To count intronic and flanking mutations, the MAF
+must include them (e.g. from \code{get_ssm_by_genes}); a coding MAF with
+silent mutations only offers silent and UTR mutations.}
+
+\item{noncoding_maf}{Optional MAF to take the non-coding mutations from
+instead of \code{unannotated_maf}, e.g. \code{get_ssm_by_genes} for
+\code{genes_noncoding} alongside a coding MAF for many more genes. Its
+coding mutations are ignored, as are \code{unannotated_maf}'s non-coding
+ones. Default NULL uses \code{unannotated_maf} for both.}
 
 \item{genes_hotspot}{Character vector of genes with hotspot annotations (default: MYD88).}
 
@@ -43,15 +80,35 @@ under a policy and in \code{genes_hotspot} or \code{genes_driver}.}
 
 \item{these_samples_metadata}{Optional metadata for samples. Its sample_id
 column defines the rows: samples without mutations get all zeros, and MAF
-samples not in the metadata are dropped. If provided with
-\code{sv_from_metadata}, SV status columns are appended via
-\code{encode_sv_status()}.}
+samples not in the metadata are dropped. With \code{sv_from_metadata},
+SV status columns are added (see \code{sv_data}).}
 
-\item{sv_from_metadata}{Named vector or list mapping new SV column names to
-metadata fields. If names do not end with \code{_SV}, that suffix is added.}
+\item{sv_from_metadata}{Named vector or list mapping SV genes to metadata
+fields (e.g. break-apart FISH), default
+\code{c(BCL2 = "bcl2_ba", BCL6 = "bcl6_ba", MYC = "myc_ba")}. Its names
+are the genes that get an SV status column, named \code{GENE_SV} (the
+\code{_SV} suffix is added if missing). NULL for no SV columns.}
 
 \item{sv_positive_values}{Values in metadata fields that indicate positive SV
 status (default: \code{"POS"}).}
+
+\item{sv_data}{Optional SV calls in bedpe format (e.g. from
+\code{GAMBLR.results::get_combined_sv} or \code{get_manta_sv}), either
+already annotated by \code{\link{annotate_sv}} (with \code{gene} and
+\code{partner} columns) or raw, in which case \code{annotate_sv} is run on
+them. A sample is SV positive for a gene when an SV rearranges it (the
+gene is in the \code{gene} column and a partner was annotated), or its
+metadata field (\code{sv_from_metadata}) is positive. A gene named as the
+\code{partner} (the locus driving the rearranged gene, e.g. BCL6 in a
+BCL6-MYC) doesn't count, and neither do SVs without an annotated partner. This fills in samples whose
+metadata status is missing (e.g. no FISH). Samples positive in neither
+source are encoded as 0.}
+
+\item{genome_build}{Genome build of the MAF and \code{sv_data}, for
+\code{\link{annotate_curated_drivers}}, \code{noncoding_window} and
+\code{\link{annotate_sv}}. Default: the MAF's \code{genome_build}
+attribute (set by GAMBLR's MAF getters) if it has one, otherwise
+\code{"grch37"}.}
 
 \item{verbose}{Logical. If TRUE, prints progress messages.}
 
@@ -67,30 +124,80 @@ Build a sample-by-feature matrix from a MAF by annotating curated drivers,
 summarizing coding/non-coding status, and collapsing per-gene columns.
 }
 \examples{
-\dontrun{
-dlbcl_meta = get_gambl_metadata() \%>\%
-  filter(seq_type != "mrna", pathology == "DLBCL")
-# Get coding AND non-coding variants for all genes (including non-Tier 1)
-# to allow for flexible summarization 
+library(dplyr)
+# public data from GAMBLR.open: a few DLBCL genomes, which have break-apart
+# FISH results (bcl2_ba, bcl6_ba, myc_ba) as well as SV calls
+meta = GAMBLR.open::get_gambl_metadata() \%>\%
+  filter(pathology == "DLBCL", seq_type == "genome") \%>\%
+  head(40)
+genes = c("EZH2", "CREBBP", "KMT2D", "MYD88", "CD79B", "BCL2", "PIM1")
 
-dlbcl_maf = get_all_coding_ssm(
+# every mutation in these genes, coding and non-coding
+maf = GAMBLR.open::get_ssm_by_genes(genes, these_samples_metadata = meta)
+sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
+
+# - coding mutations for every gene (2), and for BCL2 and PIM1 also
+#   non-coding ones (1), counting only those in the first 4 kb of the gene
+#   (LymphGen's Synon window); the MAF is split and windowed internally
+# - BCL2_SV, BCL6_SV and MYC_SV are positive when FISH or the SV calls
+#   show the rearrangement, so each fills in for the other. Only the
+#   rearranged gene counts, with an annotated partner, so e.g. BCL6 as the
+#   partner of a MYC rearrangement isn't a BCL6 SV.
+features = assemble_genetic_features(
+  maf,
+  genes_coding = genes,
+  genes_noncoding = c("BCL2", "PIM1"),
+  noncoding_window = c(0, 4000),
+  these_samples_metadata = meta,
+  sv_data = sv,
+  verbose = TRUE   # e.g. SV positives from metadata, SV calls and both
+)
+head(features)
+
+# For many genes, a coding MAF (e.g. GAMBLR.open::get_all_coding_ssm) can
+# supply the coding mutations and get_ssm_by_genes only the genes in
+# genes_noncoding, passed as noncoding_maf. For a simpler option, see further below.
+
+\dontrun{
+# Combined exome and genome analysis (full GAMBL data via GAMBLR.results)
+dlbcl_meta = GAMBLR.results::get_gambl_metadata() \%>\%
+  filter(seq_type != "mrna", pathology == "DLBCL")
+
+# Coding mutations plus silent (and splice region) ones, but no UTR,
+# intronic or flanking mutations: those aren't covered consistently by
+# exome data, so leaving them out keeps exomes and genomes comparable.
+dlbcl_maf_with_silent = GAMBLR.results::get_all_coding_ssm(
   these_samples_metadata = dlbcl_meta,
   include_silent = TRUE
 )
+
+# SV calls exist only for genomes; capture samples rely on FISH in the
+# metadata, and samples with neither are 0 (not NA) in the *_SV columns.
+dlbcl_sv = GAMBLR.results::get_combined_sv(these_samples_metadata = dlbcl_meta)
+
 # use the Tier 1 DLBCL list (includes almost all LymphGen features and more)
-dlbcl_genes = lymphoma_genes \%>\%
+dlbcl_genes = GAMBLR.data::lymphoma_genes \%>\%
   filter(DLBCL_Tier == 1) \%>\%
   pull(Gene)
 
-# genes affected by aSHM are not all in the Tier 1 DLBCL list
-ashm_genes = unique(grch37_ashm_regions$gene)
+# genes affected by aSHM, from the curated aSHM regions (not all are in the
+# Tier 1 DLBCL list)
+ashm_genes = unique(GAMBLR.data::grch37_ashm_regions$gene)
 ashm_genes = ashm_genes[ashm_genes \%in\% dlbcl_genes]
 
+# With this MAF, a gene's non-coding indicator (1) means a silent or splice
+# region mutation in the first 4 kb of the gene. That's narrower than
+# LymphGen's Synon feature, which also counts 5' UTR mutations, and genes
+# whose coding sequence starts more than 4 kb from the TSS can't score at
+# all. Leave out noncoding_window to count silent mutations anywhere in
+# the gene instead.
 assembled = assemble_genetic_features(
-  dlbcl_maf,
-  dlbcl_genes,
-  ashm_genes,
-  these_samples_metadata = dlbcl_meta
+  unannotated_maf = dlbcl_maf_with_silent,
+  genes_coding = dlbcl_genes,
+  genes_noncoding = ashm_genes,
+  noncoding_window = c(0, 4000),
+  these_samples_metadata = dlbcl_meta,
+  sv_data = dlbcl_sv
 )
 }
 }
