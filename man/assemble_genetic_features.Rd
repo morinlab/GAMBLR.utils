@@ -116,8 +116,8 @@ feature, valued 0, 1 or 2 by default: no change, single-copy change,
 larger change).}
 
 \item{cnv_features}{Optional copy number features to call (see
-\code{\link{get_cnv_features}}). Default NULL: the curated set
-(\code{get_cnv_features()}).}
+\code{\link{get_cnv_features}}). Default NULL: the core set, as returned
+by \code{get_cnv_features()} without a \code{feature_set}.}
 
 \item{cnv_args}{Optional named list of further arguments for
 \code{\link{segmented_data_to_cnv_status}}, e.g.
@@ -175,7 +175,7 @@ segs = GAMBLR.open::get_cn_segments(these_samples_metadata = meta)
 #   show the rearrangement, so each fills in for the other. Only the
 #   rearranged gene counts, with an annotated partner, so e.g. BCL6 as the
 #   partner of a MYC rearrangement isn't a BCL6 SV.
-# - copy number features from the segments (the curated set, 0/1/2), one
+# - copy number features from the segments (the core set, 0/1/2), one
 #   column each
 # - unassessed_value = NA marks samples without data of a type (e.g. no
 #   segments, or neither FISH nor SV calls) instead of counting them as 0
@@ -249,7 +249,7 @@ dlbcl_segs = GAMBLR.results::get_cn_segments(these_samples_metadata = dlbcl_meta
 # NA rather than counted as having no copy number change.
 dlbcl_meta = GAMBLR.results::annotate_data_availability(dlbcl_meta)
 
-# - cnv_features: the curated copy number features (arm-level and focal
+# - cnv_features: the core copy number features (arm-level and focal
 #   gains and losses, e.g. 6q_loss, REL_gain, CDKN2A_loss), one column
 #   each: 0 no change, 1 single-copy change, 2 larger change
 # - cnv_args: call them on the copy number scale, relative to each
