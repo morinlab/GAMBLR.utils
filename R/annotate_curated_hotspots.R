@@ -70,6 +70,28 @@
 #' BCL6-MYC) doesn't count, and neither do SVs without an annotated partner. This fills in samples whose
 #' metadata status is missing (e.g. no FISH). Samples positive in neither
 #' source are encoded as 0.
+#' @param seg_data Optional segmented copy number data (as for
+#' \code{\link{segmented_data_to_cnv_status}}, e.g. from
+#' \code{get_cn_segments}). Its copy number features are called with
+#' \code{\link{segmented_data_to_cnv_status}} and added as columns (one per
+#' feature, valued 0, 1 or 2 by default: no change, single-copy change,
+#' larger change).
+#' @param cnv_features Optional copy number features to call (see
+#' \code{\link{get_cnv_features}}). Default NULL: the curated set
+#' (\code{get_cnv_features()}).
+#' @param cnv_args Optional named list of further arguments for
+#' \code{\link{segmented_data_to_cnv_status}}, e.g.
+#' \code{list(value_scale = "CN", centering = "mode")}.
+#' @param unassessed_value Value for samples whose data of a type wasn't
+#' assessed. Default 0, the same as assessed with no event; NA marks them
+#' instead. Copy number columns: samples with \code{cn_available} FALSE in
+#' \code{these_samples_metadata} (see GAMBLR.results
+#' \code{annotate_data_availability}) or, without that column, with no
+#' segments in \code{seg_data}. SV columns: samples with no result in the
+#' metadata field (e.g. no FISH), no rows in \code{sv_data} and no
+#' \code{sv_available} TRUE. Mutation columns: only samples with
+#' \code{ssm_available} FALSE, since a sample without mutations can't
+#' otherwise be told from one without data.
 #' @param genome_build Genome build of the MAF and \code{sv_data}, for
 #' \code{\link{annotate_curated_drivers}}, \code{noncoding_window} and
 #' \code{\link{annotate_sv}}. Default: the MAF's \code{genome_build}
@@ -77,7 +99,8 @@
 #' \code{"grch37"}.
 #' @param verbose Logical. If TRUE, prints progress messages.
 #' @param return_everything Logical. If TRUE, return a list with
-#' \code{annotated_maf}, \code{full_status}, and \code{collapsed_status}.
+#' \code{annotated_maf}, \code{full_status}, \code{collapsed_status} and
+#' \code{cnv_status} (the copy number features alone, or NULL).
 #'
 #' @return A wide matrix-like data frame of per-sample mutation features.
 #' If \code{return_everything = TRUE}, returns a list with intermediate outputs.
@@ -97,6 +120,7 @@
 #' # every mutation in these genes, coding and non-coding
 #' maf = GAMBLR.open::get_ssm_by_genes(genes, these_samples_metadata = meta)
 #' sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
+#' segs = GAMBLR.open::get_cn_segments(these_samples_metadata = meta)
 #'
 #' # - coding mutations for every gene (2), and for BCL2 and PIM1 also
 #' #   non-coding ones (1), counting only those in the first 4 kb of the gene
@@ -105,6 +129,10 @@
 #' #   show the rearrangement, so each fills in for the other. Only the
 #' #   rearranged gene counts, with an annotated partner, so e.g. BCL6 as the
 #' #   partner of a MYC rearrangement isn't a BCL6 SV.
+#' # - copy number features from the segments (the curated set, 0/1/2), one
+#' #   column each
+#' # - unassessed_value = NA marks samples without data of a type (e.g. no
+#' #   segments, or neither FISH nor SV calls) instead of counting them as 0
 #' features = assemble_genetic_features(
 #'   maf,
 #'   genes_coding = genes,
@@ -112,9 +140,11 @@
 #'   noncoding_window = c(0, 4000),
 #'   these_samples_metadata = meta,
 #'   sv_data = sv,
+#'   seg_data = segs,
+#'   unassessed_value = NA,
 #'   verbose = TRUE   # e.g. SV positives from metadata, SV calls and both
 #' )
-#' head(features)
+#' features[1:5, c("EZH2", "BCL2", "PIM1", "BCL2_SV", "MYC_SV", "6q_loss")]
 #'
 #' # For many genes, a coding MAF (e.g. GAMBLR.open::get_all_coding_ssm) can
 #' # supply the coding mutations and get_ssm_by_genes only the genes in
@@ -134,7 +164,8 @@
 #' )
 #'
 #' # SV calls exist only for genomes; capture samples rely on FISH in the
-#' # metadata, and samples with neither are 0 (not NA) in the *_SV columns.
+#' # metadata, and samples with neither are 0 in the *_SV columns (or NA
+#' # with unassessed_value = NA, below).
 #' dlbcl_sv = GAMBLR.results::get_combined_sv(these_samples_metadata = dlbcl_meta)
 #'
 #' # use the Tier 1 DLBCL list (includes almost all LymphGen features and more)
@@ -161,6 +192,44 @@
 #'   these_samples_metadata = dlbcl_meta,
 #'   sv_data = dlbcl_sv
 #' )
+#'
+#' # The same matrix with copy number features added. The default
+#' # get_cn_segments() reads the central merge, with the best available
+#' # segments for each sample (genome or exome).
+#' dlbcl_segs = GAMBLR.results::get_cn_segments(these_samples_metadata = dlbcl_meta)
+#'
+#' # Record which samples have each data type (ssm_available, sv_available,
+#' # cn_available), so that samples without copy number data can be marked
+#' # NA rather than counted as having no copy number change.
+#' dlbcl_meta = GAMBLR.results::annotate_data_availability(dlbcl_meta)
+#'
+#' # - cnv_features: the curated copy number features (arm-level and focal
+#' #   gains and losses, e.g. 6q_loss, REL_gain, CDKN2A_loss), one column
+#' #   each: 0 no change, 1 single-copy change, 2 larger change
+#' # - cnv_args: call them on the copy number scale, relative to each
+#' #   sample's modal copy number, so that whole-genome doubling doesn't read
+#' #   as gains everywhere
+#' # - unassessed_value = NA: samples without copy number data (or without
+#' #   SV calls or FISH) are NA in those columns
+#' assembled_cn = assemble_genetic_features(
+#'   unannotated_maf = dlbcl_maf_with_silent,
+#'   genes_coding = dlbcl_genes,
+#'   genes_noncoding = ashm_genes,
+#'   noncoding_window = c(0, 4000),
+#'   these_samples_metadata = dlbcl_meta,
+#'   sv_data = dlbcl_sv,
+#'   seg_data = dlbcl_segs,
+#'   cnv_features = get_cnv_features(),
+#'   cnv_args = list(value_scale = "CN", centering = "mode"),
+#'   unassessed_value = NA
+#' )
+#'
+#' # copy number columns, and how many samples of each seq_type have them
+#' cn_cols = intersect(get_cnv_features()$name, colnames(assembled_cn))
+#' seq_type = dlbcl_meta$seq_type[match(rownames(assembled_cn), dlbcl_meta$sample_id)]
+#' table(seq_type, cn_assessed = !is.na(assembled_cn[[cn_cols[1]]]))
+#' # e.g. the frequency of each copy number loss or gain among assessed samples
+#' sort(colMeans(assembled_cn[, cn_cols] > 0, na.rm = TRUE), decreasing = TRUE)[1:10]
 #' }
 assemble_genetic_features <- function(unannotated_maf,
                                      genes_coding,
@@ -175,6 +244,10 @@ assemble_genetic_features <- function(unannotated_maf,
                                      sv_from_metadata = c(BCL2="bcl2_ba", BCL6="bcl6_ba", MYC="myc_ba"),
                                      sv_positive_values = "POS",
                                      sv_data = NULL,
+                                     seg_data = NULL,
+                                     cnv_features = NULL,
+                                     cnv_args = list(),
+                                     unassessed_value = 0,
                                      genome_build = "grch37",
                                      verbose = FALSE,
                                      return_everything = FALSE
@@ -334,15 +407,105 @@ assemble_genetic_features <- function(unannotated_maf,
     }
     status_collapse <- sv_mat
   }
+  sv_cols = intersect(names(.sv_column_mapping(sv_from_metadata)), colnames(status_collapse))
+  mutation_cols = setdiff(colnames(status_collapse), sv_cols)
+
+  # copy number features, joined by sample
+  cnv_status = NULL
+  if (!is.null(seg_data)) {
+    sample_ids <- rownames(status_collapse)
+    cnv_meta <- if (is.null(these_samples_metadata)) data.frame(sample_id = sample_ids) else
+      these_samples_metadata
+    cnv_call <- utils::modifyList(list(
+      seg_data = seg_data,
+      cnv_features = cnv_features,
+      these_samples_metadata = cnv_meta,
+      genome_build = if (!is.null(get_genome_build(seg_data))) get_genome_build(seg_data) else genome_build
+    ), cnv_args)
+    cnv_call$output_format <- "matrix"
+    if (verbose) {
+      message("Calling copy number features with segmented_data_to_cnv_status...")
+    }
+    cnv_status <- as.data.frame(do.call(segmented_data_to_cnv_status, cnv_call))
+    clash <- intersect(colnames(cnv_status), colnames(status_collapse))
+    if (length(clash) > 0) {
+      stop("copy number feature names clash with mutation or SV columns: ",
+           paste(clash, collapse = ", "))
+    }
+    cnv_cols <- colnames(cnv_status)
+    cnv_status <- cnv_status[match(sample_ids, rownames(cnv_status)), , drop = FALSE]
+    cnv_status[is.na(cnv_status)] <- 0
+    rownames(cnv_status) <- sample_ids
+    status_collapse <- cbind(as.data.frame(status_collapse), cnv_status)
+  }
+
+  # samples whose data of a type wasn't assessed get unassessed_value
+  # (default 0, as if assessed with no event; NA marks them)
+  if (!identical(unassessed_value, 0)) {
+    sample_ids <- rownames(status_collapse)
+    meta <- these_samples_metadata
+    available <- function(column) {
+      if (is.null(meta) || !column %in% colnames(meta)) return(NULL)
+      stats::setNames(meta[[column]] %in% TRUE, as.character(meta$sample_id))[sample_ids]
+    }
+    unassessed <- list()
+    # mutations: only known from an ssm_available column
+    ssm <- available("ssm_available")
+    if (!is.null(ssm)) unassessed$mutation <- list(cols = mutation_cols, rows = !ssm)
+    # copy number: cn_available, otherwise samples without segments
+    if (!is.null(seg_data)) {
+      cn <- available("cn_available")
+      if (is.null(cn)) cn <- sample_ids %in% as.character(as.data.frame(seg_data)$ID)
+      unassessed$cnv <- list(cols = cnv_cols, rows = !cn)
+    }
+    # SVs: a FISH result, any SV call for the sample, or sv_available
+    if (length(sv_cols) > 0) {
+      sv_assessed <- rep(FALSE, length(sample_ids))
+      sv_av <- available("sv_available")
+      if (!is.null(sv_av)) sv_assessed <- sv_assessed | sv_av
+      if (!is.null(sv_data)) {
+        sv_assessed <- sv_assessed | sample_ids %in% as.character(as.data.frame(sv_data)$tumour_sample_id)
+      }
+      for (col_name in sv_cols) {
+        field <- .sv_column_mapping(sv_from_metadata)[[col_name]]
+        if (!is.null(meta) && field %in% colnames(meta)) {
+          status <- as.character(meta[[field]][match(sample_ids, meta$sample_id)])
+          fish <- !is.na(status) & status != "" & status != "NA"
+          unassessed[[col_name]] <- list(cols = col_name, rows = !(sv_assessed | fish))
+        } else {
+          unassessed[[col_name]] <- list(cols = col_name, rows = !sv_assessed)
+        }
+      }
+    }
+    for (u in unassessed) {
+      if (length(u$cols) > 0 && any(u$rows)) {
+        status_collapse[u$rows, u$cols] <- unassessed_value
+      }
+      if (verbose && length(u$cols) > 0) {
+        message(sum(u$rows), " sample(s) not assessed for ", length(u$cols),
+                " column(s), e.g. ", u$cols[1])
+      }
+    }
+  }
+
   if(return_everything){
     return(list(
       annotated_maf = annotated_maf,
       full_status = mut_status,
-      collapsed_status = status_collapse
+      collapsed_status = status_collapse,
+      cnv_status = cnv_status
     ))
   }
   return(status_collapse)
 
+}
+
+# sv_from_metadata as the named list of GENE_SV column -> metadata field, or
+# an empty list for NULL
+.sv_column_mapping <- function(sv_from_metadata) {
+  if (is.null(sv_from_metadata)) return(list())
+  if (any(grepl("_SV$", names(sv_from_metadata)))) return(as.list(sv_from_metadata))
+  stats::setNames(as.list(sv_from_metadata), paste0(names(sv_from_metadata), "_SV"))
 }
 
 # For each gene, the samples with an SV rearranging it in sv_data, annotating

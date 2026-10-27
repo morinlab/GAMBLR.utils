@@ -18,6 +18,10 @@ assemble_genetic_features(
   sv_from_metadata = c(BCL2 = "bcl2_ba", BCL6 = "bcl6_ba", MYC = "myc_ba"),
   sv_positive_values = "POS",
   sv_data = NULL,
+  seg_data = NULL,
+  cnv_features = NULL,
+  cnv_args = list(),
+  unassessed_value = 0,
   genome_build = "grch37",
   verbose = FALSE,
   return_everything = FALSE
@@ -104,6 +108,32 @@ BCL6-MYC) doesn't count, and neither do SVs without an annotated partner. This f
 metadata status is missing (e.g. no FISH). Samples positive in neither
 source are encoded as 0.}
 
+\item{seg_data}{Optional segmented copy number data (as for
+\code{\link{segmented_data_to_cnv_status}}, e.g. from
+\code{get_cn_segments}). Its copy number features are called with
+\code{\link{segmented_data_to_cnv_status}} and added as columns (one per
+feature, valued 0, 1 or 2 by default: no change, single-copy change,
+larger change).}
+
+\item{cnv_features}{Optional copy number features to call (see
+\code{\link{get_cnv_features}}). Default NULL: the curated set
+(\code{get_cnv_features()}).}
+
+\item{cnv_args}{Optional named list of further arguments for
+\code{\link{segmented_data_to_cnv_status}}, e.g.
+\code{list(value_scale = "CN", centering = "mode")}.}
+
+\item{unassessed_value}{Value for samples whose data of a type wasn't
+assessed. Default 0, the same as assessed with no event; NA marks them
+instead. Copy number columns: samples with \code{cn_available} FALSE in
+\code{these_samples_metadata} (see GAMBLR.results
+\code{annotate_data_availability}) or, without that column, with no
+segments in \code{seg_data}. SV columns: samples with no result in the
+metadata field (e.g. no FISH), no rows in \code{sv_data} and no
+\code{sv_available} TRUE. Mutation columns: only samples with
+\code{ssm_available} FALSE, since a sample without mutations can't
+otherwise be told from one without data.}
+
 \item{genome_build}{Genome build of the MAF and \code{sv_data}, for
 \code{\link{annotate_curated_drivers}}, \code{noncoding_window} and
 \code{\link{annotate_sv}}. Default: the MAF's \code{genome_build}
@@ -113,7 +143,8 @@ attribute (set by GAMBLR's MAF getters) if it has one, otherwise
 \item{verbose}{Logical. If TRUE, prints progress messages.}
 
 \item{return_everything}{Logical. If TRUE, return a list with
-\code{annotated_maf}, \code{full_status}, and \code{collapsed_status}.}
+\code{annotated_maf}, \code{full_status}, \code{collapsed_status} and
+\code{cnv_status} (the copy number features alone, or NULL).}
 }
 \value{
 A wide matrix-like data frame of per-sample mutation features.
@@ -135,6 +166,7 @@ genes = c("EZH2", "CREBBP", "KMT2D", "MYD88", "CD79B", "BCL2", "PIM1")
 # every mutation in these genes, coding and non-coding
 maf = GAMBLR.open::get_ssm_by_genes(genes, these_samples_metadata = meta)
 sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
+segs = GAMBLR.open::get_cn_segments(these_samples_metadata = meta)
 
 # - coding mutations for every gene (2), and for BCL2 and PIM1 also
 #   non-coding ones (1), counting only those in the first 4 kb of the gene
@@ -143,6 +175,10 @@ sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
 #   show the rearrangement, so each fills in for the other. Only the
 #   rearranged gene counts, with an annotated partner, so e.g. BCL6 as the
 #   partner of a MYC rearrangement isn't a BCL6 SV.
+# - copy number features from the segments (the curated set, 0/1/2), one
+#   column each
+# - unassessed_value = NA marks samples without data of a type (e.g. no
+#   segments, or neither FISH nor SV calls) instead of counting them as 0
 features = assemble_genetic_features(
   maf,
   genes_coding = genes,
@@ -150,9 +186,11 @@ features = assemble_genetic_features(
   noncoding_window = c(0, 4000),
   these_samples_metadata = meta,
   sv_data = sv,
+  seg_data = segs,
+  unassessed_value = NA,
   verbose = TRUE   # e.g. SV positives from metadata, SV calls and both
 )
-head(features)
+features[1:5, c("EZH2", "BCL2", "PIM1", "BCL2_SV", "MYC_SV", "6q_loss")]
 
 # For many genes, a coding MAF (e.g. GAMBLR.open::get_all_coding_ssm) can
 # supply the coding mutations and get_ssm_by_genes only the genes in
@@ -172,7 +210,8 @@ dlbcl_maf_with_silent = GAMBLR.results::get_all_coding_ssm(
 )
 
 # SV calls exist only for genomes; capture samples rely on FISH in the
-# metadata, and samples with neither are 0 (not NA) in the *_SV columns.
+# metadata, and samples with neither are 0 in the *_SV columns (or NA
+# with unassessed_value = NA, below).
 dlbcl_sv = GAMBLR.results::get_combined_sv(these_samples_metadata = dlbcl_meta)
 
 # use the Tier 1 DLBCL list (includes almost all LymphGen features and more)
@@ -199,5 +238,43 @@ assembled = assemble_genetic_features(
   these_samples_metadata = dlbcl_meta,
   sv_data = dlbcl_sv
 )
+
+# The same matrix with copy number features added. The default
+# get_cn_segments() reads the central merge, with the best available
+# segments for each sample (genome or exome).
+dlbcl_segs = GAMBLR.results::get_cn_segments(these_samples_metadata = dlbcl_meta)
+
+# Record which samples have each data type (ssm_available, sv_available,
+# cn_available), so that samples without copy number data can be marked
+# NA rather than counted as having no copy number change.
+dlbcl_meta = GAMBLR.results::annotate_data_availability(dlbcl_meta)
+
+# - cnv_features: the curated copy number features (arm-level and focal
+#   gains and losses, e.g. 6q_loss, REL_gain, CDKN2A_loss), one column
+#   each: 0 no change, 1 single-copy change, 2 larger change
+# - cnv_args: call them on the copy number scale, relative to each
+#   sample's modal copy number, so that whole-genome doubling doesn't read
+#   as gains everywhere
+# - unassessed_value = NA: samples without copy number data (or without
+#   SV calls or FISH) are NA in those columns
+assembled_cn = assemble_genetic_features(
+  unannotated_maf = dlbcl_maf_with_silent,
+  genes_coding = dlbcl_genes,
+  genes_noncoding = ashm_genes,
+  noncoding_window = c(0, 4000),
+  these_samples_metadata = dlbcl_meta,
+  sv_data = dlbcl_sv,
+  seg_data = dlbcl_segs,
+  cnv_features = get_cnv_features(),
+  cnv_args = list(value_scale = "CN", centering = "mode"),
+  unassessed_value = NA
+)
+
+# copy number columns, and how many samples of each seq_type have them
+cn_cols = intersect(get_cnv_features()$name, colnames(assembled_cn))
+seq_type = dlbcl_meta$seq_type[match(rownames(assembled_cn), dlbcl_meta$sample_id)]
+table(seq_type, cn_assessed = !is.na(assembled_cn[[cn_cols[1]]]))
+# e.g. the frequency of each copy number loss or gain among assessed samples
+sort(colMeans(assembled_cn[, cn_cols] > 0, na.rm = TRUE), decreasing = TRUE)[1:10]
 }
 }

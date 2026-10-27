@@ -152,3 +152,39 @@ test_that("one get_ssm_by_genes MAF, or a coding MAF plus noncoding_maf, give th
   expect_equal(run(coding_maf, gene_maf, NULL)[rownames(one_maf), ],
                run(gene_maf, window = NULL)[rownames(one_maf), ])
 })
+
+test_that("seg_data adds copy number columns; unassessed_value marks missing data", {
+  skip_if_not_installed("GAMBLR.open")
+  meta = utils::head(open_dlbcl_meta(), 12)
+  maf = suppressMessages(GAMBLR.open::get_coding_ssm(these_samples_metadata = meta))
+  segs = suppressMessages(GAMBLR.open::get_cn_segments(these_samples_metadata = meta))
+  no_cn = meta$sample_id[1]
+  segs = segs[segs$ID != no_cn, ]
+  meta$bcl2_ba[2] = NA
+  run = function(...) suppressWarnings(suppressMessages(assemble_genetic_features(
+    maf, genes_coding = c("EZH2", "CREBBP", "KMT2D"), genes_noncoding = NULL,
+    these_samples_metadata = meta, seg_data = segs, ...)))
+  zero = run()
+  mut_only = suppressWarnings(suppressMessages(assemble_genetic_features(
+    maf, genes_coding = c("EZH2", "CREBBP", "KMT2D"), genes_noncoding = NULL,
+    these_samples_metadata = meta)))
+  cnv_cols = setdiff(colnames(zero), colnames(mut_only))
+  expect_equal(length(cnv_cols), nrow(get_cnv_features()))
+  expect_equal(rownames(zero), rownames(mut_only))
+  expect_equal(zero[, colnames(mut_only)], mut_only)
+  expect_false(anyNA(zero))
+  expect_true(all(zero[no_cn, cnv_cols] == 0))
+
+  na = run(unassessed_value = NA)
+  expect_true(all(is.na(na[no_cn, cnv_cols])))
+  expect_false(anyNA(na[no_cn, setdiff(colnames(mut_only), c("BCL2_SV", "BCL6_SV", "MYC_SV"))]))
+  expect_true(is.na(na[meta$sample_id[2], "BCL2_SV"]))
+  # assessed values are unchanged
+  expect_equal(na[!is.na(na)], zero[!is.na(na)])
+  # mutations are only marked with an ssm_available column
+  meta$ssm_available = meta$sample_id != meta$sample_id[3]
+  na2 = suppressWarnings(suppressMessages(assemble_genetic_features(
+    maf, genes_coding = c("EZH2", "CREBBP", "KMT2D"), genes_noncoding = NULL,
+    these_samples_metadata = meta, seg_data = segs, unassessed_value = NA)))
+  expect_true(all(is.na(na2[meta$sample_id[3], intersect(c("EZH2", "CREBBP", "KMT2D"), colnames(na2))])))
+})
