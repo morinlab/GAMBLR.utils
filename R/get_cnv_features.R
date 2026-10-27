@@ -9,8 +9,12 @@
 #' The rows tagged "DLBClass" were seeded from the DLBClass arm-level and
 #' focal (GISTIC) definitions and are kept fixed, since the DLBClass model
 #' was trained on them. They are in DLBClass GSM order. The rows tagged
-#' "LymphGen" are the LymphGen copy number features (Wright et al. 2020).
-#' Rows with an empty `feature_set` are hand-curated.
+#' "LymphGen" are LymphGen-associated copy number features (Wright et al.
+#' 2020). The rows tagged "LymphGen_model" are the gene and arm features the
+#' LymphGen R code's model uses (gene coordinates from its
+#' Full.Uber.2019.txt), as used by [classifier_features]; gene rows count any
+#' overlap (min_fraction 0.01) and arm rows need 80% of the arm, as LymphGen
+#' defines them. Rows with an empty `feature_set` are hand-curated.
 #'
 #' A feature in more than one set has one row per set (same `name`), so that
 #' each named set can be returned complete with its own settings. Where rows
@@ -63,6 +67,10 @@
 #'     one set's row uses that row's settings. Initially the hand-curated
 #'     rows and the (non-retired) DLBClass rows.}
 #'   \item{citation, summary}{Source and description.}
+#'   \item{max_event_length}{Optional: the longest change (in bp) that
+#'     counts for the feature (see [segmented_data_to_cnv_status]). 30 Mb on
+#'     the LymphGen_model gene rows, following LymphGen's rule that only
+#'     changes of 30 Mb or less count; empty elsewhere.}
 #'   \item{lymphgen_level}{For LymphGen rows, the magnitude of copy number
 #'     change (in copies) an event must reach to count for LymphGen: 1 or 2.
 #'     Recorded for future use; not yet used when calling features.}

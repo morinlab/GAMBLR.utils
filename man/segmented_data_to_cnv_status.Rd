@@ -149,6 +149,21 @@ length-weighted median).
 \item The event level is 1 if the value passes \code{single_thresh} and 2 if
 it passes \code{high_thresh} (above for gains, below the negative for
 losses).
+\item For features with a \code{max_event_length} (e.g. the LymphGen gene
+features, which count only changes of 30 Mb or less), a call is kept
+only if the change is no longer than that. Its extent is measured
+from the segments overlapping the feature that are at exactly the
+call's level, outward along adjacent segments for as long as they stay
+at that level; uncovered stretches between segments (e.g. liftOver
+gaps or the centromere) are stepped over without adding to the extent,
+so segments split by liftOver give the same result as the unsplit
+segment, while a segment at another level ends the change (as in
+LymphGen, which judges each segment by its own length). A level 2 call
+that is too long is checked again as level 1 using the level 1
+segments overlapping the feature, if any; a deeper focal change inside
+a broad one (e.g. a homozygous deletion in an arm-level loss) keeps its
+level. With
+\code{encoding = "value"}, the measured change is still reported.
 }
 Overlaps are inclusive and coverage uses segment lengths clipped to each
 feature.

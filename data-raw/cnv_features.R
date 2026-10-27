@@ -30,7 +30,8 @@ library(dplyr)
 cnv_features_grch37 = read_tsv(
   "inst/extdata/cnv_features.grch37.tsv",
   col_types = cols(chrom = "c", start = "i", end = "i",
-                   include = "l", core = "l", lymphgen_level = "i", .default = "c"),
+                   include = "l", core = "l", lymphgen_level = "i", max_event_length = "d",
+                   .default = "c"),
   na = c("", "NA")
 ) %>%
   mutate(min_fraction = as.numeric(min_fraction),
@@ -62,6 +63,7 @@ in_lymphgen = grepl("(^|,)\\s*LymphGen\\s*(,|$)",
 
 stopifnot(
   all(cnv_features_grch37$direction %in% c("gain", "loss")),
+  "chrom must be 1-22, X or Y" = all(cnv_features_grch37$chrom %in% c(1:22, "X", "Y")),
   all(cnv_features_grch37$start < cnv_features_grch37$end),
   all(stats::na.omit(cnv_features_grch37$background_arm) %in%
         c("none", cnv_features_grch37$region_name[cnv_features_grch37$type == "arm"])),
@@ -81,7 +83,9 @@ stopifnot(
   # core: the default set; retired rows (include FALSE) can't be core
   all(cnv_features_grch37$core %in% c(TRUE, FALSE)),
   "retired rows (include FALSE) can't be core" =
-    !any(cnv_features_grch37$core & !cnv_features_grch37$include)
+    !any(cnv_features_grch37$core & !cnv_features_grch37$include),
+  # focality limit: a positive length
+  all(is.na(cnv_features_grch37$max_event_length) | cnv_features_grch37$max_event_length > 0)
 )
 
 usethis::use_data(cnv_features_grch37, overwrite = TRUE)

@@ -125,7 +125,67 @@
                paste(bg[!bg %in% arms], collapse = ", ")))
   }
   cnv_features$chrom = gsub("^chr", "", as.character(cnv_features$chrom))
+  # optional focality limit (see .drop_broad_cnv_calls)
+  if(!"max_event_length" %in% colnames(cnv_features)){
+    cnv_features$max_event_length = NA_real_
+  }
+  cnv_features$max_event_length = as.numeric(cnv_features$max_event_length)
   as.data.frame(cnv_features)
+}
+
+# Lower calls that are part of a longer change, for features with a
+# max_event_length (e.g. the LymphGen gene features, which count only
+# changes of 30 Mb or less). The extent of a call is found by starting from
+# the segments overlapping the feature that are at exactly the call's level
+# and walking outward along the sample's segments on that chromosome for as
+# long as they stay at that level. Uncovered stretches between segments
+# (liftOver gaps, centromeres) are stepped over without adding to the
+# extent, so a segment split into pieces by liftOver has the same extent as
+# the unsplit segment. Segments at a different level stop the walk, as
+# LymphGen judges each segment by its own length: a short single-copy loss
+# next to a homozygous deletion still counts. If the extent is longer than
+# max_event_length, the call drops to the next level down and is checked
+# again with the segments at that level; with none overlapping the feature,
+# the call drops again (a long homozygous deletion counts as nothing, while
+# one inside an arm-level loss keeps level 2).
+.drop_broad_cnv_calls = function(calls, segs, cnv_features, single_thresh,
+                                 high_thresh){
+  limited = cnv_features[!is.na(cnv_features$max_event_length), , drop = FALSE]
+  check = which(calls$name %in% limited$name & calls$level > 0)
+  if(length(check) == 0){
+    return(calls)
+  }
+  segs_by_sample = split(segs[, c("chrom", "start", "end", ".value")], segs$ID)
+  feature = limited[match(calls$name[check], limited$name), , drop = FALSE]
+  extent = function(sg, f_start, f_end, in_state){
+    hit = which(in_state & sg$end > f_start & sg$start < f_end)
+    if(length(hit) == 0){
+      return(Inf)
+    }
+    first = min(hit)
+    while(first > 1 && in_state[first - 1]) first = first - 1
+    last = max(hit)
+    while(last < nrow(sg) && in_state[last + 1]) last = last + 1
+    sg$end[last] - sg$start[first]
+  }
+  calls$level[check] = vapply(seq_along(check), function(k){
+    i = check[k]
+    sg = segs_by_sample[[calls$ID[i]]]
+    sg = sg[sg$chrom == feature$chrom[k], , drop = FALSE]
+    sg = sg[order(sg$start), , drop = FALSE]
+    signed = if(calls$direction[i] == "gain") sg$.value else -sg$.value
+    seg_level = ifelse(signed > high_thresh, 2, ifelse(signed > single_thresh, 1, 0))
+    level = calls$level[i]
+    while(level > 0){
+      if(extent(sg, feature$start[k], feature$end[k], seg_level == level) <=
+         feature$max_event_length[k]){
+        break
+      }
+      level = level - 1
+    }
+    level
+  }, numeric(1))
+  calls
 }
 
 # Feature names with the representative gene inserted before the direction,
@@ -434,6 +494,21 @@
 #'   \item The event level is 1 if the value passes `single_thresh` and 2 if
 #'     it passes `high_thresh` (above for gains, below the negative for
 #'     losses).
+#'   \item For features with a `max_event_length` (e.g. the LymphGen gene
+#'     features, which count only changes of 30 Mb or less), a call is kept
+#'     only if the change is no longer than that. Its extent is measured
+#'     from the segments overlapping the feature that are at exactly the
+#'     call's level, outward along adjacent segments for as long as they stay
+#'     at that level; uncovered stretches between segments (e.g. liftOver
+#'     gaps or the centromere) are stepped over without adding to the extent,
+#'     so segments split by liftOver give the same result as the unsplit
+#'     segment, while a segment at another level ends the change (as in
+#'     LymphGen, which judges each segment by its own length). A level 2 call
+#'     that is too long is checked again as level 1 using the level 1
+#'     segments overlapping the feature, if any; a deeper focal change inside
+#'     a broad one (e.g. a homozygous deletion in an arm-level loss) keeps its
+#'     level. With
+#'     `encoding = "value"`, the measured change is still reported.
 #' }
 #' Overlaps are inclusive and coverage uses segment lengths clipped to each
 #' feature.
@@ -617,6 +692,8 @@ segmented_data_to_cnv_status = function(seg_data,
         TRUE ~ 0
       )
     )
+  calls = .drop_broad_cnv_calls(calls, prepared$segs, cnv_features,
+                                single_thresh, high_thresh)
 
   result = matrix(ifelse(encoding == "value", NA_real_, 0),
                   nrow = length(all_samples), ncol = nrow(cnv_features),

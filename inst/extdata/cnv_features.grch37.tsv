@@ -1,152 +1,209 @@
-name	type	region_name	chrom	start	end	direction	min_fraction	min_coverage	background_arm	representative_gene	genes	feature_set	dlbclass_name	include	core	citation	summary	lymphgen_level
-6q_loss	arm	6q	6	61000000	171115067	loss	0.5	0.5				DLBClass	6Q.DEL	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-17p_loss	arm	17p	17	0	24000000	loss	0.5	0.5				DLBClass	17P.DEL	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-1q_gain	arm	1q	1	125000000	249250621	gain	0.5	0.5				DLBClass	1Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-3p_gain	arm	3p	3	0	91000000	gain	0.5	0.5				DLBClass	3P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-3q_gain	arm	3q	3	91000000	198022430	gain	0.5	0.5				DLBClass	3Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-5p_gain	arm	5p	5	0	48400000	gain	0.5	0.5				DLBClass	5P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-5q_gain	arm	5q	5	48400000	180915260	gain	0.5	0.5				DLBClass	5Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-6p_gain	arm	6p	6	0	61000000	gain	0.5	0.5				DLBClass	6P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-7p_gain	arm	7p	7	0	59900000	gain	0.5	0.5				DLBClass	7P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-7q_gain	arm	7q	7	59900000	159138663	gain	0.5	0.5				DLBClass	7Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-9q_gain	arm	9q	9	49000000	141213431	gain	0.5	0.5				DLBClass	9Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-11p_gain	arm	11p	11	0	53700000	gain	0.5	0.5				DLBClass	11P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-11q_gain	arm	11q	11	53700000	135006516	gain	0.5	0.5				DLBClass	11Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-12p_gain	arm	12p	12	0	35800000	gain	0.5	0.5				DLBClass	12P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-12q_gain	arm	12q	12	35800000	133851895	gain	0.5	0.5				DLBClass	12Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-13q_gain	arm	13q	13	17900000	115169878	gain	0.5	0.5				DLBClass	13Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-18p_gain	arm	18p	18	0	17200000	gain	0.5	0.5				DLBClass	18P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-18q_gain	arm	18q	18	17200000	78077248	gain	0.5	0.5				DLBClass	18Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-19q_gain	arm	19q	19	26500000	59128983	gain	0.5	0.5				DLBClass	19Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-21q_gain	arm	21q	21	13200000	48129895	gain	0.5	0.5				DLBClass	21Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024		
-1q23.3_gain	focal	1q23.3	1	161336260	161721713	gain	0.2	0		FCGR2B		DLBClass	1Q23.3.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-1q32.1_gain	focal	1q32.1	1	200014642	200528517	gain	0.2	0				DLBClass	1Q32.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-2p16.1_gain	focal	2p16.1	2	58468401	62115577	gain	0.2	0		REL		DLBClass	2P16.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-3q28_gain	focal	3q28	3	187447324	189028250	gain	0.2	0		BCL6		DLBClass	3Q28.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-6p21.1_gain	focal	6p21.1	6	41309831	42023316	gain	0.2	0		CCND3		DLBClass	6P21.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-7q22.1_gain	focal	7q22.1	7	99792969	99818231	gain	0.2	0				DLBClass	7Q22.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-8q24.22_gain	focal	8q24.22	8	133919039	134108532	gain	0.2	0				DLBClass	8Q24.22.AMP	FALSE	FALSE	DLBClass: DLBCL_focal_peaks.18Aug2024	Retired from the default curated set in favour of 8q24.21_gain (MYC), which calls nearly all the same events (Jaccard 0.85 on GAMBL DLBCL genomes) plus more. Kept for the DLBClass feature set.	
-9p24.1_gain	focal	9p24.1	9	4844603	5569955	gain	0.2	0		CD274		DLBClass	9P24.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-11q23.3_gain	focal	11q23.3	11	117712724	117864039	gain	0.2	0		TMPRSS13		DLBClass	11Q23.3.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-17q24.3_gain	focal	17q24.3	17	67082818	67133537	gain	0.2	0				DLBClass	17Q24.3.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-18q21.32_gain	focal	18q21.32	18	56383183	56819841	gain	0.2	0		MALT1		DLBClass	18Q21.32.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-18q22.2_gain	focal	18q22.2	18	67531613	67795686	gain	0.2	0				DLBClass	18Q22.2.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-19q13.42_gain	focal	19q13.42	19	55435174	55530048	gain	0.2	0				DLBClass	19Q13.42.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-1p36.32_loss	focal	1p36.32	1	3428183	5924020	loss	0.2	0		TP73		DLBClass	1P36.32.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-1p36.11_loss	focal	1p36.11	1	27224004	27339026	loss	0.2	0		ARID1A		DLBClass	1P36.11.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene ARID1A lies 115 kb outside the peak.	
-1p31.1_loss	focal	1p31.1	1	78479019	79101096	loss	0.2	0				DLBClass	1P31.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-1p13.1_loss	focal	1p13.1	1	117150759	117303137	loss	0.2	0		CD58		DLBClass	1P13.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene CD58 lies 37 kb outside the peak.	
-1q42.12_loss	focal	1q42.12	1	225755034	226829722	loss	0.2	0		ITPKB		DLBClass	1Q42.12.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-2q22.2_loss	focal	2q22.2	2	143798112	144710373	loss	0.2	0				DLBClass	2Q22.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-3p21.31_loss	focal	3p21.31	3	49215943	49311526	loss	0.2	0		RHOA		DLBClass	3P21.31.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene RHOA lies 85 kb outside the peak.	
-3q28_loss	focal	3q28	3	189028252	189690736	loss	0.2	0		TP63		DLBClass	3Q28.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-4q21.22_loss	focal	4q21.22	4	82378714	83347699	loss	0.2	0		HNRNPD		DLBClass	4Q21.22.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-4q35.1_loss	focal	4q35.1	4	184366753	186382256	loss	0.2	0				DLBClass	4Q35.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-6p21.33_loss	focal	6p21.33	6	31118570	32917110	loss	0.2	0		HLA-B		DLBClass	6P21.33.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-6q14.1_loss	focal	6q14.1	6	75902000	75969133	loss	0.2	0		TMEM30A		DLBClass	6Q14.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-6q21_loss	focal	6q21	6	108544202	109175578	loss	0.2	0		FOXO3		DLBClass	6Q21.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-8q12.1_loss	focal	8q12.1	8	59548066	61139461	loss	0.2	0		TOX		DLBClass	8Q12.1.DEL	FALSE	FALSE	DLBClass: DLBCL_focal_peaks.18Aug2024	Retired from the default curated set in favour of TOX_loss, which calls every event this peak does plus small deletions within TOX. Kept for the DLBClass feature set.	
-9p21.3_loss	focal	9p21.3	9	21409461	23704991	loss	0.2	0		CDKN2A		DLBClass	9P21.3.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-9q21.13_loss	focal	9q21.13	9	74361187	74561973	loss	0.2	0				DLBClass	9Q21.13.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-10q23.31_loss	focal	10q23.31	10	90771797	90983512	loss	0.2	0		FAS		DLBClass	10Q23.31.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-12p13.2_loss	focal	12p13.2	12	12264928	12496135	loss	0.2	0		ETV6		DLBClass	12P13.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene ETV6 lies 217 kb outside the peak.	
-13q14.2_loss	focal	13q14.2	13	49089800	49796343	loss	0.2	0		RB1		DLBClass	13Q14.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene RB1 lies 34 kb outside the peak.	
-13q34_loss	focal	13q34	13	109831936	111274636	loss	0.2	0				DLBClass	13Q34.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-14q32.31_loss	focal	14q32.31	14	102963982	103174859	loss	0.2	0		TRAF3		DLBClass	14Q32.31.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene TRAF3 lies 69 kb outside the peak.	
-15q15.3_loss	focal	15q15.3	15	41387833	44120362	loss	0.2	0		MGA		DLBClass	15Q15.3.DEL	FALSE	FALSE	DLBClass: DLBCL_focal_peaks.18Aug2024	Retired from the default curated set in favour of B2M_loss, which calls nearly all the same events. Kept for the DLBClass feature set.	
-16q12.1_loss	focal	16q12.1	16	50763771	51174326	loss	0.2	0		CYLD		DLBClass	16Q12.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-17q25.1_loss	focal	17q25.1	17	73282463	73482014	loss	0.2	0		GRB2		DLBClass	17Q25.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-18q23_loss	focal	18q23	18	77105807	78077248	loss	0.2	0		NFATC1		DLBClass	18Q23.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-19p13.3_loss	focal	19p13.3	19	6495704	6667440	loss	0.2	0		CD70		DLBClass	19P13.3.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-19p13.2_loss	focal	19p13.2	19	10823267	10886479	loss	0.2	0				DLBClass	19P13.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-19q13.32_loss	focal	19q13.32	19	45572483	45716469	loss	0.2	0				DLBClass	19Q13.32.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024		
-6q23.3_loss	focal	6q23.3	6	137470757	138411513	loss	0.2	0		TNFAIP3				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC wide peak.	
-13q31.3_gain	focal	13q31.3	13	91792127	92632094	gain	0.2	0		MIR17HG				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC wide peak; the narrow peak lies 45 kb from MIR17HG, at GPC5.	
-8q24.21_gain	focal	8q24.21	8	128747680	129164288	gain	0.2	0		MYC				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC narrow peak (PVT1) extended to include MYC; the wide peak is 11 Mb.	
-12q15_gain	focal	12q15	12	69161429	69277664	gain	0.2	0		MDM2				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC narrow peak; the wide peak is 8 Mb.	
-TP53_loss	gene	17p13.1	17	7565097	7590856	loss	0.1	0.5	none	TP53				TRUE	TRUE	TP53 gene coordinates (GAMBLR.data grch37_gene_coordinates)	Focal TP53 deletion: partial or complete loss of the gene beyond the 17p arm level (measured relative to 17p_loss by the background rule).	
-PRDM1_loss	gene	6q21	6	106534195	106557814	loss	0.1	0.5	none	PRDM1				TRUE	TRUE	PRDM1 gene coordinates (GAMBLR.data grch37_gene_coordinates)	Focal PRDM1 deletion: partial or complete loss of the gene beyond the 6q arm level (measured relative to 6q_loss by the background rule).	
-TOX_loss	gene	8q12.1	8	59717977	60031767	loss	0.1	0.5	none	TOX				TRUE	TRUE	TOX gene coordinates (GAMBLR.data grch37_gene_coordinates)	Partial or complete TOX deletion, measured against the genome baseline (no 8q arm feature). Catches deletions within TOX that are too small for the 8q12.1_loss peak (min_fraction 0.2 of 1.59 Mb); overlaps with that feature.	
-B2M_loss	gene	15q21.1	15	45003675	45011075	loss	0.1	0.5	none	B2M				TRUE	TRUE	B2M gene coordinates (GAMBLR.data grch37_gene_coordinates)	Partial or complete B2M deletion, measured against the genome baseline (no 15q arm feature, so arm-level and focal losses both count). B2M lies 883 kb outside the DLBClass 15q15.3_loss peak; overlaps with that feature.	
-1p_loss	arm	1p	1	0	125000000	loss	0.5	0.5						TRUE	TRUE	GISTIC arm boundary from DLBCL_broad_significance.18Aug2024 (1p not significant in DLBClass)	With background = auto it makes the four 1p focal losses (1p36.32, 1p36.11, 1p31.1, 1p13.1) relative to 1p in the curated set (not in the DLBClass set).	
-SPIB_gain	gene	19q13.33	19	50922195	50934570	gain	0.1	0.5	none	SPIB				TRUE	TRUE			
-10q23.31_loss	focal	10q23.31	10	90771797	90983512	loss	0.2	0	none	FAS		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A	LymphGen FAS loss, represented by the existing 10q23.31 peak, which overlaps FAS.	1
-HLA-B_loss	gene	6p21.33	6	31321649	31324965	loss	0.1	0.5	none	HLA-B		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-BTG1_loss	gene	12q21.33	12	92536286	92539673	loss	0.1	0.5	none	BTG1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-CDKN2A_loss	gene	9p21.3	9	21967751	21995300	loss	0.1	0.5	none	CDKN2A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-ETV6_loss	gene	12p13.2	12	11802788	12048336	loss	0.1	0.5	none	ETV6		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-SPIB_gain	gene	19q13.33	19	50922195	50934570	gain	0.1	0.5	none	SPIB		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-TOX_loss	gene	8q12.1	8	59717977	60031767	loss	0.1	0.5	none	TOX		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-BCL2_gain	gene	18q21.33	18	60790579	60987361	gain	0.1	0.5	none	BCL2		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-HLA-A_loss	gene	6p22.1	6	29909037	29913661	loss	0.1	0.5	none	HLA-A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-HLA-C_loss	gene	6p21.33	6	31236526	31239907	loss	0.1	0.5	none	HLA-C		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-SETD1B_loss	gene	12q24.31	12	122242086	122270562	loss	0.1	0.5	none	SETD1B		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-CD58_loss	gene	1p13.1	1	117057157	117113661	loss	0.1	0.5	none	CD58		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-TAP1_loss	gene	6p21.32	6	32812986	32821755	loss	0.1	0.5	none	TAP1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-SLC1A5_gain	gene	19q13.32	19	47278140	47291851	gain	0.1	0.5	none	SLC1A5		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-DAZAP1_gain	gene	19p13.3	19	1407568	1435719	gain	0.1	0.5	none	DAZAP1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-NOTCH2_gain	gene	1p12-p11.2	1	120454176	120612240	gain	0.1	0.5	none	NOTCH2		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-TNFAIP3_loss	gene	6q23.3	6	138188351	138204449	loss	0.1	0.5	none	TNFAIP3		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-BCL10_gain	gene	1p22.3	1	85731931	85742773	gain	0.1	0.5	none	BCL10		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-TMEM30A_loss	gene	6q14.1	6	75962640	75994684	loss	0.1	0.5	none	TMEM30A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-TP63_loss	gene	3q28	3	189349205	189615068	loss	0.1	0.5	none	TP63		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-PRKCB_gain	gene	16p12.2-p12.1	16	23847322	24231932	gain	0.1	0.5	none	PRKCB		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-4p_gain	arm	4p	4	0	50400000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-TNFRSF14_loss	gene	1p36.32	1	2487078	2496821	loss	0.1	0.5	none	TNFRSF14		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-CREBBP_loss	gene	16p13.3	16	3775055	3930727	loss	0.1	0.5	none	CREBBP		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-REL_gain	gene	2p16.1	2	61108656	61158745	gain	0.1	0.5	none	REL		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-EP300_loss	gene	22q13.2	22	41487790	41576081	loss	0.1	0.5	none	EP300		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-12p_gain	arm	12p	12	0	35800000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-ARID1A_loss	gene	1p36.11	1	27022524	27108595	loss	0.1	0.5	none	ARID1A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-GNA13_loss	gene	17q24.1	17	63006833	63052957	loss	0.1	0.5	none	GNA13		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-STAT6_gain	gene	12q13.3	12	57489191	57525922	gain	0.1	0.5	none	STAT6		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-PTEN_loss	gene	10q23.31	10	89622870	89731687	loss	0.1	0.5	none	PTEN		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-21_gain	chromosome	21	21	0	48129895	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-EBF1_loss	gene	5q33.3	5	158122928	158526769	loss	0.1	0.5	none	EBF1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-C10orf12_loss	gene	10q24.1	10	98741041	98745582	loss	0.1	0.5	none	C10orf12		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-MAP2K1_loss	gene	15q22.31	15	66679155	66784650	loss	0.1	0.5	none	MAP2K1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-FBXO11_loss	gene	2p16.3	2	48016455	48132932	loss	0.1	0.5	none	FBXO11		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-MIR17HG_gain	gene	13q31.3	13	92000074	92006833	gain	0.1	0.5	none	MIR17HG		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-TP53_loss	gene	17p13.1	17	7565097	7590856	loss	0.1	0.5	none	TP53		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-6q_loss	arm	6q	6	61000000	171115067	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-17p_loss	arm	17p	17	0	24000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-8p_loss	arm	8p	8	0	45600000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-7p_gain	arm	7p	7	0	59900000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-3q_gain	arm	3q	3	91000000	198022430	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-1p_loss	arm	1p	1	0	125000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-7q_gain	arm	7q	7	59900000	159138663	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-B2M_loss	gene	15q21.1	15	45003675	45011075	loss	0.1	0.5	none	B2M		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-2q_loss	arm	2q	2	93300000	243199373	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-4p_loss	arm	4p	4	0	50400000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-11q_gain	arm	11q	11	53700000	135006516	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-15q_loss	arm	15q	15	19000000	102531392	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-16q_loss	arm	16q	16	36600000	90354753	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-TP53BP1_loss	gene	15q15.3	15	43699407	43802926	loss	0.1	0.5	none	TP53BP1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-2p_loss	arm	2p	2	0	93300000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-4q_loss	arm	4q	4	50400000	191154276	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-22q_loss	arm	22q	22	14700000	51304566	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-CNPY3_gain	gene	6p21.1	6	42896938	42907025	gain	0.1	0.5	none	CNPY3		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-8q_loss	arm	8q	8	45600000	146364022	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-19p_loss	arm	19p	19	0	26500000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-20p_loss	arm	20p	20	0	27500000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-6p_loss	arm	6p	6	0	61000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-9q_loss	arm	9q	9	49000000	141213431	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-12p_loss	arm	12p	12	0	35800000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-3p_loss	arm	3p	3	0	91000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-11p_loss	arm	11p	11	0	53700000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-12q_loss	arm	12q	12	35800000	133851895	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-14q_loss	arm	14q	14	17600000	107349540	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-ING1_loss	gene	13q34	13	111365083	111373421	loss	0.1	0.5	none	ING1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-NFKBIZ_gain	gene	3q12.3	3	101546835	101579866	gain	0.1	0.5	none	NFKBIZ		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-1q_loss	arm	1q	1	125000000	249250621	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-9p_loss	arm	9p	9	0	49000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-10p_loss	arm	10p	10	0	40200000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-10q_loss	arm	10q	10	40200000	135534747	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-13q_loss	arm	13q	13	17900000	115169878	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-21q_loss	arm	21q	21	13200000	48129895	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-TP73_loss	gene	1p36.32	1	3569084	3652765	loss	0.1	0.5	none	TP73		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-16p_loss	arm	16p	16	0	36600000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-18q_loss	arm	18q	18	17200000	78077248	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-20q_loss	arm	20q	20	27500000	63025520	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
-Xp_gain	arm	Xp	X	0	60600000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2
-19q_loss	arm	19q	19	26500000	59128983	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1
+name	type	region_name	chrom	start	end	direction	min_fraction	min_coverage	background_arm	representative_gene	genes	feature_set	dlbclass_name	include	core	citation	summary	lymphgen_level	max_event_length
+6q_loss	arm	6q	6	61000000	171115067	loss	0.5	0.5				DLBClass	6Q.DEL	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+17p_loss	arm	17p	17	0	24000000	loss	0.5	0.5				DLBClass	17P.DEL	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+1q_gain	arm	1q	1	125000000	249250621	gain	0.5	0.5				DLBClass	1Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+3p_gain	arm	3p	3	0	91000000	gain	0.5	0.5				DLBClass	3P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+3q_gain	arm	3q	3	91000000	198022430	gain	0.5	0.5				DLBClass	3Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+5p_gain	arm	5p	5	0	48400000	gain	0.5	0.5				DLBClass	5P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+5q_gain	arm	5q	5	48400000	180915260	gain	0.5	0.5				DLBClass	5Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+6p_gain	arm	6p	6	0	61000000	gain	0.5	0.5				DLBClass	6P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+7p_gain	arm	7p	7	0	59900000	gain	0.5	0.5				DLBClass	7P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+7q_gain	arm	7q	7	59900000	159138663	gain	0.5	0.5				DLBClass	7Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+9q_gain	arm	9q	9	49000000	141213431	gain	0.5	0.5				DLBClass	9Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+11p_gain	arm	11p	11	0	53700000	gain	0.5	0.5				DLBClass	11P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+11q_gain	arm	11q	11	53700000	135006516	gain	0.5	0.5				DLBClass	11Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+12p_gain	arm	12p	12	0	35800000	gain	0.5	0.5				DLBClass	12P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+12q_gain	arm	12q	12	35800000	133851895	gain	0.5	0.5				DLBClass	12Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+13q_gain	arm	13q	13	17900000	115169878	gain	0.5	0.5				DLBClass	13Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+18p_gain	arm	18p	18	0	17200000	gain	0.5	0.5				DLBClass	18P.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+18q_gain	arm	18q	18	17200000	78077248	gain	0.5	0.5				DLBClass	18Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+19q_gain	arm	19q	19	26500000	59128983	gain	0.5	0.5				DLBClass	19Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+21q_gain	arm	21q	21	13200000	48129895	gain	0.5	0.5				DLBClass	21Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
+1q23.3_gain	focal	1q23.3	1	161336260	161721713	gain	0.2	0		FCGR2B		DLBClass	1Q23.3.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+1q32.1_gain	focal	1q32.1	1	200014642	200528517	gain	0.2	0				DLBClass	1Q32.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+2p16.1_gain	focal	2p16.1	2	58468401	62115577	gain	0.2	0		REL		DLBClass	2P16.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+3q28_gain	focal	3q28	3	187447324	189028250	gain	0.2	0		BCL6		DLBClass	3Q28.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+6p21.1_gain	focal	6p21.1	6	41309831	42023316	gain	0.2	0		CCND3		DLBClass	6P21.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+7q22.1_gain	focal	7q22.1	7	99792969	99818231	gain	0.2	0				DLBClass	7Q22.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+8q24.22_gain	focal	8q24.22	8	133919039	134108532	gain	0.2	0				DLBClass	8Q24.22.AMP	FALSE	FALSE	DLBClass: DLBCL_focal_peaks.18Aug2024	Retired from the default curated set in favour of 8q24.21_gain (MYC), which calls nearly all the same events (Jaccard 0.85 on GAMBL DLBCL genomes) plus more. Kept for the DLBClass feature set.		
+9p24.1_gain	focal	9p24.1	9	4844603	5569955	gain	0.2	0		CD274		DLBClass	9P24.1.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+11q23.3_gain	focal	11q23.3	11	117712724	117864039	gain	0.2	0		TMPRSS13		DLBClass	11Q23.3.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+17q24.3_gain	focal	17q24.3	17	67082818	67133537	gain	0.2	0				DLBClass	17Q24.3.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+18q21.32_gain	focal	18q21.32	18	56383183	56819841	gain	0.2	0		MALT1		DLBClass	18Q21.32.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+18q22.2_gain	focal	18q22.2	18	67531613	67795686	gain	0.2	0				DLBClass	18Q22.2.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+19q13.42_gain	focal	19q13.42	19	55435174	55530048	gain	0.2	0				DLBClass	19Q13.42.AMP	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+1p36.32_loss	focal	1p36.32	1	3428183	5924020	loss	0.2	0		TP73		DLBClass	1P36.32.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+1p36.11_loss	focal	1p36.11	1	27224004	27339026	loss	0.2	0		ARID1A		DLBClass	1P36.11.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene ARID1A lies 115 kb outside the peak.		
+1p31.1_loss	focal	1p31.1	1	78479019	79101096	loss	0.2	0				DLBClass	1P31.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+1p13.1_loss	focal	1p13.1	1	117150759	117303137	loss	0.2	0		CD58		DLBClass	1P13.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene CD58 lies 37 kb outside the peak.		
+1q42.12_loss	focal	1q42.12	1	225755034	226829722	loss	0.2	0		ITPKB		DLBClass	1Q42.12.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+2q22.2_loss	focal	2q22.2	2	143798112	144710373	loss	0.2	0				DLBClass	2Q22.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+3p21.31_loss	focal	3p21.31	3	49215943	49311526	loss	0.2	0		RHOA		DLBClass	3P21.31.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene RHOA lies 85 kb outside the peak.		
+3q28_loss	focal	3q28	3	189028252	189690736	loss	0.2	0		TP63		DLBClass	3Q28.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+4q21.22_loss	focal	4q21.22	4	82378714	83347699	loss	0.2	0		HNRNPD		DLBClass	4Q21.22.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+4q35.1_loss	focal	4q35.1	4	184366753	186382256	loss	0.2	0				DLBClass	4Q35.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+6p21.33_loss	focal	6p21.33	6	31118570	32917110	loss	0.2	0		HLA-B		DLBClass	6P21.33.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+6q14.1_loss	focal	6q14.1	6	75902000	75969133	loss	0.2	0		TMEM30A		DLBClass	6Q14.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+6q21_loss	focal	6q21	6	108544202	109175578	loss	0.2	0		FOXO3		DLBClass	6Q21.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+8q12.1_loss	focal	8q12.1	8	59548066	61139461	loss	0.2	0		TOX		DLBClass	8Q12.1.DEL	FALSE	FALSE	DLBClass: DLBCL_focal_peaks.18Aug2024	Retired from the default curated set in favour of TOX_loss, which calls every event this peak does plus small deletions within TOX. Kept for the DLBClass feature set.		
+9p21.3_loss	focal	9p21.3	9	21409461	23704991	loss	0.2	0		CDKN2A		DLBClass	9P21.3.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+9q21.13_loss	focal	9q21.13	9	74361187	74561973	loss	0.2	0				DLBClass	9Q21.13.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+10q23.31_loss	focal	10q23.31	10	90771797	90983512	loss	0.2	0		FAS		DLBClass	10Q23.31.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+12p13.2_loss	focal	12p13.2	12	12264928	12496135	loss	0.2	0		ETV6		DLBClass	12P13.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene ETV6 lies 217 kb outside the peak.		
+13q14.2_loss	focal	13q14.2	13	49089800	49796343	loss	0.2	0		RB1		DLBClass	13Q14.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene RB1 lies 34 kb outside the peak.		
+13q34_loss	focal	13q34	13	109831936	111274636	loss	0.2	0				DLBClass	13Q34.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+14q32.31_loss	focal	14q32.31	14	102963982	103174859	loss	0.2	0		TRAF3		DLBClass	14Q32.31.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024	Representative gene TRAF3 lies 69 kb outside the peak.		
+15q15.3_loss	focal	15q15.3	15	41387833	44120362	loss	0.2	0		MGA		DLBClass	15Q15.3.DEL	FALSE	FALSE	DLBClass: DLBCL_focal_peaks.18Aug2024	Retired from the default curated set in favour of B2M_loss, which calls nearly all the same events. Kept for the DLBClass feature set.		
+16q12.1_loss	focal	16q12.1	16	50763771	51174326	loss	0.2	0		CYLD		DLBClass	16Q12.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+17q25.1_loss	focal	17q25.1	17	73282463	73482014	loss	0.2	0		GRB2		DLBClass	17Q25.1.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+18q23_loss	focal	18q23	18	77105807	78077248	loss	0.2	0		NFATC1		DLBClass	18Q23.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+19p13.3_loss	focal	19p13.3	19	6495704	6667440	loss	0.2	0		CD70		DLBClass	19P13.3.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+19p13.2_loss	focal	19p13.2	19	10823267	10886479	loss	0.2	0				DLBClass	19P13.2.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+19q13.32_loss	focal	19q13.32	19	45572483	45716469	loss	0.2	0				DLBClass	19Q13.32.DEL	TRUE	TRUE	DLBClass: DLBCL_focal_peaks.18Aug2024			
+6q23.3_loss	focal	6q23.3	6	137470757	138411513	loss	0.2	0		TNFAIP3				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC wide peak.		
+13q31.3_gain	focal	13q31.3	13	91792127	92632094	gain	0.2	0		MIR17HG				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC wide peak; the narrow peak lies 45 kb from MIR17HG, at GPC5.		
+8q24.21_gain	focal	8q24.21	8	128747680	129164288	gain	0.2	0		MYC				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC narrow peak (PVT1) extended to include MYC; the wide peak is 11 Mb.		
+12q15_gain	focal	12q15	12	69161429	69277664	gain	0.2	0		MDM2				TRUE	TRUE	GAMBL DLBCL GISTIC2 (794 samples, grch37; GAMBLR.viz inst/extdata/all_lesions.conf_90.txt)	GISTIC narrow peak; the wide peak is 8 Mb.		
+TP53_loss	gene	17p13.1	17	7565097	7590856	loss	0.1	0.5	none	TP53				TRUE	TRUE	TP53 gene coordinates (GAMBLR.data grch37_gene_coordinates)	Focal TP53 deletion: partial or complete loss of the gene beyond the 17p arm level (measured relative to 17p_loss by the background rule).		
+PRDM1_loss	gene	6q21	6	106534195	106557814	loss	0.1	0.5	none	PRDM1				TRUE	TRUE	PRDM1 gene coordinates (GAMBLR.data grch37_gene_coordinates)	Focal PRDM1 deletion: partial or complete loss of the gene beyond the 6q arm level (measured relative to 6q_loss by the background rule).		
+TOX_loss	gene	8q12.1	8	59717977	60031767	loss	0.1	0.5	none	TOX				TRUE	TRUE	TOX gene coordinates (GAMBLR.data grch37_gene_coordinates)	Partial or complete TOX deletion, measured against the genome baseline (no 8q arm feature). Catches deletions within TOX that are too small for the 8q12.1_loss peak (min_fraction 0.2 of 1.59 Mb); overlaps with that feature.		
+B2M_loss	gene	15q21.1	15	45003675	45011075	loss	0.1	0.5	none	B2M				TRUE	TRUE	B2M gene coordinates (GAMBLR.data grch37_gene_coordinates)	Partial or complete B2M deletion, measured against the genome baseline (no 15q arm feature, so arm-level and focal losses both count). B2M lies 883 kb outside the DLBClass 15q15.3_loss peak; overlaps with that feature.		
+1p_loss	arm	1p	1	0	125000000	loss	0.5	0.5						TRUE	TRUE	GISTIC arm boundary from DLBCL_broad_significance.18Aug2024 (1p not significant in DLBClass)	With background = auto it makes the four 1p focal losses (1p36.32, 1p36.11, 1p31.1, 1p13.1) relative to 1p in the curated set (not in the DLBClass set).		
+SPIB_gain	gene	19q13.33	19	50922195	50934570	gain	0.1	0.5	none	SPIB				TRUE	TRUE				
+10q23.31_loss	focal	10q23.31	10	90771797	90983512	loss	0.2	0	none	FAS		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A	LymphGen FAS loss, represented by the existing 10q23.31 peak, which overlaps FAS.	1	
+HLA-B_loss	gene	6p21.33	6	31321649	31324965	loss	0.1	0.5	none	HLA-B		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+BTG1_loss	gene	12q21.33	12	92536286	92539673	loss	0.1	0.5	none	BTG1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+CDKN2A_loss	gene	9p21.3	9	21967751	21995300	loss	0.1	0.5	none	CDKN2A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+ETV6_loss	gene	12p13.2	12	11802788	12048336	loss	0.1	0.5	none	ETV6		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+SPIB_gain	gene	19q13.33	19	50922195	50934570	gain	0.1	0.5	none	SPIB		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TOX_loss	gene	8q12.1	8	59717977	60031767	loss	0.1	0.5	none	TOX		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+BCL2_gain	gene	18q21.33	18	60790579	60987361	gain	0.1	0.5	none	BCL2		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+HLA-A_loss	gene	6p22.1	6	29909037	29913661	loss	0.1	0.5	none	HLA-A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+HLA-C_loss	gene	6p21.33	6	31236526	31239907	loss	0.1	0.5	none	HLA-C		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+SETD1B_loss	gene	12q24.31	12	122242086	122270562	loss	0.1	0.5	none	SETD1B		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+CD58_loss	gene	1p13.1	1	117057157	117113661	loss	0.1	0.5	none	CD58		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+TAP1_loss	gene	6p21.32	6	32812986	32821755	loss	0.1	0.5	none	TAP1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+SLC1A5_gain	gene	19q13.32	19	47278140	47291851	gain	0.1	0.5	none	SLC1A5		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+DAZAP1_gain	gene	19p13.3	19	1407568	1435719	gain	0.1	0.5	none	DAZAP1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+NOTCH2_gain	gene	1p12-p11.2	1	120454176	120612240	gain	0.1	0.5	none	NOTCH2		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+TNFAIP3_loss	gene	6q23.3	6	138188351	138204449	loss	0.1	0.5	none	TNFAIP3		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+BCL10_gain	gene	1p22.3	1	85731931	85742773	gain	0.1	0.5	none	BCL10		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TMEM30A_loss	gene	6q14.1	6	75962640	75994684	loss	0.1	0.5	none	TMEM30A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TP63_loss	gene	3q28	3	189349205	189615068	loss	0.1	0.5	none	TP63		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+PRKCB_gain	gene	16p12.2-p12.1	16	23847322	24231932	gain	0.1	0.5	none	PRKCB		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+4p_gain	arm	4p	4	0	50400000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TNFRSF14_loss	gene	1p36.32	1	2487078	2496821	loss	0.1	0.5	none	TNFRSF14		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+CREBBP_loss	gene	16p13.3	16	3775055	3930727	loss	0.1	0.5	none	CREBBP		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+REL_gain	gene	2p16.1	2	61108656	61158745	gain	0.1	0.5	none	REL		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+EP300_loss	gene	22q13.2	22	41487790	41576081	loss	0.1	0.5	none	EP300		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+12p_gain	arm	12p	12	0	35800000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+ARID1A_loss	gene	1p36.11	1	27022524	27108595	loss	0.1	0.5	none	ARID1A		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+GNA13_loss	gene	17q24.1	17	63006833	63052957	loss	0.1	0.5	none	GNA13		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+STAT6_gain	gene	12q13.3	12	57489191	57525922	gain	0.1	0.5	none	STAT6		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+PTEN_loss	gene	10q23.31	10	89622870	89731687	loss	0.1	0.5	none	PTEN		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+21_gain	chromosome	21	21	0	48129895	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+EBF1_loss	gene	5q33.3	5	158122928	158526769	loss	0.1	0.5	none	EBF1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+C10orf12_loss	gene	10q24.1	10	98741041	98745582	loss	0.1	0.5	none	C10orf12		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+MAP2K1_loss	gene	15q22.31	15	66679155	66784650	loss	0.1	0.5	none	MAP2K1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+FBXO11_loss	gene	2p16.3	2	48016455	48132932	loss	0.1	0.5	none	FBXO11		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+MIR17HG_gain	gene	13q31.3	13	92000074	92006833	gain	0.1	0.5	none	MIR17HG		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+TP53_loss	gene	17p13.1	17	7565097	7590856	loss	0.1	0.5	none	TP53		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+6q_loss	arm	6q	6	61000000	171115067	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+17p_loss	arm	17p	17	0	24000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+8p_loss	arm	8p	8	0	45600000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+7p_gain	arm	7p	7	0	59900000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+3q_gain	arm	3q	3	91000000	198022430	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+1p_loss	arm	1p	1	0	125000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+7q_gain	arm	7q	7	59900000	159138663	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+B2M_loss	gene	15q21.1	15	45003675	45011075	loss	0.1	0.5	none	B2M		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+2q_loss	arm	2q	2	93300000	243199373	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+4p_loss	arm	4p	4	0	50400000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+11q_gain	arm	11q	11	53700000	135006516	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+15q_loss	arm	15q	15	19000000	102531392	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+16q_loss	arm	16q	16	36600000	90354753	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TP53BP1_loss	gene	15q15.3	15	43699407	43802926	loss	0.1	0.5	none	TP53BP1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+2p_loss	arm	2p	2	0	93300000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+4q_loss	arm	4q	4	50400000	191154276	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+22q_loss	arm	22q	22	14700000	51304566	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+CNPY3_gain	gene	6p21.1	6	42896938	42907025	gain	0.1	0.5	none	CNPY3		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+8q_loss	arm	8q	8	45600000	146364022	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+19p_loss	arm	19p	19	0	26500000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+20p_loss	arm	20p	20	0	27500000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+6p_loss	arm	6p	6	0	61000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+9q_loss	arm	9q	9	49000000	141213431	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+12p_loss	arm	12p	12	0	35800000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+3p_loss	arm	3p	3	0	91000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+11p_loss	arm	11p	11	0	53700000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+12q_loss	arm	12q	12	35800000	133851895	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+14q_loss	arm	14q	14	17600000	107349540	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+ING1_loss	gene	13q34	13	111365083	111373421	loss	0.1	0.5	none	ING1		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+NFKBIZ_gain	gene	3q12.3	3	101546835	101579866	gain	0.1	0.5	none	NFKBIZ		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+1q_loss	arm	1q	1	125000000	249250621	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+9p_loss	arm	9p	9	0	49000000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+10p_loss	arm	10p	10	0	40200000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+10q_loss	arm	10q	10	40200000	135534747	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+13q_loss	arm	13q	13	17900000	115169878	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+21q_loss	arm	21q	21	13200000	48129895	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TP73_loss	gene	1p36.32	1	3569084	3652765	loss	0.1	0.5	none	TP73		LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+16p_loss	arm	16p	16	0	36600000	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+18q_loss	arm	18q	18	17200000	78077248	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+20q_loss	arm	20q	20	27500000	63025520	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+Xp_gain	arm	Xp	X	0	60600000	gain	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		2	
+19q_loss	arm	19q	19	26500000	59128983	loss	0.5	0.5	none			LymphGen		TRUE	FALSE	LymphGen: Wright_2020_fig_S2A		1	
+TNFAIP3_loss	gene	6q23.3	6	138188324	138204451	loss	0.01	0.5	none	TNFAIP3		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TMEM30A_loss	gene	6q14.1	6	75962637	75994632	loss	0.01	0.5	none	TMEM30A		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TNFRSF14_loss	gene	1p36.32	1	2487803	2497061	loss	0.01	0.5	none	TNFRSF14		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+REL_gain	gene	2p16.1	2	61108629	61155291	gain	0.01	0.5	none	REL		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+EP300_loss	gene	22q13.2	22	41488613	41576081	loss	0.01	0.5	none	EP300		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+STAT6_gain	gene	12q13.3	12	57489186	57505196	gain	0.01	0.5	none	STAT6		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+IRF8_gain	gene	16q24.1	16	85932773	85956211	gain	0.01	0.5	none	IRF8		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+ARID1A_loss	gene	1p36.11	1	27022521	27108601	loss	0.01	0.5	none	ARID1A		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+CIITA_loss	gene	16p13.13	16	10971054	11018840	loss	0.01	0.5	none	CIITA		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+ETV6_loss	gene	12p13.2	12	11802787	12048325	loss	0.01	0.5	none	ETV6		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+HLA-B_loss	gene	6p21.33	6	31321648	31324989	loss	0.01	0.5	none	HLA-B		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+BTG1_loss	gene	12q21.33	12	92534053	92539673	loss	0.01	0.5	none	BTG1		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+SPIB_gain	gene	19q13.33	19	50922194	50934309	gain	0.01	0.5	none	SPIB		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TOX_loss	gene	8q12.1	8	59717976	60031767	loss	0.01	0.5	none	TOX		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+CDKN2A_loss	gene	9p21.3	9	21967750	21975132	loss	0.01	0.5	none	CDKN2A		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+SETD1B_loss	gene	12q24.31	12	122241570	122270561	loss	0.01	0.5	none	SETD1B		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+CD58_loss	gene	1p13.1	1	117057155	117113715	loss	0.01	0.5	none	CD58		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+IRF4_loss	gene	6p25.3	6	391738	411443	loss	0.01	0.5	none	IRF4		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+DYSF_loss	gene	2p13.2	2	71693831	71913893	loss	0.01	0.5	none	DYSF		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+EIF4A2_loss	gene	3q27.3	3	186501360	186507685	loss	0.01	0.5	none	EIF4A2		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+PIK3CG_gain	gene	7q22.3	7	106505722	106549423	gain	0.01	0.5	none	PIK3CG		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+PRKDC_loss	gene	8q11.21	8	48685668	48872743	loss	0.01	0.5	none	PRKDC		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TBCC_loss	gene	6p21.1	6	42712233	42713884	loss	0.01	0.5	none	TBCC		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TP53_loss	gene	17p13.1	17	7571719	7590868	loss	0.01	0.5	none	TP53		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+12q_loss	arm	12q	12	35800000	133851895	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+2q_loss	arm	2q	2	93300000	243199373	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+8p_loss	arm	8p	8	0	45600000	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+RYR3_loss	gene	15q14	15	33603162	34158304	loss	0.01	0.5	none	RYR3		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+6q_loss	arm	6q	6	61000000	171115067	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+IGFBP7_loss	gene	4q12	4	57897236	57976551	loss	0.01	0.5	none	IGFBP7		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+22q_loss	arm	22q	22	14700000	51304566	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+ADAM8_loss	gene	10q26.3	10	135075919	135090407	loss	0.01	0.5	none	ADAM8		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+LOC107986596_gain	gene	6p21.1	6	42419992	42424886	gain	0.01	0.5	none	LOC107986596		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TMEM121_loss	gene	14q32.33	14	105992952	105996539	loss	0.01	0.5	none	TMEM121		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TENM3_gain	gene	4q34.3	4	183164583	183724177	gain	0.01	0.5	none	TENM3		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+20p_loss	arm	20p	20	0	27500000	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+APRT_loss	gene	16q24.3	16	88875876	88878342	loss	0.01	0.5	none	APRT		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+SEMA4A_loss	gene	1q22	1	156123321	156147542	loss	0.01	0.5	none	SEMA4A		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+INTS1_gain	gene	7p22.3	7	1509912	1544018	gain	0.01	0.5	none	INTS1		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+NECTIN3_gain	gene	3q13.13	3	110790605	110856407	gain	0.01	0.5	none	NECTIN3		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+TNK2_gain	gene	3q29	3	195590235	195635880	gain	0.01	0.5	none	TNK2		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+PACRGL_loss	gene	4p15.31	4	20702035	20729980	loss	0.01	0.5	none	PACRGL		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+1p_loss	arm	1p	1	0	125000000	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+C1R_loss	gene	12p13.31	12	7187514	7245043	loss	0.01	0.5	none	C1R		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+ZNF595_loss	gene	4p16.3	4	53178	88099	loss	0.01	0.5	none	ZNF595		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+ANKRD30B_gain	gene	18p11.21	18	14748238	14852737	gain	0.01	0.5	none	ANKRD30B		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+9q_loss	arm	9q	9	49000000	141213431	loss	0.8	0.5	none			LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen arm feature		
+ARID3A_loss	gene	19p13.3	19	926036	972803	loss	0.01	0.5	none	ARID3A		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+ZNF552_loss	gene	19q13.43	19	58318449	58326281	loss	0.01	0.5	none	ZNF552		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+CNKSR2_gain	gene	Xp22.12	X	21392535	21672813	gain	0.01	0.5	none	CNKSR2		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+SERPINB1_loss	gene	6p25.2	6	2832565	2842283	loss	0.01	0.5	none	SERPINB1		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+ANO8_loss	gene	19p13.11	19	17434031	17445638	loss	0.01	0.5	none	ANO8		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+OR2M4_loss	gene	1q44	1	248402230	248403166	loss	0.01	0.5	none	OR2M4		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+SNX13_gain	gene	7p21.1	7	17830384	17980131	gain	0.01	0.5	none	SNX13		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+FHIT_loss	gene	3p14.2	3	59735035	61237133	loss	0.01	0.5	none	FHIT		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+MKLN1_gain	gene	7q32.3	7	131012594	131181398	gain	0.01	0.5	none	MKLN1		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
+PRDM15_gain	gene	21q22.3	21	43221153	43299591	gain	0.01	0.5	none	PRDM15		LymphGen_model		TRUE	FALSE	LymphGen R code (Model9.R, Full.Uber.2019.txt)	LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)		30000000
