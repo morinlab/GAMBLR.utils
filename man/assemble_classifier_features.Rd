@@ -89,9 +89,11 @@ Features that need \code{noncoding_maf} (e.g. 5' UTR) are only called when
 it is given; \code{maf_data} should include silent mutations (e.g.
 \code{get_coding_ssm(include_silent = TRUE)}).
 \item Structural variants: present (1) when either \code{sv_data} has an SV
-with the gene at one end (from \link{annotate_sv}, which is run if
-\code{sv_data} has no gene column) or the metadata column in
-\code{sv_from_metadata} is positive. Assessed when either source has
+rearranging the gene (its \code{gene} column, with an annotated partner,
+from \link{annotate_sv}, which is run if \code{sv_data} has no gene column) or
+the metadata column in \code{sv_from_metadata} is positive. A gene named
+only as the \code{partner} (the locus driving the rearranged gene, e.g.
+BCL6 in a BCL6-MYC) doesn't count. Assessed when either source has
 information for the sample.
 \item Copy number: the feature's level (0, 1 or 2) from
 \link{segmented_data_to_cnv_status}, called separately for each

@@ -14,9 +14,13 @@
 #   LymphGen: the LymphGen R code ("Lymphgen for R": Model9.R,
 #     Full.Uber.2019.txt, Fullmat.2019.txt, Study.sampR.txt). Model9() refits
 #     the model from the training data each run; the features here are those
-#     it selects for the full model (copy number and both fusions available)
-#     with complete gene lists, plus the A53 model.
+#     its nine submodels select with complete gene lists: the full model
+#     (copy number and both fusions available), the A53 model, and the
+#     submodels used when copy number and/or the BCL2 or BCL6 fusion status
+#     is missing. classifier_features.tsv records which submodels use each.
 suppressMessages({library(dplyr); library(readr)})
+# for get_gene_tss()
+devtools::load_all(quiet = TRUE)
 
 dlbclass_order_file = "~/git/DLBClass-tool/gsm/feature_order.19Aug2024.txt"
 lymphgen_dir = "~/Downloads/Lymphgen for R 2"
@@ -24,7 +28,6 @@ lymphgen_dir = "~/Downloads/Lymphgen for R 2"
 feature_order = readLines(dlbclass_order_file)
 cnv = read_tsv("inst/extdata/cnv_features.grch37.tsv", col_types = cols(.default = "c"),
                na = c("", "NA"))
-genes37 = GAMBLR.data::grch37_gene_coordinates
 
 nonsilent = "trunc,missense,inframe,splice_region,other_nonsilent"
 rows = list(); map = list()
@@ -78,17 +81,26 @@ lab = study[, 3]; lab[lab == "SDT"] = "ST2"
 # Model9.R reads these from the global environment under its own names
 Full.Uber.2019 = uber
 Fullmat.2019 = rd("Fullmat.2019.txt")
+# all nine submodels: Model9 picks one per sample by which of copy number and
+# the BCL2 and BCL6 fusions are available, and they select different features
+# (e.g. BCL2 Synon when BCL2 fusion status is missing)
+submodel_names = c("Full", "NoCGH", "NoBCL2Fus", "NoBCL2CGH", "NoBCL6Fus",
+                   "NoBCL6CGH", "NoFus", "NoFusCGH", "A53")
 model = Model9(lab, uber, Fullmat.2019, CGH.class = 0,
                mut.genelist = unique(uber[, 3]), CGH.genelist = unique(uber[, 3]),
-               Has.CGH = study[, 2] == 1, modelcheck = c(1, 9))
+               Has.CGH = study[, 2] == 1, modelcheck = 1:9)
 selected = NULL
-for(k in c(1, 9)){
+# Full and A53 first, so their features keep the order they had before the
+# other submodels were added
+for(k in c(1, 9, 2:8)){
   mt = model[[k]]$Mod.type
+  mt = mt[!is.na(mt$out) & mt$out > 0, ]   # drop padding rows
   ix = cbind(mt$out, mt$ot1, mt$ot1.1)
   subtype = if(k == 9) rep("A53", nrow(mt)) else model[[k]]$lst[mt$i]
   for(r in seq_len(nrow(mt))){
     parts = uber[match(stats::na.omit(ix[r, ]), uber$Feature.Index), ]
-    selected = rbind(selected, data.frame(subtype = subtype[r], rank = r,
+    selected = rbind(selected, data.frame(submodel = submodel_names[k],
+                                          subtype = subtype[r], rank = r,
                                           gene = parts$Gene.Symbol,
                                           entrez = parts$ENTREZ.ID,
                                           type = parts$Feature.type,
@@ -105,15 +117,18 @@ symbol = c(MYD88L265P = "MYD88", BCL6FusionCatcherORInHouse = "BCL6",
 selected$gene37 = ifelse(selected$gene %in% names(symbol), symbol[selected$gene], selected$gene)
 arm = grepl("^[0-9XY]+[pq]$", selected$gene)
 
-# Synon windows: 4 kb either side of the grch37 TSS. Strand from
-# org.Hs.eg.db (its coordinates are hg38; strand doesn't change).
+# Synon windows: the first 4 kb of the gene from its grch37 TSS (0 to 4000
+# bp, downstream), as LymphGen defines Synon (5' UTR or synonymous coding
+# mutations within 4 kb of the TSS, so only downstream of it). TSS and strand
+# from get_gene_tss(), as used by subset_ssm_by_tss().
 tss_window = function(gene, entrez){
-  loc = tryCatch(org.Hs.eg.db::org.Hs.egCHRLOC[[as.character(entrez)]], error = function(e) NA)
-  coords = filter(genes37, hugo_symbol == gene | gene_name == gene,
-                  chromosome %in% c(1:22, "X", "Y"))
-  if(all(is.na(loc)) || nrow(coords) == 0) stop("no TSS for ", gene)
-  tss = if(loc[1] < 0) max(coords$end) else min(coords$start)
-  list(chrom = coords$chromosome[1], start = tss - 4000, end = tss + 4000)
+  tss = suppressMessages(get_gene_tss(gene, "grch37"))
+  if(nrow(tss) == 0) stop("no TSS for ", gene)
+  if(tss$strand == "+"){
+    list(chrom = tss$chrom, start = tss$tss, end = tss$tss + 4000)
+  }else{
+    list(chrom = tss$chrom, start = tss$tss - 4000, end = tss$tss)
+  }
 }
 
 # position rules from the LymphGen instructions (hg19). The LymphGen code
@@ -180,7 +195,7 @@ ssm_feature = function(gene, entrez, kind){
       variant_class = cls, chrom = w$chrom, start = as.integer(w$start),
       end = as.integer(w$end), position_rule = "tss4kb",
       requires = if(cls == "silent") "maf_data" else "noncoding_maf",
-      summary = "LymphGen Synon: within 4 kb of the TSS (window not applied by the LymphGen code)")
+      summary = "LymphGen Synon: first 4 kb of the gene from the TSS (window not applied by the LymphGen code)")
   f
 }
 
@@ -222,9 +237,17 @@ cn_feature = function(gene, direction, chrom, start, end, is_arm){
   f
 }
 
+# one classifier feature per subtype, gene and types, wherever it's selected
+selected$row = paste(selected$submodel, selected$subtype, selected$rank)
+types = tapply(selected$type, selected$row, paste, collapse = "|")
+selected$key = paste(selected$subtype, selected$gene[match(selected$row, selected$row)],
+                     types[selected$row])
 lymphgen_order = 0
-for(key in unique(paste(selected$subtype, selected$rank))){
-  s = selected[paste(selected$subtype, selected$rank) == key, ]
+for(key in unique(selected$key)){
+  first_row = selected$row[selected$key == key][1]
+  s = selected[selected$row == first_row, ]
+  in_models = unique(selected$submodel[selected$key == key])
+  submodels = paste(submodel_names[submodel_names %in% in_models], collapse = ",")
   lymphgen_order = lymphgen_order + 1
   gene = s$gene37[1]
   name = paste0(s$gene[1], ":", paste(s$type, collapse = "|"))
@@ -259,7 +282,7 @@ for(key in unique(paste(selected$subtype, selected$rank))){
   features = unique(features)
   link(classifier = "LymphGen", classifier_feature = name, group = s$subtype[1],
        feature_order = lymphgen_order, feature = features, value = "1",
-       min_level = as.integer(lowest[features]))
+       min_level = as.integer(lowest[features]), submodels = submodels)
 }
 
 # outputs -----------------------------------------------------------------
@@ -272,7 +295,8 @@ classifier_map = bind_rows(map)
 d = classifier_map$classifier == "DLBClass"
 classifier_map$feature_order[d] = match(classifier_map$classifier_feature[d], feature_order)
 classifier_map = classifier_map %>%
-  select(classifier, classifier_feature, group, feature_order, feature, value, min_level) %>%
+  select(classifier, classifier_feature, group, feature_order, feature, value, min_level,
+         submodels) %>%
   arrange(classifier, feature_order)
 stopifnot(setequal(classifier_map$classifier_feature[d], feature_order),
           all(classifier_map$feature %in% features$feature),

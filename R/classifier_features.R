@@ -23,7 +23,8 @@
 #'   \item{position_rule}{The named rule the range implements, so it can be
 #'     switched off (see `position_rules` in [assemble_classifier_features]):
 #'     "PEST" (NOTCH1/NOTCH2), "ITAM" (CD79B), "SET" (EZH2) or "tss4kb"
-#'     (silent and 5' UTR mutations within 4 kb of the TSS, the LymphGen
+#'     (silent and 5' UTR mutations in the first 4 kb of the gene from its
+#'     TSS, as in [subset_ssm_by_tss] with its defaults; the LymphGen
 #'     Synon definition).}
 #'   \item{cnv_feature, cnv_feature_set}{For cnv features, the `name` and
 #'     `feature_set` of the [cnv_features_grch37] row that defines it.}
@@ -45,11 +46,14 @@
 #' non-silent mutation (CREBBP_nonsilent) and otherwise 1 for a silent one
 #' (CREBBP_silent).
 #'
-#' The LymphGen features are those its R code (Model9) selects for the full
-#' model (copy number and both translocations available, complete gene lists)
-#' and for the A53 model. LymphGen refits its model to the genes and data
-#' types available, so smaller panels or missing data types use other
-#' features. Its feature types map to shared features as follows ("Sub"
+#' The LymphGen features are those its R code (Model9) selects, with
+#' complete gene lists, in each of its nine submodels: the full model (copy
+#' number and both translocations available), the A53 model, and the
+#' submodels LymphGen uses for samples without copy number and/or BCL2 or
+#' BCL6 translocation status, which select some other features (e.g. BCL2
+#' Synon, a stand-in for the BCL2 translocation). `submodels` records which
+#' use each feature. LymphGen refits its model to the genes available, so
+#' smaller panels can use still other features. Its feature types map to shared features as follows ("Sub"
 #' types count the same as the plain ones for new data): TRUNC, truncating
 #' mutations; MUTATION, any truncating or non-truncating coding mutation;
 #' Synon, any of these or a silent or 5' UTR mutation near the TSS; HETLOSS
@@ -74,6 +78,11 @@
 #'     number, or "level" to pass the copy number level (1 or 2) through.}
 #'   \item{min_level}{For copy number features, the minimum level (1 or 2)
 #'     that counts; empty means 1.}
+#'   \item{submodels}{For LymphGen, the submodels whose model uses the
+#'     feature, comma-separated: "Full" (copy number and both translocations
+#'     available), "NoCGH" (no copy number), "NoBCL2Fus", "NoBCL6Fus" and
+#'     "NoFus" (BCL2, BCL6 or both translocation statuses missing), the same
+#'     three ending in "CGH" (also no copy number), and "A53".}
 #' }
 "classifier_features"
 
@@ -91,6 +100,10 @@
 #' without classifier columns.
 #' @param genome_build Genome build. Default "grch37", the only one
 #' currently available.
+#' @param submodel Optional LymphGen submodel name(s) (see `submodels` in
+#' [classifier_features]), e.g. "Full" or c("NoCGH", "A53"), to keep only
+#' the features those submodels use. Default NULL keeps every feature.
+#' Features of classifiers without submodels (e.g. DLBClass) are kept.
 #'
 #' @return A data frame: [genetic_features_grch37] rows, or with
 #' `classifier`, one row per classifier feature and shared feature with the
@@ -106,7 +119,7 @@
 #' # shared definitions used by both classifiers
 #' both = intersect(get_classifier_features("DLBClass")$feature,
 #'                  get_classifier_features("LymphGen")$feature)
-get_classifier_features = function(classifier, genome_build = "grch37"){
+get_classifier_features = function(classifier, genome_build = "grch37", submodel = NULL){
   if(!genome_build %in% c("grch37", "hg19")){
     stop("only grch37 classifier features are currently available")
   }
@@ -119,6 +132,17 @@ get_classifier_features = function(classifier, genome_build = "grch37"){
          ". Available: ", paste(unique(feature_map$classifier), collapse = ", "))
   }
   feature_map = feature_map[feature_map$classifier %in% classifier, , drop = FALSE]
+  if(!is.null(submodel)){
+    known = unique(trimws(unlist(strsplit(stats::na.omit(feature_map$submodels), ","))))
+    unknown = setdiff(submodel, known)
+    if(length(unknown) > 0){
+      stop("unknown submodel: ", paste(unknown, collapse = ", "),
+           ". Available: ", paste(known, collapse = ", "))
+    }
+    uses = vapply(strsplit(ifelse(is.na(feature_map$submodels), "", feature_map$submodels), ","),
+                  function(x) any(trimws(x) %in% submodel), logical(1))
+    feature_map = feature_map[is.na(feature_map$submodels) | uses, , drop = FALSE]
+  }
   feature_map = feature_map[order(match(feature_map$classifier, classifier),
                                   feature_map$feature_order), , drop = FALSE]
   out = cbind(feature_map,
@@ -202,9 +226,11 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #'     it is given; `maf_data` should include silent mutations (e.g.
 #'     `get_coding_ssm(include_silent = TRUE)`).
 #'   \item Structural variants: present (1) when either `sv_data` has an SV
-#'     with the gene at one end (from [annotate_sv], which is run if
-#'     `sv_data` has no gene column) or the metadata column in
-#'     `sv_from_metadata` is positive. Assessed when either source has
+#'     rearranging the gene (its `gene` column, with an annotated partner,
+#'     from [annotate_sv], which is run if `sv_data` has no gene column) or
+#'     the metadata column in `sv_from_metadata` is positive. A gene named
+#'     only as the `partner` (the locus driving the rearranged gene, e.g.
+#'     BCL6 in a BCL6-MYC) doesn't count. Assessed when either source has
 #'     information for the sample.
 #'   \item Copy number: the feature's level (0, 1 or 2) from
 #'     [segmented_data_to_cnv_status], called separately for each
@@ -366,9 +392,11 @@ assemble_classifier_features = function(these_samples_metadata,
       if(!"gene" %in% colnames(sv_data)){
         sv_data = annotate_sv(sv_data, genome_build = genome_build)
       }
-      sv_data = sv_data[sv_data$tumour_sample_id %in% samples, , drop = FALSE]
-      sv_genes = split(c(sv_data$gene, sv_data$partner),
-                       rep(sv_data$tumour_sample_id, 2))
+      # only rearranged genes with an annotated partner count; the partner is
+      # the locus driving the gene (e.g. BCL6 in a BCL6-MYC), not a target
+      sv_data = sv_data[sv_data$tumour_sample_id %in% samples &
+                          !is.na(sv_data$partner), , drop = FALSE]
+      sv_genes = split(sv_data$gene, sv_data$tumour_sample_id)
       sv_assessed = available("sv_available")
       if(is.null(sv_assessed)) sv_assessed = rep(TRUE, length(samples))
     }
@@ -453,6 +481,10 @@ assemble_classifier_features = function(these_samples_metadata,
 #' features was assessed in a sample. Default 0 (as DLBClass expects); NA
 #' marks them.
 #' @param genome_build Genome build. Default "grch37".
+#' @param submodel Optional LymphGen submodel name(s), as for
+#' [get_classifier_features], to encode only the features those submodels
+#' use, e.g. "NoCGH" for samples without copy number. Default NULL encodes
+#' every feature.
 #'
 #' @return A data frame in the requested format.
 #'
@@ -467,12 +499,13 @@ classifier_feature_matrix = function(feature_table,
                                      classifier,
                                      output_format = "matrix",
                                      unassessed_value = 0,
-                                     genome_build = "grch37"){
+                                     genome_build = "grch37",
+                                     submodel = NULL){
   if(!output_format %in% c("matrix", "long", "gsm")){
     stop("output_format must be \"matrix\", \"long\" or \"gsm\"")
   }
   if(length(classifier) != 1) stop("give one classifier")
-  feature_map = get_classifier_features(classifier, genome_build)
+  feature_map = get_classifier_features(classifier, genome_build, submodel = submodel)
   samples = unique(feature_table$sample_id)
   # features the table doesn't have (e.g. one assembled from mutations only)
   # count as not assessed

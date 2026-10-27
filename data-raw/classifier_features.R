@@ -15,11 +15,12 @@
 #     DLBclass-tool (163 features, GSM order kept in feature_order), with the
 #     MYD88.OTHER encoding taken as intended (a silent MYD88 mutation doesn't
 #     replace a non-silent one) rather than as maf2gsm.py implements it.
-#   LymphGen: the features its R code (Model9) selects for the full model
-#     and the A53 model, with the position rules from the LymphGen
-#     instructions (NOTCH1/NOTCH2 PEST, CD79B ITAM, EZH2 SET, and Synon within
-#     4 kb of the TSS), each tagged in position_rule so it can be switched
-#     off (assemble_classifier_features(position_rules = ...)).
+#   LymphGen: the features its R code (Model9) selects in each of its nine
+#     submodels (full, A53, and those for missing copy number or BCL2/BCL6
+#     translocation status; the submodels column records which use each),
+#     with the position rules from the LymphGen instructions (NOTCH1/NOTCH2 PEST, CD79B ITAM, EZH2 SET, and Synon in the
+#     first 4 kb of the gene from its TSS), each tagged in position_rule so it
+#     can be switched off (assemble_classifier_features(position_rules = ...)).
 # See data-raw/classifier_features_seed.R for how the tables were seeded.
 #
 # TODO(hg38): grch37 coordinates only.
@@ -74,7 +75,14 @@ stopifnot(
     all(tapply(m$feature_order, paste(m$classifier, m$classifier_feature),
                function(x) length(unique(x))) == 1),
   "min_level is 1 or 2" = all(m$min_level %in% c(1L, 2L, NA)),
-  "position_rule needs a position" = all(positioned[!is.na(f$position_rule)])
+  "position_rule needs a position" = all(positioned[!is.na(f$position_rule)]),
+  "unknown LymphGen submodel" =
+    all(trimws(unlist(strsplit(stats::na.omit(m$submodels), ","))) %in%
+          c("Full", "NoCGH", "NoBCL2Fus", "NoBCL2CGH", "NoBCL6Fus", "NoBCL6CGH",
+            "NoFus", "NoFusCGH", "A53")),
+  "each classifier feature has one set of submodels" =
+    all(tapply(m$submodels, paste(m$classifier, m$classifier_feature),
+               function(x) length(unique(x))) == 1)
 )
 
 usethis::use_data(genetic_features_grch37, overwrite = TRUE)

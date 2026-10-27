@@ -9,7 +9,8 @@ classifier_feature_matrix(
   classifier,
   output_format = "matrix",
   unassessed_value = 0,
-  genome_build = "grch37"
+  genome_build = "grch37",
+  submodel = NULL
 )
 }
 \arguments{
@@ -27,6 +28,11 @@ features was assessed in a sample. Default 0 (as DLBClass expects); NA
 marks them.}
 
 \item{genome_build}{Genome build. Default "grch37".}
+
+\item{submodel}{Optional LymphGen submodel name(s), as for
+\link{get_classifier_features}, to encode only the features those submodels
+use, e.g. "NoCGH" for samples without copy number. Default NULL encodes
+every feature.}
 }
 \value{
 A data frame in the requested format.

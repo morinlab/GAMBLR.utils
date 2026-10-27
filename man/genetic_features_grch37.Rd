@@ -21,7 +21,8 @@ mutation start must fall in (e.g. the LymphGen NOTCH1 PEST rule).}
 \item{position_rule}{The named rule the range implements, so it can be
 switched off (see \code{position_rules} in \link{assemble_classifier_features}):
 "PEST" (NOTCH1/NOTCH2), "ITAM" (CD79B), "SET" (EZH2) or "tss4kb"
-(silent and 5' UTR mutations within 4 kb of the TSS, the LymphGen
+(silent and 5' UTR mutations in the first 4 kb of the gene from its
+TSS, as in \link{subset_ssm_by_tss} with its defaults; the LymphGen
 Synon definition).}
 \item{cnv_feature, cnv_feature_set}{For cnv features, the \code{name} and
 \code{feature_set} of the \link{cnv_features_grch37} row that defines it.}

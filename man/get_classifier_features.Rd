@@ -4,7 +4,7 @@
 \alias{get_classifier_features}
 \title{Get classifier feature definitions}
 \usage{
-get_classifier_features(classifier, genome_build = "grch37")
+get_classifier_features(classifier, genome_build = "grch37", submodel = NULL)
 }
 \arguments{
 \item{classifier}{Optional classifier name(s), e.g. "DLBClass" or
@@ -13,6 +13,11 @@ without classifier columns.}
 
 \item{genome_build}{Genome build. Default "grch37", the only one
 currently available.}
+
+\item{submodel}{Optional LymphGen submodel name(s) (see \code{submodels} in
+\link{classifier_features}), e.g. "Full" or c("NoCGH", "A53"), to keep only
+the features those submodels use. Default NULL keeps every feature.
+Features of classifiers without submodels (e.g. DLBClass) are kept.}
 }
 \value{
 A data frame: \link{genetic_features_grch37} rows, or with

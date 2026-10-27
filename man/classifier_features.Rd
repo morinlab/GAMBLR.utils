@@ -23,6 +23,11 @@ classifier's order (the DLBClass GSM order for DLBClass).}
 number, or "level" to pass the copy number level (1 or 2) through.}
 \item{min_level}{For copy number features, the minimum level (1 or 2)
 that counts; empty means 1.}
+\item{submodels}{For LymphGen, the submodels whose model uses the
+feature, comma-separated: "Full" (copy number and both translocations
+available), "NoCGH" (no copy number), "NoBCL2Fus", "NoBCL6Fus" and
+"NoFus" (BCL2, BCL6 or both translocation statuses missing), the same
+three ending in "CGH" (also no copy number), and "A53".}
 }
 }
 \usage{
@@ -39,11 +44,14 @@ largest encoded value: e.g. the DLBClass "CREBBP" feature is 2 for a
 non-silent mutation (CREBBP_nonsilent) and otherwise 1 for a silent one
 (CREBBP_silent).
 
-The LymphGen features are those its R code (Model9) selects for the full
-model (copy number and both translocations available, complete gene lists)
-and for the A53 model. LymphGen refits its model to the genes and data
-types available, so smaller panels or missing data types use other
-features. Its feature types map to shared features as follows ("Sub"
+The LymphGen features are those its R code (Model9) selects, with
+complete gene lists, in each of its nine submodels: the full model (copy
+number and both translocations available), the A53 model, and the
+submodels LymphGen uses for samples without copy number and/or BCL2 or
+BCL6 translocation status, which select some other features (e.g. BCL2
+Synon, a stand-in for the BCL2 translocation). \code{submodels} records which
+use each feature. LymphGen refits its model to the genes available, so
+smaller panels can use still other features. Its feature types map to shared features as follows ("Sub"
 types count the same as the plain ones for new data): TRUNC, truncating
 mutations; MUTATION, any truncating or non-truncating coding mutation;
 Synon, any of these or a silent or 5' UTR mutation near the TSS; HETLOSS

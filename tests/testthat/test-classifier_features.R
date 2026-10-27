@@ -55,7 +55,17 @@ test_that("DLBClass mutation and SV encoding", {
 
 test_that("LymphGen features and position rules", {
   lymphgen = get_classifier_features("LymphGen")
-  expect_equal(length(unique(lymphgen$classifier_feature)), 115)
+  # every submodel's features; Full + A53 are the 115 used with complete data
+  expect_equal(length(unique(lymphgen$classifier_feature)), 126)
+  full = get_classifier_features("LymphGen", submodel = c("Full", "A53"))
+  expect_equal(length(unique(full$classifier_feature)), 115)
+  # stand-ins when BCL2 translocation status or copy number is missing
+  expect_true("BCL2:Synon" %in% get_classifier_features("LymphGen", submodel = "NoBCL2Fus")$classifier_feature)
+  expect_false("BCL2:Synon" %in% full$classifier_feature)
+  nocn = get_classifier_features("LymphGen", submodel = "NoCGH")
+  expect_true("TNFAIP3:TRUNC" %in% nocn$classifier_feature)
+  expect_false(any(nocn$data_type == "cnv"))
+  expect_error(get_classifier_features("LymphGen", submodel = "nope"), "unknown submodel")
   expect_setequal(unique(lymphgen$group), c("BN2", "EZB", "MCD", "N1", "ST2", "A53"))
 
   meta = data.frame(sample_id = c("s1", "s2", "s3"),
