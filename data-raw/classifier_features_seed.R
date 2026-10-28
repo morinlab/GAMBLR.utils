@@ -209,7 +209,7 @@ arm_rows = filter(cnv, type == "arm", is.na(feature_set) | grepl("DLBClass|Lymph
   distinct(region_name, .keep_all = TRUE)
 cytobands = GAMBLR.data::cytobands_grch37
 cnv_new = list()
-cn_feature = function(gene, direction, chrom, start, end, is_arm){
+cn_feature = function(gene, entrez, direction, chrom, start, end, is_arm){
   name = paste0(gene, "_", direction)
   if(is_arm){
     a = filter(arm_rows, region_name == gene)
@@ -236,6 +236,7 @@ cn_feature = function(gene, direction, chrom, start, end, is_arm){
       "LymphGen gene feature (LymphGen counts only focal changes of 30 Mb or less)")
   f = paste0(name, "_LymphGen")
   add(feature = f, data_type = "cnv", gene = if(is_arm) NA_character_ else gene,
+      entrez = if(is_arm) NA_character_ else as.character(entrez),
       cnv_feature = name, cnv_feature_set = "LymphGen_model", requires = "seg_data")
   f
 }
@@ -273,7 +274,7 @@ for(key in unique(selected$key)){
                 ssm_feature(gene, s$entrez[j], "utr5_tss4kb")); lvl = NA
       }else if(t %in% c("HETLOSS", "HOMDEL", "GAIN", "AMP")){
         direction = if(t %in% c("HETLOSS", "HOMDEL")) "loss" else "gain"
-        new = cn_feature(gene, direction, s$chrom[j], s$start[j], s$end[j], arm[match(s$gene[j], selected$gene)])
+        new = cn_feature(gene, s$entrez[j], direction, s$chrom[j], s$start[j], s$end[j], arm[match(s$gene[j], selected$gene)])
         lvl = if(t %in% c("HOMDEL", "AMP")) 2L else 1L
       }else{
         stop("unknown LymphGen feature type ", t)
