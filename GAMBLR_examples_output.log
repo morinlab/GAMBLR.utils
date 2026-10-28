@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-10-27 10:08:42.221871 ==="
+[1] "=== STARTED AT 2026-10-28 11:06:29.966299 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 89 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
+── Running 89 example files ───────────────────────────────────────────────────── GAMBLR.utils ──
 
 > arms = GAMBLR.data::chromosome_arms_grch37
 
@@ -120,18 +120,21 @@ Showing first 10 rows:
 
 > sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
 
+> segs = GAMBLR.open::get_cn_segments(these_samples_metadata = meta)
+
 > features = assemble_genetic_features(maf, genes_coding = genes, 
 +     genes_noncoding = c("BCL2", "PIM1"), noncoding_window = c(0, 
-+         4000), these_samples_metadata = meta, sv_data = sv, verbose = TRUE)
++         4000), these_samples_metadata = meta, sv_data = sv, seg_data = segs, 
++     unassessed_value = NA, verbose = TRUE)
 
-> head(features)
-          CD79B EZH2 MYD88_hotspot MYD88_other CREBBP KMT2D BCL2 PIM1 BCL2_SV BCL6_SV MYC_SV
-02-13135T     0    2             0           0      0     0    1    0       2       2      2
-02-20170T     0    0             2           0      0     0    0    0       0       0      0
-02-22991T     0    0             0           0      0     0    0    1       0       0      0
-04-24937T     2    0             2           0      0     0    1    2       0       0      0
-04-28140T     0    0             0           0      0     0    0    0       0       0      2
-04-29264T     0    0             0           0      0     0    0    0       0       0      0
+> features[1:5, c("EZH2", "BCL2", "PIM1", "BCL2_SV", 
++     "MYC_SV", "6q_loss")]
+          EZH2 BCL2 PIM1 BCL2_SV MYC_SV 6q_loss
+02-13135T    2    1    0       2      2       0
+02-20170T    0    0    0       0      0       2
+02-22991T    0    0    1      NA     NA       0
+04-24937T    0    1    2       0      0       0
+04-28140T    0    0    0       0      2       0
 
 > baseline_methods()
 [1] "mode"         "mode_rounded" "mean"        
@@ -374,4 +377,4 @@ Showing first 10 rows:
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-10-27 10:09:26.515128 ==="
+[1] "=== COMPLETED AT 2026-10-28 11:10:01.807037 ==="
