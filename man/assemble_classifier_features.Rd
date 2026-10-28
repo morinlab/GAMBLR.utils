@@ -108,7 +108,8 @@ A sample counts as assessed for a data type when the matching
 availability column of \code{these_samples_metadata} (ssm_available,
 sv_available, cn_available; see GAMBLR.results annotate_data_availability)
 is TRUE, or, without that column, when the data was given (mutations) or
-has rows for the sample (segments).
+has rows for the sample (segments and SVs: e.g. exomes absent from Manta
+calls for genomes have unknown SV status, not negative).
 }
 \examples{
 \dontrun{

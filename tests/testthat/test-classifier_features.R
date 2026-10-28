@@ -48,7 +48,8 @@ test_that("DLBClass mutation and SV encoding", {
   long = classifier_feature_matrix(ft, "DLBClass", output_format = "long",
                                    unassessed_value = NA)
   bcl2 = long[long$classifier_feature == "SV.BCL2", ]
-  expect_equal(bcl2$assessed, c(TRUE, TRUE, TRUE, TRUE))
+  # s4 has no breakapart result and isn't in sv_data, so its status is unknown
+  expect_equal(bcl2$assessed, c(TRUE, TRUE, TRUE, FALSE))
   expect_true(all(is.na(long$value[long$classifier_feature == "X17P.DEL"])))
   expect_equal(ft$source[ft$feature == "BCL2_SV"], c("metadata", NA, "sv_data", NA))
 })

@@ -255,7 +255,8 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #' availability column of `these_samples_metadata` (ssm_available,
 #' sv_available, cn_available; see GAMBLR.results annotate_data_availability)
 #' is TRUE, or, without that column, when the data was given (mutations) or
-#' has rows for the sample (segments).
+#' has rows for the sample (segments and SVs: e.g. exomes absent from Manta
+#' calls for genomes have unknown SV status, not negative).
 #'
 #' @param these_samples_metadata Metadata with one row per sample_id; defines
 #' the samples. Data for other samples is dropped.
@@ -408,6 +409,9 @@ assemble_classifier_features = function(these_samples_metadata,
     sv_genes = NULL
     if(!is.null(sv_data)){
       sv_data = as.data.frame(sv_data)
+      # samples with SV calls (before annotation, which keeps only SVs near
+      # annotated genes) count as assessed, as segments do for copy number
+      sv_samples = unique(as.character(sv_data$tumour_sample_id))
       if(!"gene" %in% colnames(sv_data)){
         sv_data = annotate_sv(sv_data, genome_build = genome_build)
       }
@@ -417,7 +421,7 @@ assemble_classifier_features = function(these_samples_metadata,
                           !is.na(sv_data$partner), , drop = FALSE]
       sv_genes = split(sv_data$gene, sv_data$tumour_sample_id)
       sv_assessed = available("sv_available")
-      if(is.null(sv_assessed)) sv_assessed = rep(TRUE, length(samples))
+      if(is.null(sv_assessed)) sv_assessed = samples %in% sv_samples
     }
     meta_rows = match(samples, as.character(these_samples_metadata$sample_id))
     for(i in seq_len(nrow(sv))){
