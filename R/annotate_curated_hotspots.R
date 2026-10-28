@@ -252,6 +252,8 @@ assemble_genetic_features <- function(unannotated_maf,
                                      verbose = FALSE,
                                      return_everything = FALSE
                                      ){
+  these_samples_metadata = drop_mrna_samples(these_samples_metadata,
+                                             "assemble_genetic_features")
   # to remove redundancy, we will drop all GENE_other for
   # the genes in genes_driver
   # to remove redundancy, we will drop all GENE_driver for
@@ -758,6 +760,8 @@ summarise_mutation_status = function(annotated_maf,
                                      include_hotspot_alias = TRUE,
                                      verbose = FALSE,
                                      these_samples_metadata = NULL){
+  these_samples_metadata = drop_mrna_samples(these_samples_metadata,
+                                             "summarise_mutation_status")
 
   # per-row "mutated" value: the raw occurrence count for genes listed in
   # genes_use_counts, otherwise the fixed encoding_policy value. Gene is

@@ -26,6 +26,7 @@
 #'}
 supplement_maf <- function(incoming_maf,
                            these_samples_metadata){
+  these_samples_metadata = drop_mrna_samples(these_samples_metadata, "supplement_maf")
 
   missing_sample_ids = setdiff(these_samples_metadata$Tumor_Sample_Barcode,
                                incoming_maf$Tumor_Sample_Barcode)

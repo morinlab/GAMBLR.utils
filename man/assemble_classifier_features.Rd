@@ -78,7 +78,8 @@ for every sample, from mutations, copy number segments and structural
 variants, as the common input for classifier input files (e.g. the
 DLBClass GSM, via \link{classifier_feature_matrix}) and for developing new
 models. Every sample in \code{these_samples_metadata} is included, with each
-feature marked as assessed or not.
+feature marked as assessed or not, except mRNA-seq samples (seq_type
+"mrna"), which are dropped with a warning.
 }
 \details{
 \itemize{
