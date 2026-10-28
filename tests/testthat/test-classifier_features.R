@@ -104,8 +104,8 @@ test_that("LymphGen features and position rules", {
   expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 1, NA))
   expect_equal(lg[, "PIM1:Synon"], c(1, 0, NA))
   expect_equal(lg[, "CD79B:MUTATION"], c(1, 0, NA))
-  # 5' UTR features need noncoding_maf; Synon is still assessed from the MAF
-  expect_false(any(ft$assessed[grepl("_noncoding_", ft$feature)]))
+  # without noncoding_maf, non-coding features come from maf_data
+  expect_true(all(ft$assessed[grepl("_noncoding_", ft$feature) & ft$sample_id != "s3"]))
 
   # with the SET rule
   ft = assemble_classifier_features(meta, classifier = "LymphGen",
@@ -145,4 +145,22 @@ test_that("mRNA-seq samples are dropped from the metadata, with a warning", {
                                                     sv_from_metadata = NULL),
                  "mrna")
   expect_equal(unique(ft$sample_id), "a")
+})
+
+test_that("non-coding features use maf_data's non-coding rows without noncoding_maf", {
+  meta = data.frame(sample_id = c("s1", "s2"))
+  # PIM1 5' UTR (s1) and splice region without a protein change (s2) in the Synon window
+  maf = rbind(maf_row("s1", "PIM1", "5'UTR", "", "6", 37138500),
+              maf_row("s2", "PIM1", "Splice_Region", "", "6", 37139000))
+  ft = assemble_classifier_features(meta, classifier = "LymphGen", maf_data = maf,
+                                    sv_from_metadata = NULL)
+  utr = ft[ft$feature == "PIM1_noncoding_tss4kb", ]
+  expect_equal(utr$value, c(1, 1))
+  expect_true(all(utr$assessed))
+  lg = classifier_feature_matrix(ft, "LymphGen")
+  expect_equal(lg[, "PIM1:Synon"], c(1, 1))
+  # a separate noncoding_maf replaces maf_data for them
+  ft = assemble_classifier_features(meta, classifier = "LymphGen", maf_data = maf,
+                                    noncoding_maf = maf[0, ], sv_from_metadata = NULL)
+  expect_equal(ft$value[ft$feature == "PIM1_noncoding_tss4kb"], c(0, 0))
 })

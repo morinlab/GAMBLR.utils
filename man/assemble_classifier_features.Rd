@@ -35,7 +35,8 @@ columns).}
 \item{maf_data}{MAF data frame of coding mutations, including silent ones.}
 
 \item{noncoding_maf}{Optional MAF of non-coding mutations (e.g. 5' UTR),
-for the features that need it. Not used by default.}
+for the features that need it. Default NULL uses \code{maf_data} (its
+non-coding rows).}
 
 \item{seg_data}{Optional segmented copy number data, as for
 \link{segmented_data_to_cnv_status}.}
@@ -86,9 +87,11 @@ feature marked as assessed or not, except mRNA-seq samples (seq_type
 \item Mutations: each MAF row is classified with \link{classify_mutations}
 and a feature is present (1) when a mutation in its gene has one of
 its classes and passes its protein change and position rules.
-Features that need \code{noncoding_maf} (e.g. 5' UTR) are only called when
-it is given; \code{maf_data} should include silent mutations (e.g.
-\code{get_coding_ssm(include_silent = TRUE)}).
+Features that need \code{noncoding_maf} (e.g. 5' UTR) use the non-coding
+mutations in \code{maf_data} when it isn't given (as
+\link{assemble_genetic_features} does), e.g. the silent, splice region and
+targeted region rows of \code{get_all_coding_ssm(include_silent = TRUE)};
+\code{maf_data} should include silent mutations.
 \item Structural variants: present (1) when either \code{sv_data} has an SV
 rearranging the gene (its \code{gene} column, with an annotated partner,
 from \link{annotate_sv}, which is run if \code{sv_data} has no gene column) or

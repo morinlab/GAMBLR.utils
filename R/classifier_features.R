@@ -234,9 +234,11 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #'   \item Mutations: each MAF row is classified with [classify_mutations]
 #'     and a feature is present (1) when a mutation in its gene has one of
 #'     its classes and passes its protein change and position rules.
-#'     Features that need `noncoding_maf` (e.g. 5' UTR) are only called when
-#'     it is given; `maf_data` should include silent mutations (e.g.
-#'     `get_coding_ssm(include_silent = TRUE)`).
+#'     Features that need `noncoding_maf` (e.g. 5' UTR) use the non-coding
+#'     mutations in `maf_data` when it isn't given (as
+#'     [assemble_genetic_features] does), e.g. the silent, splice region and
+#'     targeted region rows of `get_all_coding_ssm(include_silent = TRUE)`;
+#'     `maf_data` should include silent mutations.
 #'   \item Structural variants: present (1) when either `sv_data` has an SV
 #'     rearranging the gene (its `gene` column, with an annotated partner,
 #'     from [annotate_sv], which is run if `sv_data` has no gene column) or
@@ -265,7 +267,8 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #' columns).
 #' @param maf_data MAF data frame of coding mutations, including silent ones.
 #' @param noncoding_maf Optional MAF of non-coding mutations (e.g. 5' UTR),
-#' for the features that need it. Not used by default.
+#' for the features that need it. Default NULL uses `maf_data` (its
+#' non-coding rows).
 #' @param seg_data Optional segmented copy number data, as for
 #' [segmented_data_to_cnv_status].
 #' @param sv_data Optional SV data (bedpe, as for [annotate_sv], or already
@@ -359,7 +362,10 @@ assemble_classifier_features = function(these_samples_metadata,
   ssm = features[features$data_type == "ssm", , drop = FALSE]
   if(nrow(ssm) > 0){
     ssm_assessed = available("ssm_available")
-    inputs = list(maf_data = maf_data, noncoding_maf = noncoding_maf)
+    # without noncoding_maf, non-coding features come from maf_data, as in
+    # assemble_genetic_features
+    inputs = list(maf_data = maf_data,
+                  noncoding_maf = if(is.null(noncoding_maf)) maf_data else noncoding_maf)
     for(input in names(inputs)){
       these = ssm[ssm$requires == input, , drop = FALSE]
       if(nrow(these) == 0) next
