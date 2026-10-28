@@ -27,7 +27,7 @@
 #'     (NOTCH1/NOTCH2 truncations up to 139391455 and 120459150), "ITAM"
 #'     (CD79B mutations up to 62007172, truncations up to 62006800), "SET"
 #'     (EZH2 catalytic domain; LymphGen 2 doesn't apply it, as its rule uses
-#'     the wrong Entrez ID) and "tss4kb" (Synon: silent and 5' UTR mutations
+#'     the wrong Entrez ID) and "tss4kb" (Synon: silent and non-coding mutations
 #'     in the first 4 kb of the gene from its TSS, no further than the gene
 #'     end, using the LymphGen 2 windows and so its gene coordinates).}
 #'   \item{cnv_feature, cnv_feature_set}{For cnv features, the `name` and
@@ -63,7 +63,8 @@
 #' smaller panels can use still other features. Its feature types map to shared features as follows ("Sub"
 #' types count the same as the plain ones for new data): TRUNC, truncating
 #' mutations; MUTATION, any truncating or non-truncating coding mutation;
-#' Synon, any of these or a silent or 5' UTR mutation near the TSS; HETLOSS
+#' Synon, any of these or a silent or non-coding mutation (5' UTR, intron,
+#' splice region, etc.) near the TSS; HETLOSS
 #' (which includes HOMDEL), GAIN (which includes AMP), HOMDEL and AMP, copy
 #' number levels from the "LymphGen_model" rows of [cnv_features_grch37].
 #'
@@ -95,7 +96,7 @@
 
 # mutation classes used in genetic_features_grch37$variant_class
 .mutation_classes = c("trunc", "missense", "inframe", "nonstop", "splice_region",
-                      "other_nonsilent", "silent", "utr5")
+                      "other_nonsilent", "silent", "utr5", "noncoding")
 
 #' @title Get classifier feature definitions
 #'
@@ -166,8 +167,9 @@ get_classifier_features = function(classifier, genome_build = "grch37", submodel
 #' start codon loss), "missense", "inframe" (in-frame indels), "nonstop",
 #' "splice_region" (splice region variants with a protein change),
 #' "other_nonsilent" (any other mutation with a protein change, or a de novo
-#' start in the 5' UTR), "silent" or "utr5" (5' UTR). Other rows (e.g. intronic
-#' or 3' UTR) get NA.
+#' start in the 5' UTR), "silent", "utr5" (5' UTR) or "noncoding" (any other
+#' class, e.g. intron, 3' UTR, flanking or splice region variants without a
+#' protein change). Rows without a Variant_Classification get NA.
 #'
 #' @param maf_data MAF data frame (Variant_Classification and a protein
 #' change column).
@@ -210,6 +212,7 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
     vc == "Splice_Region" & has_change ~ "splice_region",
     vc %in% c("De_novo_Start_InFrame", "De_novo_Start_OutOfFrame") ~ "other_nonsilent",
     has_change ~ "other_nonsilent",
+    !is.na(vc) & vc != "" ~ "noncoding",
     TRUE ~ NA_character_
   )
   maf_data$protein_change = protein_change
@@ -283,7 +286,7 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #' the rules LymphGen 2 applies; add "SET" to count only EZH2 mutations in
 #' its catalytic domain. Features whose rule is left out count mutations at
 #' any position, e.g. `position_rules = c("PEST", "ITAM")` counts silent and
-#' 5' UTR mutations anywhere in the gene for LymphGen Synon features.
+#' non-coding mutations anywhere in the gene for LymphGen Synon features.
 #'
 #' @return A data frame with one row per sample and feature: sample_id,
 #' feature, data_type, value (0/1, or the copy number level), assessed

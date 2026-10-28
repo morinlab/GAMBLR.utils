@@ -63,7 +63,7 @@ currently supported).}
 the rules LymphGen 2 applies; add "SET" to count only EZH2 mutations in
 its catalytic domain. Features whose rule is left out count mutations at
 any position, e.g. \code{position_rules = c("PEST", "ITAM")} counts silent and
-5' UTR mutations anywhere in the gene for LymphGen Synon features.}
+non-coding mutations anywhere in the gene for LymphGen Synon features.}
 }
 \value{
 A data frame with one row per sample and feature: sample_id,

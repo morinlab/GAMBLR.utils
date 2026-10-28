@@ -57,7 +57,8 @@ feature selected for two subtypes has a row for each. LymphGen refits its model 
 smaller panels can use still other features. Its feature types map to shared features as follows ("Sub"
 types count the same as the plain ones for new data): TRUNC, truncating
 mutations; MUTATION, any truncating or non-truncating coding mutation;
-Synon, any of these or a silent or 5' UTR mutation near the TSS; HETLOSS
+Synon, any of these or a silent or non-coding mutation (5' UTR, intron,
+splice region, etc.) near the TSS; HETLOSS
 (which includes HOMDEL), GAIN (which includes AMP), HOMDEL and AMP, copy
 number levels from the "LymphGen_model" rows of \link{cnv_features_grch37}.
 }

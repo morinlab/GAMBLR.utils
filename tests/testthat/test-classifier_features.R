@@ -19,7 +19,7 @@ test_that("classify_mutations assigns classes", {
               maf_row("a", "X", "Nonstop_Mutation", "p.*10Lext*5"),
               maf_row("a", "X", "Intron", ""))
   expect_equal(classify_mutations(maf)$mutation_class,
-               c("trunc", NA, "splice_region", "nonstop", NA))
+               c("trunc", "noncoding", "splice_region", "nonstop", "noncoding"))
 })
 
 test_that("DLBClass mutation and SV encoding", {
@@ -105,7 +105,7 @@ test_that("LymphGen features and position rules", {
   expect_equal(lg[, "PIM1:Synon"], c(1, 0, NA))
   expect_equal(lg[, "CD79B:MUTATION"], c(1, 0, NA))
   # 5' UTR features need noncoding_maf; Synon is still assessed from the MAF
-  expect_false(any(ft$assessed[grepl("_utr5_", ft$feature)]))
+  expect_false(any(ft$assessed[grepl("_noncoding_", ft$feature)]))
 
   # with the SET rule
   ft = assemble_classifier_features(meta, classifier = "LymphGen",

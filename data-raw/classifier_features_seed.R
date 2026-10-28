@@ -141,7 +141,7 @@ rule_range = list(PEST_NOTCH1 = c("9", 1, 139391455), PEST_NOTCH2 = c("1", 1, 12
                   ITAM_trunc = c("17", 1, 62006800), ITAM_missense = c("17", 1, 62007172),
                   SET = c("7", 148506238, 148508764))
 ssm_feature = function(gene, entrez, kind){
-  # kind: "trunc", "mutation", "silent_tss4kb" or "utr5_tss4kb"; returns the
+  # kind: "trunc", "mutation", "silent_tss4kb" or "noncoding_tss4kb"; returns the
   # shared feature name(s), adding definitions as needed
   out = character(0)
   restricted = list(NOTCH1 = "PEST_NOTCH1", NOTCH2 = "PEST_NOTCH2")
@@ -191,13 +191,17 @@ ssm_feature = function(gene, entrez, kind){
         summary = "LymphGen MUTATION: any truncating or non-truncating coding mutation")
     return(f)
   }
+  # Synon counts every mutation in the window that isn't coding (LymphGen
+  # MUTATION/TRUNC): silent and other changes in the coding MAF, and 5' UTR
+  # and other non-coding mutations (intron, 3' UTR, flanking) in noncoding_maf
   w = tss_window(gene, entrez)
-  cls = if(kind == "silent_tss4kb") "silent" else "utr5"
+  coding_maf = kind == "silent_tss4kb"
   f = paste0(gene, "_", kind)
   add(feature = f, data_type = "ssm", gene = gene, entrez = as.character(entrez),
-      variant_class = cls, chrom = w$chrom, start = as.integer(w$start),
+      variant_class = if(coding_maf) "silent,splice_region,other_nonsilent" else "utr5,noncoding",
+      chrom = w$chrom, start = as.integer(w$start),
       end = as.integer(w$end), position_rule = "tss4kb",
-      requires = if(cls == "silent") "maf_data" else "noncoding_maf",
+      requires = if(coding_maf) "maf_data" else "noncoding_maf",
       summary = "LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)")
   f
 }
@@ -271,7 +275,7 @@ for(key in unique(selected$key)){
       }else if(t %in% c("Syn", "Synon")){
         new = c(ssm_feature(gene, s$entrez[j], "mutation"),
                 ssm_feature(gene, s$entrez[j], "silent_tss4kb"),
-                ssm_feature(gene, s$entrez[j], "utr5_tss4kb")); lvl = NA
+                ssm_feature(gene, s$entrez[j], "noncoding_tss4kb")); lvl = NA
       }else if(t %in% c("HETLOSS", "HOMDEL", "GAIN", "AMP")){
         direction = if(t %in% c("HETLOSS", "HOMDEL")) "loss" else "gain"
         new = cn_feature(gene, s$entrez[j], direction, s$chrom[j], s$start[j], s$end[j], arm[match(s$gene[j], selected$gene)])

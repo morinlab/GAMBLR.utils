@@ -24,8 +24,9 @@ Assign each MAF row one of the mutation classes used by
 start codon loss), "missense", "inframe" (in-frame indels), "nonstop",
 "splice_region" (splice region variants with a protein change),
 "other_nonsilent" (any other mutation with a protein change, or a de novo
-start in the 5' UTR), "silent" or "utr5" (5' UTR). Other rows (e.g. intronic
-or 3' UTR) get NA.
+start in the 5' UTR), "silent", "utr5" (5' UTR) or "noncoding" (any other
+class, e.g. intron, 3' UTR, flanking or splice region variants without a
+protein change). Rows without a Variant_Classification get NA.
 }
 \examples{
 maf = data.frame(Variant_Classification = c("Nonsense_Mutation",
