@@ -50,13 +50,16 @@
 #' non-silent mutation (CREBBP_nonsilent) and otherwise 1 for a silent one
 #' (CREBBP_silent).
 #'
-#' The LymphGen features are those its R code (Model9) selects, with
-#' complete gene lists, in each of its nine submodels: the full model (copy
+#' The LymphGen features are those LymphGen 2 (its R code's Model9, with
+#' Version = 2 as run in GAMBL) selects, with complete gene lists, in each of
+#' its nine submodels: the full model (copy
 #' number and both translocations available), the A53 model, and the
 #' submodels LymphGen uses for samples without copy number and/or BCL2 or
 #' BCL6 translocation status, which select some other features (e.g. BCL2
-#' Synon, a stand-in for the BCL2 translocation). `submodels` records which
-#' use each feature. LymphGen refits its model to the genes available, so
+#' Synon, a stand-in for the BCL2 translocation, and without copy number the
+#' mutation part of a combined feature, e.g. TMEM30A:TRUNC for
+#' TMEM30A:TRUNC|HETLOSS). `submodels` records which use each feature; a
+#' feature selected for two subtypes has a row for each. LymphGen refits its model to the genes available, so
 #' smaller panels can use still other features. Its feature types map to shared features as follows ("Sub"
 #' types count the same as the plain ones for new data): TRUNC, truncating
 #' mutations; MUTATION, any truncating or non-truncating coding mutation;

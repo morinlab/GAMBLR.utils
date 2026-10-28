@@ -3,28 +3,26 @@
 # GAMBLR.utils root. It writes
 #   inst/extdata/genetic_features.grch37.tsv  (shared feature definitions)
 #   inst/extdata/classifier_features.tsv      (classifier feature map)
-# and appends the "LymphGen_model" rows to inst/extdata/cnv_features.grch37.tsv
-# (only if they aren't there yet). After seeding, the TSVs are the master
-# copies: edit them directly and run data-raw/cnv_features.R and
-# data-raw/classifier_features.R.
+# and replaces the "LymphGen_model" rows of inst/extdata/cnv_features.grch37.tsv.
+# After seeding, the TSVs are the master copies: edit them directly and run
+# data-raw/cnv_features.R and data-raw/classifier_features.R.
 #
 # Sources (local copies; not distributed with the package):
 #   DLBClass: DLBclass-tool maf2gsm.py, sv2gsm.py and
 #     gsm/feature_order.19Aug2024.txt.
-#   LymphGen: the LymphGen R code ("Lymphgen for R": Model9.R,
-#     Full.Uber.2019.txt, Fullmat.2019.txt, Study.sampR.txt). Model9() refits
-#     the model from the training data each run; the features here are those
-#     its nine submodels select with complete gene lists: the full model
-#     (copy number and both fusions available), the A53 model, and the
-#     submodels used when copy number and/or the BCL2 or BCL6 fusion status
-#     is missing. classifier_features.tsv records which submodels use each.
-#   LymphGen 2 (the version run in GAMBL: "Source LymphGen.R",
-#     Full.Uber.2020.txt): the position rules and Synon windows it applies.
+#   LymphGen: LymphGen 2, the version run in GAMBL ("Source LymphGen.R",
+#     Full.Uber.2020.txt, Fullmat.2020.txt, Featord.2020.txt,
+#     Study.samp.txt), with Version = 2 (its default). Model9() refits the
+#     model from the training data each run; the features here are those its
+#     nine submodels select with complete gene lists: the full model (copy
+#     number and both fusions available), the A53 model, and the submodels
+#     used when copy number and/or the BCL2 or BCL6 fusion status is missing.
+#     classifier_features.tsv records which submodels use each. The position
+#     rules and Synon windows are those LymphGen 2 applies.
 suppressMessages({library(dplyr); library(readr)})
 
 dlbclass_order_file = "~/git/DLBClass-tool/gsm/feature_order.19Aug2024.txt"
-lymphgen_dir = "~/Downloads/Lymphgen for R 2"
-lymphgen2_dir = "~/git/Lymphgen_2"
+lymphgen_dir = "~/git/Lymphgen_2"
 
 feature_order = readLines(dlbclass_order_file)
 cnv = read_tsv("inst/extdata/cnv_features.grch37.tsv", col_types = cols(.default = "c"),
@@ -74,29 +72,30 @@ for(i in seq_len(nrow(dcnv))){
 }
 
 # LymphGen: features selected by Model9 ------------------------------------
-source(file.path(lymphgen_dir, "Model9.R"))
+# (the source file also defines Predict9 etc.; only Model9 is used)
+suppressWarnings(source(file.path(lymphgen_dir, "Source LymphGen.R")))
 rd = function(f) read.table(file.path(lymphgen_dir, f), header = TRUE, sep = "\t")
-uber = rd("Full.Uber.2019.txt")
-study = rd("Study.sampR.txt")
-lab = study[, 3]; lab[lab == "SDT"] = "ST2"
-# Model9.R reads these from the global environment under its own names
-Full.Uber.2019 = uber
-Fullmat.2019 = rd("Fullmat.2019.txt")
+uber = rd("Full.Uber.2020.txt")
+study = rd("Study.samp.txt")
+# as in Run_Lymphgen.R
+lab = study[, 18]; lab[lab == "SDT"] = "ST2"
+featord = rd("Featord.2020.txt"); featord[, 11] = featord[, 11] == 1
 # all nine submodels: Model9 picks one per sample by which of copy number and
 # the BCL2 and BCL6 fusions are available, and they select different features
 # (e.g. BCL2 Synon when BCL2 fusion status is missing)
 submodel_names = c("Full", "NoCGH", "NoBCL2Fus", "NoBCL2CGH", "NoBCL6Fus",
                    "NoBCL6CGH", "NoFus", "NoFusCGH", "A53")
-model = Model9(lab, uber, Fullmat.2019, CGH.class = 0,
+model = Model9(lab, uber, as.matrix(rd("Fullmat.2020.txt") == 1), CGH.class = 0,
                mut.genelist = unique(uber[, 3]), CGH.genelist = unique(uber[, 3]),
-               Has.CGH = study[, 2] == 1, modelcheck = 1:9)
+               Has.CGH = study[, 7] == 1, modelcheck = 1:9,
+               Featord.2020 = featord, Version = 2)
 selected = NULL
-# Full and A53 first, so their features keep the order they had before the
-# other submodels were added
+# Full and A53 first, so their features come first in feature_order
 for(k in c(1, 9, 2:8)){
   mt = model[[k]]$Mod.type
   mt = mt[!is.na(mt$out) & mt$out > 0, ]   # drop padding rows
-  ix = cbind(mt$out, mt$ot1, mt$ot1.1)
+  # a selected feature combines up to four training features (out, ot1, ...)
+  ix = as.matrix(mt[, grep("^(out|ot1)", names(mt))])
   subtype = if(k == 9) rep("A53", nrow(mt)) else model[[k]]$lst[mt$i]
   for(r in seq_len(nrow(mt))){
     parts = uber[match(stats::na.omit(ix[r, ]), uber$Feature.Index), ]
@@ -107,8 +106,8 @@ for(k in c(1, 9, 2:8)){
                                           type = parts$Feature.type,
                                           # LymphGen codes X and Y as 23 and 24
                                           chrom = sub("^23$", "X", sub("^24$", "Y", parts$Chrom.2018)),
-                                          start = parts$Gene.Start.2018,
-                                          end = parts$Gene.Stop.2018))
+                                          start = parts$Gene.start,
+                                          end = parts$Gene.end))
   }
 }
 
@@ -123,8 +122,7 @@ arm = grepl("^[0-9XY]+[pq]$", selected$gene)
 # its TSS, downstream only, and no further than the gene end. LymphGen 2 uses
 # its own gene coordinates, so its TSS can differ from get_gene_tss() (e.g.
 # ETS1, by 65 kb, and BCL2 and BCL2L1, by about 1 kb).
-uber2 = read.table(file.path(lymphgen2_dir, "Full.Uber.2020.txt"), header = TRUE, sep = "\t")
-synon2 = distinct(filter(uber2, grepl("Syn", Feature.type)),
+synon2 = distinct(filter(uber, grepl("Syn", Feature.type)),
                   ENTREZ.ID, Chrom.2018, Feat.start, Feat.end)
 stopifnot(!anyDuplicated(synon2$ENTREZ.ID))
 tss_window = function(gene, entrez){
@@ -231,7 +229,7 @@ cn_feature = function(gene, direction, chrom, start, end, is_arm){
     min_fraction = if(is_arm) "0.8" else "0.01", min_coverage = "0.5",
     background_arm = "none", representative_gene = if(is_arm) NA_character_ else gene,
     feature_set = "LymphGen_model", include = "TRUE", core = "FALSE",
-    citation = "LymphGen R code (Model9.R, Full.Uber.2019.txt)",
+    citation = "LymphGen 2 R code (Source LymphGen.R, Full.Uber.2020.txt)",
     # genes: only focal changes (LymphGen counts changes of 30 Mb or less)
     max_event_length = if(is_arm) NA_character_ else "30000000",
     summary = if(is_arm) "LymphGen arm feature" else
@@ -242,20 +240,23 @@ cn_feature = function(gene, direction, chrom, start, end, is_arm){
   f
 }
 
-# one classifier feature per subtype, gene and types, wherever it's selected
+# one classifier feature per subtype, gene and types, wherever it's selected;
+# a feature selected for two subtypes (HIST1H1B:SubSyn, ST2 and MCD) has a
+# row for each but one feature_order
 selected$row = paste(selected$submodel, selected$subtype, selected$rank)
 types = tapply(selected$type, selected$row, paste, collapse = "|")
 selected$key = paste(selected$subtype, selected$gene[match(selected$row, selected$row)],
                      types[selected$row])
-lymphgen_order = 0
+lymphgen_orders = character(0)
 for(key in unique(selected$key)){
   first_row = selected$row[selected$key == key][1]
   s = selected[selected$row == first_row, ]
   in_models = unique(selected$submodel[selected$key == key])
   submodels = paste(submodel_names[submodel_names %in% in_models], collapse = ",")
-  lymphgen_order = lymphgen_order + 1
   gene = s$gene37[1]
   name = paste0(s$gene[1], ":", paste(s$type, collapse = "|"))
+  lymphgen_orders = union(lymphgen_orders, name)
+  lymphgen_order = match(name, lymphgen_orders)
   features = character(0); min_level = integer(0)
   for(j in seq_len(nrow(s))){
     for(t in strsplit(s$type[j], "/")[[1]]){
@@ -310,10 +311,9 @@ stopifnot(setequal(classifier_map$classifier_feature[d], feature_order),
 write_tsv(features, "inst/extdata/genetic_features.grch37.tsv", na = "")
 write_tsv(classifier_map, "inst/extdata/classifier_features.tsv", na = "")
 
-if(!any(grepl("LymphGen_model", cnv$feature_set))){
-  cnv_out = bind_rows(cnv, bind_rows(cnv_new))
-  write_tsv(cnv_out, "inst/extdata/cnv_features.grch37.tsv", na = "")
-}
+cnv_out = bind_rows(filter(cnv, is.na(feature_set) | feature_set != "LymphGen_model"),
+                    bind_rows(cnv_new))
+write_tsv(cnv_out, "inst/extdata/cnv_features.grch37.tsv", na = "")
 cat(nrow(features), "features;", nrow(classifier_map), "map rows;",
     length(cnv_new), "LymphGen_model cnv rows\n")
 print(classifier_map %>% group_by(classifier, group) %>%

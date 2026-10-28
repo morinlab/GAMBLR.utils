@@ -55,16 +55,25 @@ test_that("DLBClass mutation and SV encoding", {
 
 test_that("LymphGen features and position rules", {
   lymphgen = get_classifier_features("LymphGen")
-  # every submodel's features; Full + A53 are the 115 used with complete data
-  expect_equal(length(unique(lymphgen$classifier_feature)), 126)
+  # every submodel's features; Full + A53 are the 117 used with complete data
+  expect_equal(length(unique(lymphgen$classifier_feature)), 140)
   full = get_classifier_features("LymphGen", submodel = c("Full", "A53"))
-  expect_equal(length(unique(full$classifier_feature)), 115)
+  expect_equal(length(unique(full$classifier_feature)), 117)
   # stand-ins when BCL2 translocation status or copy number is missing
   expect_true("BCL2:Synon" %in% get_classifier_features("LymphGen", submodel = "NoBCL2Fus")$classifier_feature)
   expect_false("BCL2:Synon" %in% full$classifier_feature)
   nocn = get_classifier_features("LymphGen", submodel = "NoCGH")
   expect_true("TNFAIP3:TRUNC" %in% nocn$classifier_feature)
   expect_false(any(nocn$data_type == "cnv"))
+  # without copy number, LymphGen 2 keeps the mutation part of a feature
+  # (TMEM30A:TRUNC|HETLOSS in the full model)
+  expect_true("TMEM30A:TRUNC|HETLOSS" %in% full$classifier_feature)
+  expect_true("TMEM30A:TRUNC" %in% nocn$classifier_feature)
+  # a feature selected for two subtypes, in different submodels
+  h1b = lymphgen[lymphgen$classifier_feature == "HIST1H1B:SubSyn", ]
+  expect_setequal(h1b$group, c("MCD", "ST2"))
+  expect_equal(length(unique(h1b$feature_order)), 1)
+  expect_false("MCD" %in% full$group[full$classifier_feature == "HIST1H1B:SubSyn"])
   expect_error(get_classifier_features("LymphGen", submodel = "nope"), "unknown submodel")
   expect_setequal(unique(lymphgen$group), c("BN2", "EZB", "MCD", "N1", "ST2", "A53"))
 

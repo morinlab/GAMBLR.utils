@@ -15,7 +15,7 @@
 #     DLBclass-tool (163 features, GSM order kept in feature_order), with the
 #     MYD88.OTHER encoding taken as intended (a silent MYD88 mutation doesn't
 #     replace a non-silent one) rather than as maf2gsm.py implements it.
-#   LymphGen: the features its R code (Model9) selects in each of its nine
+#   LymphGen: the features LymphGen 2 (Model9, Version = 2) selects in each of its nine
 #     submodels (full, A53, and those for missing copy number or BCL2/BCL6
 #     translocation status; the submodels column records which use each),
 #     with the position rules and Synon windows LymphGen 2 applies (NOTCH1/
@@ -82,8 +82,10 @@ stopifnot(
     all(trimws(unlist(strsplit(stats::na.omit(m$submodels), ","))) %in%
           c("Full", "NoCGH", "NoBCL2Fus", "NoBCL2CGH", "NoBCL6Fus", "NoBCL6CGH",
             "NoFus", "NoFusCGH", "A53")),
-  "each classifier feature has one set of submodels" =
-    all(tapply(m$submodels, paste(m$classifier, m$classifier_feature),
+  # per subtype: a LymphGen feature can be selected for two subtypes in
+  # different submodels (HIST1H1B:SubSyn)
+  "each classifier feature has one set of submodels per group" =
+    all(tapply(m$submodels, paste(m$classifier, m$classifier_feature, m$group),
                function(x) length(unique(x))) == 1)
 )
 

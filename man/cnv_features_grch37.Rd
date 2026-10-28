@@ -72,7 +72,7 @@ was trained on them. They are in DLBClass GSM order. The rows tagged
 "LymphGen" are LymphGen-associated copy number features (Wright et al.
 2020). The rows tagged "LymphGen_model" are the gene and arm features the
 LymphGen R code's model uses (gene coordinates from its
-Full.Uber.2019.txt), as used by \link{classifier_features}; gene rows count any
+Full.Uber.2020.txt, LymphGen 2), as used by \link{classifier_features}; gene rows count any
 overlap (min_fraction 0.01) and arm rows need 80\% of the arm, as LymphGen
 defines them. Rows with an empty \code{feature_set} are hand-curated.
 

@@ -275,8 +275,8 @@ NOL9_utr5_tss4kb	ssm	NOL9	79707	utr5			1	6610658	6614658	tss4kb			noncoding_maf	
 ETS1_mutation	ssm	ETS1	2113	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 ETS1_silent_tss4kb	ssm	ETS1	2113	silent			11	128388205	128392205	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
 ETS1_utr5_tss4kb	ssm	ETS1	2113	utr5			11	128388205	128392205	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
-TMEM30A_loss_LymphGen	cnv	TMEM30A									TMEM30A_loss	LymphGen_model	seg_data	
 TMEM30A_trunc	ssm	TMEM30A	55754	trunc									maf_data	
+TMEM30A_loss_LymphGen	cnv	TMEM30A									TMEM30A_loss	LymphGen_model	seg_data	
 HIST1H1D_mutation	ssm	HIST1H1D	3007	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 HIST1H1D_silent_tss4kb	ssm	HIST1H1D	3007	silent			6	26234439	26235216	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
 HIST1H1D_utr5_tss4kb	ssm	HIST1H1D	3007	utr5			6	26234439	26235216	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
@@ -302,8 +302,8 @@ IRF8_gain_LymphGen	cnv	IRF8									IRF8_gain	LymphGen_model	seg_data
 IRF8_mutation	ssm	IRF8	3394	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 ARID1A_loss_LymphGen	cnv	ARID1A									ARID1A_loss	LymphGen_model	seg_data	
 ARID1A_trunc	ssm	ARID1A	8289	trunc									maf_data	
-CIITA_loss_LymphGen	cnv	CIITA									CIITA_loss	LymphGen_model	seg_data	
 CIITA_mutation	ssm	CIITA	4261	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+CIITA_loss_LymphGen	cnv	CIITA									CIITA_loss	LymphGen_model	seg_data	
 KMT2D_trunc	ssm	KMT2D	8085	trunc									maf_data	
 SOCS1_mutation	ssm	SOCS1	8651	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 PIM1_mutation	ssm	PIM1	5292	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
@@ -319,8 +319,8 @@ ETV6_mutation	ssm	ETV6	2120	trunc,missense,inframe									maf_data	LymphGen MUT
 ETV6_silent_tss4kb	ssm	ETV6	2120	silent			12	11802787	11806787	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
 ETV6_utr5_tss4kb	ssm	ETV6	2120	utr5			12	11802787	11806787	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
 ETV6_loss_LymphGen	cnv	ETV6									ETV6_loss	LymphGen_model	seg_data	
-HLA-B_loss_LymphGen	cnv	HLA-B									HLA-B_loss	LymphGen_model	seg_data	
 HLA-B_mutation	ssm	HLA-B	3106	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+HLA-B_loss_LymphGen	cnv	HLA-B									HLA-B_loss	LymphGen_model	seg_data	
 CD79B_trunc_ITAM	ssm	CD79B	974	trunc			17	1	62006800	ITAM			maf_data	LymphGen: up to the given position (ITAM region)
 CD79B_missense_inframe_ITAM	ssm	CD79B	974	missense,inframe			17	1	62007172	ITAM			maf_data	LymphGen: up to the given position (ITAM region)
 MPEG1_mutation	ssm	MPEG1	219972	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
@@ -338,8 +338,8 @@ TOX_trunc	ssm	TOX	9760	trunc									maf_data
 TOX_loss_LymphGen	cnv	TOX									TOX_loss	LymphGen_model	seg_data	
 CDKN2A_loss_LymphGen	cnv	CDKN2A									CDKN2A_loss	LymphGen_model	seg_data	
 CDKN2A_mutation	ssm	CDKN2A	1029	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
-SETD1B_loss_LymphGen	cnv	SETD1B									SETD1B_loss	LymphGen_model	seg_data	
 SETD1B_mutation	ssm	SETD1B	23067	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SETD1B_loss_LymphGen	cnv	SETD1B									SETD1B_loss	LymphGen_model	seg_data	
 TBL1XR1_mutation	ssm	TBL1XR1	79718	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 FOXC1_trunc	ssm	FOXC1	2296	trunc									maf_data	
 FOXC1_mutation	ssm	FOXC1	2296	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
@@ -385,8 +385,8 @@ RFTN1_silent_tss4kb	ssm	RFTN1	23180	silent			3	16551222	16555222	tss4kb			maf_da
 RFTN1_utr5_tss4kb	ssm	RFTN1	23180	utr5			3	16551222	16555222	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
 DDX3X_mutation	ssm	DDX3X	1654	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 MED16_mutation	ssm	MED16	10025	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
-EIF4A2_loss_LymphGen	cnv	EIF4A2									EIF4A2_loss	LymphGen_model	seg_data	
 EIF4A2_mutation	ssm	EIF4A2	1974	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+EIF4A2_loss_LymphGen	cnv	EIF4A2									EIF4A2_loss	LymphGen_model	seg_data	
 NFKBIA_mutation	ssm	NFKBIA	4792	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 MBTPS1_mutation	ssm	MBTPS1	8720	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 PIK3CG_gain_LymphGen	cnv	PIK3CG									PIK3CG_gain	LymphGen_model	seg_data	
@@ -448,6 +448,8 @@ FHIT_loss_LymphGen	cnv	FHIT									FHIT_loss	LymphGen_model	seg_data
 MKLN1_gain_LymphGen	cnv	MKLN1									MKLN1_gain	LymphGen_model	seg_data	
 PRDM15_gain_LymphGen	cnv	PRDM15									PRDM15_gain	LymphGen_model	seg_data	
 PRDM15_mutation	ssm	PRDM15	63977	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+NHLRC1_gain_LymphGen	cnv	NHLRC1									NHLRC1_gain	LymphGen_model	seg_data	
+RARRES2_gain_LymphGen	cnv	RARRES2									RARRES2_gain	LymphGen_model	seg_data	
 BCL2_mutation	ssm	BCL2	596	trunc,missense,inframe									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
 BCL2_silent_tss4kb	ssm	BCL2	596	silent			18	60982613	60986613	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
 BCL2_utr5_tss4kb	ssm	BCL2	596	utr5			18	60982613	60986613	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
