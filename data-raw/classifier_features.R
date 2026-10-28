@@ -18,9 +18,11 @@
 #   LymphGen: the features its R code (Model9) selects in each of its nine
 #     submodels (full, A53, and those for missing copy number or BCL2/BCL6
 #     translocation status; the submodels column records which use each),
-#     with the position rules from the LymphGen instructions (NOTCH1/NOTCH2 PEST, CD79B ITAM, EZH2 SET, and Synon in the
-#     first 4 kb of the gene from its TSS), each tagged in position_rule so it
-#     can be switched off (assemble_classifier_features(position_rules = ...)).
+#     with the position rules and Synon windows LymphGen 2 applies (NOTCH1/
+#     NOTCH2 PEST, CD79B ITAM, and Synon in the first 4 kb of the gene from
+#     its TSS) and the EZH2 SET rule from the LymphGen instructions, each
+#     tagged in position_rule so it can be switched off
+#     (assemble_classifier_features(position_rules = ...)).
 # See data-raw/classifier_features_seed.R for how the tables were seeded.
 #
 # TODO(hg38): grch37 coordinates only.

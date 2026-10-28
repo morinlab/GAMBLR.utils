@@ -19,13 +19,17 @@
 #'   \item{protein_change, protein_change_exclude}{For ssm features, a
 #'     protein change that is required (e.g. "p.L265P") or excluded.}
 #'   \item{chrom, start, end}{For ssm features, an optional grch37 range the
-#'     mutation start must fall in (e.g. the LymphGen NOTCH1 PEST rule).}
+#'     mutation start must fall in (ends inclusive; e.g. the LymphGen NOTCH1
+#'     PEST rule).}
 #'   \item{position_rule}{The named rule the range implements, so it can be
-#'     switched off (see `position_rules` in [assemble_classifier_features]):
-#'     "PEST" (NOTCH1/NOTCH2), "ITAM" (CD79B), "SET" (EZH2) or "tss4kb"
-#'     (silent and 5' UTR mutations in the first 4 kb of the gene from its
-#'     TSS, as in [subset_ssm_by_tss] with its defaults; the LymphGen
-#'     Synon definition).}
+#'     switched off (see `position_rules` in [assemble_classifier_features]).
+#'     The LymphGen rules use the positions LymphGen 2 applies: "PEST"
+#'     (NOTCH1/NOTCH2 truncations up to 139391455 and 120459150), "ITAM"
+#'     (CD79B mutations up to 62007172, truncations up to 62006800), "SET"
+#'     (EZH2 catalytic domain; LymphGen 2 doesn't apply it, as its rule uses
+#'     the wrong Entrez ID) and "tss4kb" (Synon: silent and 5' UTR mutations
+#'     in the first 4 kb of the gene from its TSS, no further than the gene
+#'     end, using the LymphGen 2 windows and so its gene coordinates).}
 #'   \item{cnv_feature, cnv_feature_set}{For cnv features, the `name` and
 #'     `feature_set` of the [cnv_features_grch37] row that defines it.}
 #'   \item{requires}{The input the feature is called from: "maf_data",
@@ -270,11 +274,11 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #' [segmented_data_to_cnv_status], e.g. `value_scale`, `centering` or
 #' `blacklist`.
 #' @param position_rules The named position rules (`position_rule` in
-#' [genetic_features_grch37]) to apply. Default all of them: "PEST", "ITAM",
-#' "SET" and "tss4kb". Features whose rule is left out count mutations at any
-#' position, e.g. `position_rules = c("PEST", "ITAM", "SET")` counts silent
-#' and 5' UTR mutations anywhere in the gene for LymphGen Synon features, and
-#' `position_rules = "PEST"` matches what the LymphGen code applies.
+#' [genetic_features_grch37]) to apply. Default "PEST", "ITAM" and "tss4kb",
+#' the rules LymphGen 2 applies; add "SET" to count only EZH2 mutations in
+#' its catalytic domain. Features whose rule is left out count mutations at
+#' any position, e.g. `position_rules = c("PEST", "ITAM")` counts silent and
+#' 5' UTR mutations anywhere in the gene for LymphGen Synon features.
 #'
 #' @return A data frame with one row per sample and feature: sample_id,
 #' feature, data_type, value (0/1, or the copy number level), assessed
@@ -312,7 +316,7 @@ assemble_classifier_features = function(these_samples_metadata,
                                         genome_build = "grch37",
                                         protein_change_column = NULL,
                                         cnv_args = list(),
-                                        position_rules = c("PEST", "ITAM", "SET", "tss4kb")){
+                                        position_rules = c("PEST", "ITAM", "tss4kb")){
   if(!"sample_id" %in% colnames(these_samples_metadata)){
     stop("these_samples_metadata needs a sample_id column")
   }

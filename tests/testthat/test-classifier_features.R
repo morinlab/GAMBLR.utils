@@ -78,6 +78,10 @@ test_that("LymphGen features and position rules", {
     maf_row("s1", "MYD88", "Missense_Mutation", "p.L265P", "3", 38182641),
     # EZH2 outside the SET domain
     maf_row("s2", "EZH2", "Missense_Mutation", "p.A100T", "7", 148530000),
+    # CD79B: mutations up to 62007172, truncations up to 62006800
+    maf_row("s1", "CD79B", "Missense_Mutation", "p.Y196H", "17", 62007172),
+    maf_row("s2", "CD79B", "Missense_Mutation", "p.X1X", "17", 62007173),
+    maf_row("s2", "CD79B", "Nonsense_Mutation", "p.X2*", "17", 62006801),
     # PIM1 silent mutations near (s1) and far from (s2) the TSS
     maf_row("s1", "PIM1", "Silent", "p.L5L", "6", 37138500),
     maf_row("s2", "PIM1", "Silent", "p.L300L", "6", 37142500)
@@ -87,17 +91,26 @@ test_that("LymphGen features and position rules", {
   lg = classifier_feature_matrix(ft, "LymphGen", unassessed_value = NA)
   expect_equal(lg[, "NOTCH1:MUTATION"], c(1, 0, NA))
   expect_equal(lg[, "MYD88L265P:MUTATION"], c(1, 0, NA))
-  expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 0, NA))
+  # SET isn't applied by default, as in LymphGen 2
+  expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 1, NA))
   expect_equal(lg[, "PIM1:Synon"], c(1, 0, NA))
+  expect_equal(lg[, "CD79B:MUTATION"], c(1, 0, NA))
   # 5' UTR features need noncoding_maf; Synon is still assessed from the MAF
   expect_false(any(ft$assessed[grepl("_utr5_", ft$feature)]))
 
-  # without the SET and tss4kb rules
+  # with the SET rule
   ft = assemble_classifier_features(meta, classifier = "LymphGen",
                                     maf_data = maf, sv_from_metadata = NULL,
-                                    position_rules = c("PEST", "ITAM"))
+                                    position_rules = c("PEST", "ITAM", "SET", "tss4kb"))
   lg = classifier_feature_matrix(ft, "LymphGen", unassessed_value = NA)
-  expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 1, NA))
+  expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 0, NA))
+
+  # without the tss4kb and ITAM rules
+  ft = assemble_classifier_features(meta, classifier = "LymphGen",
+                                    maf_data = maf, sv_from_metadata = NULL,
+                                    position_rules = "PEST")
+  lg = classifier_feature_matrix(ft, "LymphGen", unassessed_value = NA)
+  expect_equal(lg[, "CD79B:MUTATION"], c(1, 1, NA))
   expect_equal(lg[, "PIM1:Synon"], c(1, 1, NA))
   expect_equal(lg[, "NOTCH1:MUTATION"], c(1, 0, NA))
 })

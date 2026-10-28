@@ -17,7 +17,7 @@ assemble_classifier_features(
   genome_build = "grch37",
   protein_change_column = NULL,
   cnv_args = list(),
-  position_rules = c("PEST", "ITAM", "SET", "tss4kb")
+  position_rules = c("PEST", "ITAM", "tss4kb")
 )
 }
 \arguments{
@@ -59,11 +59,11 @@ currently supported).}
 \code{blacklist}.}
 
 \item{position_rules}{The named position rules (\code{position_rule} in
-\link{genetic_features_grch37}) to apply. Default all of them: "PEST", "ITAM",
-"SET" and "tss4kb". Features whose rule is left out count mutations at any
-position, e.g. \code{position_rules = c("PEST", "ITAM", "SET")} counts silent
-and 5' UTR mutations anywhere in the gene for LymphGen Synon features, and
-\code{position_rules = "PEST"} matches what the LymphGen code applies.}
+\link{genetic_features_grch37}) to apply. Default "PEST", "ITAM" and "tss4kb",
+the rules LymphGen 2 applies; add "SET" to count only EZH2 mutations in
+its catalytic domain. Features whose rule is left out count mutations at
+any position, e.g. \code{position_rules = c("PEST", "ITAM")} counts silent and
+5' UTR mutations anywhere in the gene for LymphGen Synon features.}
 }
 \value{
 A data frame with one row per sample and feature: sample_id,

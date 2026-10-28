@@ -18,12 +18,13 @@
 #     (copy number and both fusions available), the A53 model, and the
 #     submodels used when copy number and/or the BCL2 or BCL6 fusion status
 #     is missing. classifier_features.tsv records which submodels use each.
+#   LymphGen 2 (the version run in GAMBL: "Source LymphGen.R",
+#     Full.Uber.2020.txt): the position rules and Synon windows it applies.
 suppressMessages({library(dplyr); library(readr)})
-# for get_gene_tss()
-devtools::load_all(quiet = TRUE)
 
 dlbclass_order_file = "~/git/DLBClass-tool/gsm/feature_order.19Aug2024.txt"
 lymphgen_dir = "~/Downloads/Lymphgen for R 2"
+lymphgen2_dir = "~/git/Lymphgen_2"
 
 feature_order = readLines(dlbclass_order_file)
 cnv = read_tsv("inst/extdata/cnv_features.grch37.tsv", col_types = cols(.default = "c"),
@@ -117,25 +118,29 @@ symbol = c(MYD88L265P = "MYD88", BCL6FusionCatcherORInHouse = "BCL6",
 selected$gene37 = ifelse(selected$gene %in% names(symbol), symbol[selected$gene], selected$gene)
 arm = grepl("^[0-9XY]+[pq]$", selected$gene)
 
-# Synon windows: the first 4 kb of the gene from its grch37 TSS (0 to 4000
-# bp, downstream), as LymphGen defines Synon (5' UTR or synonymous coding
-# mutations within 4 kb of the TSS, so only downstream of it). TSS and strand
-# from get_gene_tss(), as used by subset_ssm_by_tss().
+# Synon windows: those LymphGen 2 applies (Feat.start to Feat.end of its
+# Synon features, grch37, ends inclusive): the first 4 kb of the gene from
+# its TSS, downstream only, and no further than the gene end. LymphGen 2 uses
+# its own gene coordinates, so its TSS can differ from get_gene_tss() (e.g.
+# ETS1, by 65 kb, and BCL2 and BCL2L1, by about 1 kb).
+uber2 = read.table(file.path(lymphgen2_dir, "Full.Uber.2020.txt"), header = TRUE, sep = "\t")
+synon2 = distinct(filter(uber2, grepl("Syn", Feature.type)),
+                  ENTREZ.ID, Chrom.2018, Feat.start, Feat.end)
+stopifnot(!anyDuplicated(synon2$ENTREZ.ID))
 tss_window = function(gene, entrez){
-  tss = suppressMessages(get_gene_tss(gene, "grch37"))
-  if(nrow(tss) == 0) stop("no TSS for ", gene)
-  if(tss$strand == "+"){
-    list(chrom = tss$chrom, start = tss$tss, end = tss$tss + 4000)
-  }else{
-    list(chrom = tss$chrom, start = tss$tss - 4000, end = tss$tss)
-  }
+  w = synon2[synon2$ENTREZ.ID == entrez, ]
+  if(nrow(w) == 0) stop("no LymphGen 2 Synon window for ", gene)
+  list(chrom = sub("^23$", "X", sub("^24$", "Y", w$Chrom.2018)),
+       start = w$Feat.start, end = w$Feat.end)
 }
 
-# position rules from the LymphGen instructions (hg19). The LymphGen code
-# applies only the NOTCH1/NOTCH2 rules (its EZH2 rule uses Entrez 2416 and
-# its CD79B rule 63007172, so neither takes effect), and no Synon window.
+# position rules as LymphGen 2 applies them (hg19, mutation start; a mutation
+# is dropped past the given position): NOTCH1 and NOTCH2 truncations up to
+# 139391455 and 120459150, CD79B mutations up to 62007172 and truncations up
+# to 62006800. Its EZH2 (SET) rule uses Entrez 2416 rather than 2146, so it
+# never takes effect; the SET row is kept but isn't applied by default.
 rule_range = list(PEST_NOTCH1 = c("9", 1, 139391455), PEST_NOTCH2 = c("1", 1, 120459150),
-                  ITAM_trunc = c("17", 1, 62007171), ITAM_missense = c("17", 1, 62006799),
+                  ITAM_trunc = c("17", 1, 62006800), ITAM_missense = c("17", 1, 62007172),
                   SET = c("7", 148506238, 148508764))
 ssm_feature = function(gene, entrez, kind){
   # kind: "trunc", "mutation", "silent_tss4kb" or "utr5_tss4kb"; returns the
@@ -148,8 +153,8 @@ ssm_feature = function(gene, entrez, kind){
     f = paste0(gene, "_trunc_PEST")
     add(feature = f, data_type = "ssm", gene = gene, entrez = as.character(entrez),
         variant_class = "trunc", chrom = r[1], start = as.integer(r[2]),
-        end = as.integer(r[3]) - 1L, position_rule = "PEST", requires = "maf_data",
-        summary = "LymphGen: truncations only, before the given position (PEST domain)")
+        end = as.integer(r[3]), position_rule = "PEST", requires = "maf_data",
+        summary = "LymphGen: truncations only, up to the given position (PEST domain)")
     return(f)
   }
   if(kind %in% c("trunc", "mutation") && gene == "CD79B"){
@@ -160,7 +165,7 @@ ssm_feature = function(gene, entrez, kind){
           variant_class = if(t == "trunc") "trunc" else "missense,inframe",
           chrom = r[1], start = as.integer(r[2]), end = as.integer(r[3]),
           position_rule = "ITAM", requires = "maf_data",
-          summary = "LymphGen: ITAM region (not applied by the LymphGen code)")
+          summary = "LymphGen: up to the given position (ITAM region)")
       out = c(out, f)
     }
     return(out)
@@ -172,7 +177,7 @@ ssm_feature = function(gene, entrez, kind){
         variant_class = if(kind == "trunc") "trunc" else "trunc,missense,inframe",
         chrom = r[1], start = as.integer(r[2]), end = as.integer(r[3]),
         position_rule = "SET", requires = "maf_data",
-        summary = "LymphGen: catalytic (SET) domain (not applied by the LymphGen code)")
+        summary = "LymphGen: catalytic (SET) domain (not applied by the LymphGen code, which uses the wrong Entrez ID)")
     return(f)
   }
   if(kind == "trunc"){
@@ -195,7 +200,7 @@ ssm_feature = function(gene, entrez, kind){
       variant_class = cls, chrom = w$chrom, start = as.integer(w$start),
       end = as.integer(w$end), position_rule = "tss4kb",
       requires = if(cls == "silent") "maf_data" else "noncoding_maf",
-      summary = "LymphGen Synon: first 4 kb of the gene from the TSS (window not applied by the LymphGen code)")
+      summary = "LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)")
   f
 }
 
