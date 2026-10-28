@@ -28,7 +28,7 @@ feature_order = readLines(dlbclass_order_file)
 cnv = read_tsv("inst/extdata/cnv_features.grch37.tsv", col_types = cols(.default = "c"),
                na = c("", "NA"))
 
-nonsilent = "trunc,missense,inframe,splice_region,other_nonsilent"
+nonsilent = "trunc,missense,inframe,nonstop,splice_region,other_nonsilent"
 rows = list(); map = list()
 add = function(...) rows[[length(rows) + 1]] <<- tibble(...)
 link = function(...) map[[length(map) + 1]] <<- tibble(...)
@@ -160,7 +160,7 @@ ssm_feature = function(gene, entrez, kind){
       r = rule_range[[paste0("ITAM_", t)]]
       f = paste0("CD79B_", if(t == "trunc") "trunc" else "missense_inframe", "_ITAM")
       add(feature = f, data_type = "ssm", gene = gene, entrez = as.character(entrez),
-          variant_class = if(t == "trunc") "trunc" else "missense,inframe",
+          variant_class = if(t == "trunc") "trunc" else "missense,inframe,nonstop",
           chrom = r[1], start = as.integer(r[2]), end = as.integer(r[3]),
           position_rule = "ITAM", requires = "maf_data",
           summary = "LymphGen: up to the given position (ITAM region)")
@@ -172,7 +172,7 @@ ssm_feature = function(gene, entrez, kind){
     r = rule_range$SET
     f = paste0("EZH2_", kind, "_SET")
     add(feature = f, data_type = "ssm", gene = gene, entrez = as.character(entrez),
-        variant_class = if(kind == "trunc") "trunc" else "trunc,missense,inframe",
+        variant_class = if(kind == "trunc") "trunc" else "trunc,missense,inframe,nonstop",
         chrom = r[1], start = as.integer(r[2]), end = as.integer(r[3]),
         position_rule = "SET", requires = "maf_data",
         summary = "LymphGen: catalytic (SET) domain (not applied by the LymphGen code, which uses the wrong Entrez ID)")
@@ -187,7 +187,7 @@ ssm_feature = function(gene, entrez, kind){
   if(kind == "mutation"){
     f = paste0(gene, "_mutation")
     add(feature = f, data_type = "ssm", gene = gene, entrez = as.character(entrez),
-        variant_class = "trunc,missense,inframe", requires = "maf_data",
+        variant_class = "trunc,missense,inframe,nonstop", requires = "maf_data",
         summary = "LymphGen MUTATION: any truncating or non-truncating coding mutation")
     return(f)
   }

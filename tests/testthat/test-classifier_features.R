@@ -19,7 +19,7 @@ test_that("classify_mutations assigns classes", {
               maf_row("a", "X", "Nonstop_Mutation", "p.*10Lext*5"),
               maf_row("a", "X", "Intron", ""))
   expect_equal(classify_mutations(maf)$mutation_class,
-               c("trunc", NA, "splice_region", "other_nonsilent", NA))
+               c("trunc", NA, "splice_region", "nonstop", NA))
 })
 
 test_that("DLBClass mutation and SV encoding", {
@@ -122,4 +122,27 @@ test_that("LymphGen features and position rules", {
   expect_equal(lg[, "CD79B:MUTATION"], c(1, 1, NA))
   expect_equal(lg[, "PIM1:Synon"], c(1, 1, NA))
   expect_equal(lg[, "NOTCH1:MUTATION"], c(1, 0, NA))
+})
+
+test_that("nonstop mutations have their own class and count as coding", {
+  maf = data.frame(Variant_Classification = c("Nonstop_Mutation", "De_novo_Start_InFrame"),
+                   Protein_Change = c("p.*245Rext*?", ""))
+  expect_equal(classify_mutations(maf)$mutation_class, c("nonstop", "other_nonsilent"))
+  f = get_classifier_features("LymphGen")
+  expect_true(all(grepl("nonstop", f$variant_class[f$feature == "DTX1_mutation"])))
+})
+
+test_that("mRNA-seq samples are dropped from the metadata, with a warning", {
+  meta = data.frame(sample_id = c("a", "b"), seq_type = c("genome", "mrna"))
+  expect_warning(out <- drop_mrna_samples(meta, "f"), "f: dropping 1 mrna sample")
+  expect_equal(out$sample_id, "a")
+  expect_silent(drop_mrna_samples(meta[1, ]))
+  expect_null(drop_mrna_samples(NULL))
+  maf = data.frame(Tumor_Sample_Barcode = "a", Hugo_Symbol = "KMT2D",
+                   Variant_Classification = "Nonsense_Mutation", Protein_Change = "p.Q10*",
+                   Chromosome = "12", Start_Position = 49420000)
+  expect_warning(ft <- assemble_classifier_features(meta, classifier = "LymphGen", maf_data = maf,
+                                                    sv_from_metadata = NULL),
+                 "mrna")
+  expect_equal(unique(ft$sample_id), "a")
 })

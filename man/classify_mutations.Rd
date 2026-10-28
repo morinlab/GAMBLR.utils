@@ -21,10 +21,10 @@ splice region variant is left unclassified.}
 \description{
 Assign each MAF row one of the mutation classes used by
 \link{genetic_features_grch37}: "trunc" (nonsense, frameshift, splice site or
-start codon loss), "missense", "inframe" (in-frame indels),
+start codon loss), "missense", "inframe" (in-frame indels), "nonstop",
 "splice_region" (splice region variants with a protein change),
-"other_nonsilent" (any other mutation with a protein change, e.g. nonstop,
-or a de novo start), "silent" or "utr5" (5' UTR). Other rows (e.g. intronic
+"other_nonsilent" (any other mutation with a protein change, or a de novo
+start in the 5' UTR), "silent" or "utr5" (5' UTR). Other rows (e.g. intronic
 or 3' UTR) get NA.
 }
 \examples{

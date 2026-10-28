@@ -94,7 +94,7 @@
 "classifier_features"
 
 # mutation classes used in genetic_features_grch37$variant_class
-.mutation_classes = c("trunc", "missense", "inframe", "splice_region",
+.mutation_classes = c("trunc", "missense", "inframe", "nonstop", "splice_region",
                       "other_nonsilent", "silent", "utr5")
 
 #' @title Get classifier feature definitions
@@ -163,10 +163,10 @@ get_classifier_features = function(classifier, genome_build = "grch37", submodel
 #'
 #' @description Assign each MAF row one of the mutation classes used by
 #' [genetic_features_grch37]: "trunc" (nonsense, frameshift, splice site or
-#' start codon loss), "missense", "inframe" (in-frame indels),
+#' start codon loss), "missense", "inframe" (in-frame indels), "nonstop",
 #' "splice_region" (splice region variants with a protein change),
-#' "other_nonsilent" (any other mutation with a protein change, e.g. nonstop,
-#' or a de novo start), "silent" or "utr5" (5' UTR). Other rows (e.g. intronic
+#' "other_nonsilent" (any other mutation with a protein change, or a de novo
+#' start in the 5' UTR), "silent" or "utr5" (5' UTR). Other rows (e.g. intronic
 #' or 3' UTR) get NA.
 #'
 #' @param maf_data MAF data frame (Variant_Classification and a protein
@@ -204,6 +204,7 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
               "Start_Codon_Del") ~ "trunc",
     vc == "Missense_Mutation" ~ "missense",
     vc %in% c("In_Frame_Del", "In_Frame_Ins") ~ "inframe",
+    vc == "Nonstop_Mutation" ~ "nonstop",
     vc == "Silent" ~ "silent",
     vc == "5'UTR" ~ "utr5",
     vc == "Splice_Region" & has_change ~ "splice_region",
@@ -222,7 +223,8 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #' variants, as the common input for classifier input files (e.g. the
 #' DLBClass GSM, via [classifier_feature_matrix]) and for developing new
 #' models. Every sample in `these_samples_metadata` is included, with each
-#' feature marked as assessed or not.
+#' feature marked as assessed or not, except mRNA-seq samples (seq_type
+#' "mrna"), which are dropped with a warning.
 #'
 #' @details
 #' \itemize{
@@ -323,7 +325,8 @@ assemble_classifier_features = function(these_samples_metadata,
   if(!"sample_id" %in% colnames(these_samples_metadata)){
     stop("these_samples_metadata needs a sample_id column")
   }
-  these_samples_metadata = as.data.frame(these_samples_metadata)
+  these_samples_metadata = drop_mrna_samples(as.data.frame(these_samples_metadata),
+                                             "assemble_classifier_features")
   samples = unique(as.character(these_samples_metadata$sample_id))
   if(is.null(features)){
     features = if(is.null(classifier)) get_classifier_features(genome_build = genome_build)
