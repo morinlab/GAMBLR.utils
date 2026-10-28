@@ -11,6 +11,7 @@ subset_ssm_by_tss(
   end = 4000,
   genome_build = "grch37",
   noncoding_only = TRUE,
+  which = "active",
   tss = NULL
 )
 }
@@ -33,14 +34,20 @@ MAF getters set), otherwise "grch37".}
 silent, UTR, flank, intron and similar). Default TRUE; FALSE keeps every
 mutation in the window.}
 
+\item{which}{Which TSSs of aSHM genes to use, as for \link{get_gene_tss}:
+"active" (default; every well-mutated promoter), "primary" or "all".
+Other genes have one TSS whatever this is.}
+
 \item{tss}{Optional TSS table to use instead of \link{get_gene_tss}, with
-columns gene, chrom, strand ("+" or "-") and tss.}
+columns gene, chrom, strand ("+" or "-") and tss (several rows per gene
+are allowed).}
 }
 \value{
-The rows of \code{maf_data} in a window, with two added columns:
-\code{tss_gene} (the gene whose window it's in) and \code{tss_distance} (its
-position relative to that gene's TSS, as for \code{start} and \code{end}). A
-\code{maf_data} input gives a \code{maf_data} result (see \link{create_maf_data}).
+The rows of \code{maf_data} in a window, with three added columns:
+\code{tss_gene} (the gene whose window it's in), \code{tss_position} (the TSS of
+that window) and \code{tss_distance} (its position relative to that TSS, as
+for \code{start} and \code{end}). A \code{maf_data} input gives a \code{maf_data} result (see
+\link{create_maf_data}).
 }
 \description{
 Keep the mutations (by default the non-coding ones) that lie
@@ -54,6 +61,10 @@ transcription: 0 is the TSS, positive values are downstream (into the
 gene) and negative values upstream. \verb{start = 0, end = 4000} keeps the
 first 4 kb of the gene; \verb{start = -2000, end = 4000} also keeps 2 kb of
 the promoter. Both ends are inclusive.
+
+Genes in the aSHM catalogue can have more than one hypermutated promoter
+(see \link{get_gene_tss}); by default (\code{which = "active"}) a mutation counts if
+it is in the window of any of them, and is assigned to the nearest.
 
 Mutations are assigned to genes by position, not by their
 \code{Hugo_Symbol}, so an upstream mutation annotated to a neighbouring gene

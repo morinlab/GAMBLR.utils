@@ -57,22 +57,39 @@ test_that("bad windows and empty results", {
   expect_true(all(c("tss_gene", "tss_distance") %in% colnames(out)))
 })
 
-test_that("get_gene_tss uses strand to place the TSS", {
+test_that("get_gene_tss gives one TSS per gene, within the gene", {
   tss = get_gene_tss(c("BCL2", "MYC"))
+  expect_equal(tss$gene, c("BCL2", "MYC"))
   expect_equal(tss$strand, c("-", "+"))
-  expect_equal(tss$tss[1], tss$end[1])
-  expect_equal(tss$tss[2], tss$start[2])
-  # old and current symbols find the same gene
+  expect_true(all(tss$tss >= tss$start & tss$tss <= tss$end))
+  # old and current symbols find the same gene, by alias or Entrez ID
   expect_equal(get_gene_tss("H1-3")$tss, get_gene_tss("HIST1H1D")$tss)
+  expect_equal(get_gene_tss("TSPOAP1")$tss, get_gene_tss("BZRAP1")$tss)
+  expect_equal(get_gene_tss("TSPOAP1")$gene, "TSPOAP1")
 })
 
-test_that("registry tss4kb windows are subset_ssm_by_tss's default window", {
-  rows = genetic_features_grch37[genetic_features_grch37$position_rule %in% "tss4kb", ]
-  rows = rows[!duplicated(rows$gene), ]
-  tss = get_gene_tss(rows$gene)
-  tss = tss[match(rows$gene, tss$gene), ]
-  expect_equal(ifelse(tss$strand == "+", tss$tss, tss$tss - 4000), rows$start)
-  expect_equal(ifelse(tss$strand == "+", tss$tss + 4000, tss$tss), rows$end)
+test_that("aSHM genes use their most mutated promoter", {
+  # ETS1's longest isoform starts 65 kb upstream of the hypermutated promoter
+  ets1 = get_gene_tss("ETS1", which = "all")
+  expect_gt(nrow(ets1), 1)
+  expect_equal(get_gene_tss("ETS1")$tss, 128392205)
+  expect_equal(ets1$tss[ets1$primary], 128392205)
+  expect_equal(ets1$tss_source[ets1$primary], "ashm_mutations")
+  # PAX5 has two active promoters; "active" always includes the primary
+  pax5 = get_gene_tss("PAX5", which = "active")
+  expect_equal(nrow(pax5), 2)
+  expect_equal(sum(pax5$primary), 1)
+  # which doesn't apply to other genes
+  expect_equal(nrow(get_gene_tss("MYD88", which = "all")), 1)
+  expect_true(is.na(get_gene_tss("MYD88")$active))
+})
+
+test_that("a mutation in several windows of one gene counts once, for the nearest TSS", {
+  tss = data.frame(gene = "A", chrom = "1", strand = "+", tss = c(10000, 11000))
+  out = subset_ssm_by_tss(tss_maf(c(10500, 11500, 14500)), tss = tss)
+  expect_equal(out$Start_Position, c(10500, 11500, 14500))
+  expect_equal(out$tss_position, c(10000, 11000, 11000))
+  expect_equal(out$tss_distance, c(500, 500, 3500))
 })
 
 test_that("a maf_data input comes back as maf_data", {

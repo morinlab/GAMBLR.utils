@@ -1,22 +1,63 @@
+#' Gene transcription start sites
+#'
+#' The transcription start sites (TSS) used by [get_gene_tss] and
+#' [subset_ssm_by_tss], for grch37 and hg38, built by `data-raw/gene_tss.R`
+#' from UCSC knownGene (UCSC Genes for grch37, GENCODE V44 for hg38).
+#'
+#' Every gene in GAMBLR.data's gene coordinates (with an Entrez ID and a
+#' strand) has one primary TSS: that of its longest isoform (longest spliced
+#' transcript), or the start of its gene span if knownGene has no transcript
+#' for it. Genes in the aSHM catalogue
+#' (`GAMBLR.data::somatic_hypermutation_locations_*_v_latest`) instead have
+#' one row per distinct promoter (transcript TSSs within 2 kb of each other
+#' merged), each with the number of GAMBLR.open genomes mutated in its first
+#' 4 kb, counting only mutations in the gene's curated aSHM regions (so a
+#' window reaching e.g. a 3' UTR hotspot doesn't count it). Their primary TSS
+#' is the most mutated, and a TSS is active when at
+#' least 10 genomes, and at least 10% as many as the primary TSS, are mutated
+#' there. Only aSHM genes are counted because GAMBLR.open bundles non-coding
+#' mutations only for them.
+#'
+#' @format A data frame with columns
+#' \describe{
+#'   \item{genome_build}{"grch37" or "hg38".}
+#'   \item{gene, entrez}{Gene symbol (as in that build's gene coordinates)
+#'     and Entrez ID.}
+#'   \item{chrom, start, end}{The gene span (chromosome without "chr").}
+#'   \item{strand, tss}{Strand ("+" or "-") and TSS position.}
+#'   \item{tss_source}{"longest_isoform", "gene_span" or "ashm_mutations"
+#'     (chosen by mutation counts).}
+#'   \item{primary}{TRUE for the gene's primary TSS.}
+#'   \item{ashm}{TRUE for genes in the aSHM catalogue.}
+#'   \item{active, n_samples, n_mut}{For aSHM genes: whether the TSS is
+#'     active, and the genomes and mutations in its first 4 kb; NA
+#'     otherwise.}
+#' }
+"gene_tss"
+
 #' @title Get gene transcription start sites
 #'
-#' @description Return the transcription start site (TSS) and strand of
-#' genes, from the gene coordinates in GAMBLR.data
-#' (`grch37_gene_coordinates` or `hg38_gene_coordinates`) and the strand in
-#' \pkg{org.Hs.eg.db}.
+#' @description Return the transcription start site(s) (TSS) and strand of
+#' genes, from the bundled [gene_tss] table.
 #'
-#' @details The gene coordinates are Ensembl gene spans (the union of the
-#' gene's transcripts), so the TSS is the most upstream transcription start:
-#' the gene start on the + strand and the gene end on the - strand. Only
-#' genes on chromosomes 1-22, X and Y are returned. The strand is looked up
-#' by Ensembl gene ID, then by symbol or alias; genes without one are left
-#' out with a message.
+#' @details Most genes have one TSS: that of their longest isoform. Genes in
+#' the aSHM catalogue (`GAMBLR.data::somatic_hypermutation_locations_*`)
+#' have one per distinct promoter instead, ranked by how many GAMBLR.open
+#' genomes are mutated in their first 4 kb: the most mutated is the gene's
+#' primary TSS, and the well-mutated ones are active (see [gene_tss]). This
+#' picks the hypermutated promoter where it isn't the longest isoform's (e.g.
+#' ETS1, SGK1, BLK), and finds genes with more than one (e.g. PAX5, IRF8).
+#' `which` only applies to aSHM genes; other genes always give their one TSS.
+#' Only genes on chromosomes 1-22, X and Y are included.
 #'
-#' @param genes Optional gene symbols. Default NULL returns every gene with
-#' coordinates and a strand. Symbols are matched to the coordinate table's
-#' `hugo_symbol` or `gene_name`, then through [expand_gene_aliases] (so e.g.
-#' "H1-3" finds HIST1H1D in grch37).
+#' @param genes Optional gene symbols. Default NULL returns every gene.
+#' Symbols are matched to the table's gene names, then by Entrez ID (so
+#' current and former names both work, e.g. "TSPOAP1" finds BZRAP1 in
+#' grch37) and through [expand_gene_aliases] (e.g. "H1-3" finds HIST1H1D).
 #' @param genome_build "grch37" (default) or "hg38".
+#' @param which For aSHM genes: "primary" (default; one TSS per gene, the
+#' most mutated), "active" (every well-mutated TSS, always including the
+#' primary one) or "all" (every distinct TSS).
 #' @param window Optional window around each TSS, \code{c(start, end)} in bp
 #' as for [subset_ssm_by_tss] (0 is the TSS, positive values are into the
 #' gene, negative values upstream), e.g. \code{c(0, 4000)} for the first 4 kb
@@ -28,97 +69,83 @@
 #' frame with chromosome, start, end and hugo_symbol. Both cover `window`
 #' (or the TSS alone).
 #'
-#' @return With "df", a data frame with one row per gene: gene (as
-#' requested, or the coordinate table's symbol), chrom (without a "chr"
-#' prefix), start and end (the gene), strand ("+" or "-") and tss, plus
-#' window_start and window_end (genome coordinates) when `window` is given.
-#' With "region" or "bed", the window (or TSS) of each gene as described
-#' for `return_as`.
+#' @return With "df", a data frame with one row per TSS: gene (as
+#' requested), chrom (without a "chr" prefix), start and end (the gene),
+#' strand ("+" or "-"), tss, tss_source ("longest_isoform", "gene_span" or
+#' "ashm_mutations"), primary, active and n_samples (the last two NA for
+#' genes outside the aSHM catalogue), plus window_start and window_end
+#' (genome coordinates) when `window` is given. With "region" or "bed", the
+#' window (or TSS) of each row as described for `return_as`.
 #'
 #' @export
 #'
 #' @examples
 #' get_gene_tss(c("BCL2", "MYC", "PIM1"))
 #'
+#' # ETS1's hypermutated promoter is not its longest isoform's
+#' get_gene_tss("ETS1", which = "all")
+#'
+#' # PAX5 has two hypermutated promoters
+#' get_gene_tss("PAX5", which = "active")
+#'
 #' # regions covering the first 4 kb of each gene, to fetch the mutations
 #' # there (e.g. with GAMBLR.open::get_ssm_by_regions)
 #' get_gene_tss(c("BCL2", "MYC", "PIM1"), window = c(0, 4000), return_as = "region")
 get_gene_tss = function(genes = NULL, genome_build = "grch37", window = NULL,
-                        return_as = "df"){
+                        return_as = "df", which = "primary"){
   return_as = match.arg(return_as, c("df", "region", "bed"))
+  which = match.arg(which, c("primary", "active", "all"))
   if(!is.null(window) && (!is.numeric(window) || length(window) != 2 || window[1] > window[2])){
     stop("window must be c(start, end) with start <= end, in bp relative to the TSS")
   }
-  build = tolower(genome_build)
-  if(build %in% c("grch37", "hg19")){
-    coords = GAMBLR.data::grch37_gene_coordinates
-  }else if(build %in% c("hg38", "grch38")){
-    coords = GAMBLR.data::hg38_gene_coordinates
-  }else{
+  build = .maf_data_build(genome_build)
+  if(!build %in% c("grch37", "hg38")){
     stop("genome_build must be grch37 or hg38")
   }
-  coords = as.data.frame(coords)
-  coords$chromosome = sub("^chr", "", coords$chromosome)
-  coords = coords[coords$chromosome %in% c(1:22, "X", "Y"), , drop = FALSE]
-  coords$symbol = ifelse(is.na(coords$hugo_symbol), coords$gene_name, coords$hugo_symbol)
+  tab = GAMBLR.utils::gene_tss
+  tab = tab[tab$genome_build == build, , drop = FALSE]
+  keep = switch(which,
+                primary = tab$primary,
+                active = tab$primary | tab$active %in% TRUE,
+                all = rep(TRUE, nrow(tab)))
+  tab = tab[keep, , drop = FALSE]
 
   if(!is.null(genes)){
     genes = unique(genes)
-    rows = lapply(genes, function(g){
-      hit = which(coords$hugo_symbol %in% g | coords$gene_name %in% g)
-      if(length(hit) == 0){
-        aliases = setdiff(expand_gene_aliases(g), g)
-        hit = which(coords$hugo_symbol %in% aliases | coords$gene_name %in% aliases)
+    # by name, then Entrez ID, then alias
+    found = genes[genes %in% tab$gene]
+    names(found) = found
+    todo = setdiff(genes, found)
+    if(length(todo) > 0){
+      org = org.Hs.eg.db::org.Hs.eg.db
+      eg = suppressMessages(AnnotationDbi::mapIds(org, todo, "ENTREZID", "SYMBOL", multiVals = "first"))
+      if(any(is.na(eg))){
+        eg[is.na(eg)] = suppressMessages(AnnotationDbi::mapIds(org, todo[is.na(eg)], "ENTREZID",
+                                                               "ALIAS", multiVals = "first"))
       }
-      hit
-    })
-    missing = genes[lengths(rows) == 0]
+      by_entrez = tab$gene[match(eg, tab$entrez)]
+      for(i in seq_along(todo)){
+        hit = by_entrez[i]
+        if(is.na(hit)) hit = intersect(expand_gene_aliases(todo[i]), tab$gene)[1]
+        if(!is.na(hit)) found[todo[i]] = hit
+      }
+    }
+    missing = setdiff(genes, names(found))
     if(length(missing) > 0){
-      message(length(missing), " gene(s) not in the ", build, " gene coordinates: ",
+      message(length(missing), " gene(s) not in the ", build, " TSS table: ",
               paste(utils::head(missing, 10), collapse = ", "),
               if(length(missing) > 10) ", ..." else "")
     }
-    coords = coords[unlist(rows), , drop = FALSE]
-    coords$symbol = rep(genes, lengths(rows))
+    found = found[intersect(genes, names(found))]
+    rows = lapply(found, function(g) which(tab$gene == g))
+    tab = tab[unlist(rows), , drop = FALSE]
+    tab$gene = rep(names(found), lengths(rows))
   }
-
-  # strand from org.Hs.eg.db: Ensembl ID, then symbol, then alias
-  entrez = suppressMessages(AnnotationDbi::mapIds(
-    org.Hs.eg.db::org.Hs.eg.db, keys = coords$ensembl_gene_id, column = "ENTREZID",
-    keytype = "ENSEMBL", multiVals = "first"))
-  for(keytype in c("SYMBOL", "ALIAS")){
-    todo = is.na(entrez)
-    if(!any(todo)) break
-    entrez[todo] = suppressMessages(AnnotationDbi::mapIds(
-      org.Hs.eg.db::org.Hs.eg.db, keys = coords$symbol[todo], column = "ENTREZID",
-      keytype = keytype, multiVals = "first"))
-  }
-  loc = AnnotationDbi::mget(unique(stats::na.omit(entrez)), org.Hs.eg.db::org.Hs.egCHRLOC,
-                            ifnotfound = NA)
-  sign = vapply(loc, function(x) if(all(is.na(x))) NA_real_ else sign(x[!is.na(x)][1]), numeric(1))
-  coords$strand = ifelse(sign[as.character(entrez)] > 0, "+",
-                         ifelse(sign[as.character(entrez)] < 0, "-", NA))
-  no_strand = unique(coords$symbol[is.na(coords$strand)])
-  if(length(no_strand) > 0 && !is.null(genes)){
-    message(length(no_strand), " gene(s) without a strand in org.Hs.eg.db, left out: ",
-            paste(utils::head(no_strand, 10), collapse = ", "),
-            if(length(no_strand) > 10) ", ..." else "")
-  }
-  coords = coords[!is.na(coords$strand), , drop = FALSE]
-
-  # one row per gene: its span on its (first) chromosome
-  out = do.call(rbind, lapply(split(coords, coords$symbol), function(x){
-    x = x[x$chromosome == x$chromosome[1], , drop = FALSE]
-    data.frame(gene = x$symbol[1], chrom = x$chromosome[1], start = min(x$start),
-               end = max(x$end), strand = x$strand[1], stringsAsFactors = FALSE)
-  }))
-  if(is.null(out)){
-    if(return_as == "region") return(character(0))
-    return(data.frame(gene = character(), chrom = character(), start = numeric(),
-                      end = numeric(), strand = character(), tss = numeric()))
-  }
-  out$tss = ifelse(out$strand == "+", out$start, out$end)
-  if(!is.null(genes)) out = out[order(match(out$gene, genes)), , drop = FALSE]
+  out = data.frame(gene = tab$gene, chrom = tab$chrom, start = tab$start, end = tab$end,
+                   strand = tab$strand, tss = tab$tss, tss_source = tab$tss_source,
+                   primary = tab$primary, active = tab$active, n_samples = tab$n_samples,
+                   stringsAsFactors = FALSE)
+  if(nrow(out) == 0 && return_as == "region") return(character(0))
   rownames(out) = NULL
   if(return_as == "df" && is.null(window)) return(out)
   w = .tss_window(out, if(is.null(window)) c(0, 0) else window)
@@ -156,6 +183,10 @@ get_gene_tss = function(genes = NULL, genome_build = "grch37", window = NULL,
 #' first 4 kb of the gene; `start = -2000, end = 4000` also keeps 2 kb of
 #' the promoter. Both ends are inclusive.
 #'
+#' Genes in the aSHM catalogue can have more than one hypermutated promoter
+#' (see [get_gene_tss]); by default (`which = "active"`) a mutation counts if
+#' it is in the window of any of them, and is assigned to the nearest.
+#'
 #' Mutations are assigned to genes by position, not by their
 #' `Hugo_Symbol`, so an upstream mutation annotated to a neighbouring gene
 #' (e.g. as 5' flank) still counts for the gene whose window it falls in.
@@ -179,13 +210,18 @@ get_gene_tss = function(genes = NULL, genome_build = "grch37", window = NULL,
 #' `Variant_Classification` not in `GAMBLR.helpers::vc_nonSynonymous` (i.e.
 #' silent, UTR, flank, intron and similar). Default TRUE; FALSE keeps every
 #' mutation in the window.
+#' @param which Which TSSs of aSHM genes to use, as for [get_gene_tss]:
+#' "active" (default; every well-mutated promoter), "primary" or "all".
+#' Other genes have one TSS whatever this is.
 #' @param tss Optional TSS table to use instead of [get_gene_tss], with
-#' columns gene, chrom, strand ("+" or "-") and tss.
+#' columns gene, chrom, strand ("+" or "-") and tss (several rows per gene
+#' are allowed).
 #'
-#' @return The rows of `maf_data` in a window, with two added columns:
-#' `tss_gene` (the gene whose window it's in) and `tss_distance` (its
-#' position relative to that gene's TSS, as for `start` and `end`). A
-#' `maf_data` input gives a `maf_data` result (see [create_maf_data]).
+#' @return The rows of `maf_data` in a window, with three added columns:
+#' `tss_gene` (the gene whose window it's in), `tss_position` (the TSS of
+#' that window) and `tss_distance` (its position relative to that TSS, as
+#' for `start` and `end`). A `maf_data` input gives a `maf_data` result (see
+#' [create_maf_data]).
 #'
 #' @export
 #'
@@ -211,6 +247,7 @@ subset_ssm_by_tss = function(maf_data,
                              end = 4000,
                              genome_build = "grch37",
                              noncoding_only = TRUE,
+                             which = "active",
                              tss = NULL){
   if(!is.numeric(start) || !is.numeric(end) || length(start) != 1 || length(end) != 1 || start > end){
     stop("start and end must be single numbers with start <= end")
@@ -231,7 +268,7 @@ subset_ssm_by_tss = function(maf_data,
     stop("maf_data needs columns ", paste(needed, collapse = ", "))
   }
   if(is.null(tss)){
-    tss = get_gene_tss(genes, genome_build)
+    tss = get_gene_tss(genes, genome_build, which = which)
   }else{
     tss = as.data.frame(tss)
     if(!all(c("gene", "chrom", "strand", "tss") %in% colnames(tss))){
@@ -240,8 +277,9 @@ subset_ssm_by_tss = function(maf_data,
     tss$chrom = sub("^chr", "", as.character(tss$chrom))
     if(!is.null(genes)) tss = tss[tss$gene %in% genes, , drop = FALSE]
   }
-  out_cols = c(colnames(maf_data), "tss_gene", "tss_distance")
-  empty = cbind(maf_data[0, , drop = FALSE], tss_gene = character(), tss_distance = numeric())
+  out_cols = c(colnames(maf_data), "tss_gene", "tss_position", "tss_distance")
+  empty = cbind(maf_data[0, , drop = FALSE], tss_gene = character(), tss_position = numeric(),
+                tss_distance = numeric())
   if(noncoding_only){
     maf_data = maf_data[!maf_data$Variant_Classification %in% GAMBLR.helpers::vc_nonSynonymous, ,
                         drop = FALSE]
@@ -260,11 +298,16 @@ subset_ssm_by_tss = function(maf_data,
   data.table::setkey(windows, chrom, start, end)
   hits = data.table::foverlaps(muts, windows, type = "within", nomatch = NULL)
   if(nrow(hits) == 0) return(restore(empty))
-  hits = hits[order(hits$row), ]
+  hits$distance = ifelse(hits$strand == "+", hits$i.start - hits$gene_tss,
+                         hits$gene_tss - hits$i.start)
+  # once per gene: a mutation in the windows of several of a gene's TSSs
+  # goes to the nearest
+  hits = hits[order(hits$row, hits$gene, abs(hits$distance)), ]
+  hits = hits[!duplicated(hits[, c("row", "gene")]), ]
   out = maf_data[hits$row, , drop = FALSE]
   out$tss_gene = hits$gene
-  out$tss_distance = ifelse(hits$strand == "+", hits$i.start - hits$gene_tss,
-                            hits$gene_tss - hits$i.start)
+  out$tss_position = hits$gene_tss
+  out$tss_distance = hits$distance
   rownames(out) = NULL
   restore(out[, out_cols])
 }

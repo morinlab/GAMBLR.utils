@@ -8,14 +8,15 @@ get_gene_tss(
   genes = NULL,
   genome_build = "grch37",
   window = NULL,
-  return_as = "df"
+  return_as = "df",
+  which = "primary"
 )
 }
 \arguments{
-\item{genes}{Optional gene symbols. Default NULL returns every gene with
-coordinates and a strand. Symbols are matched to the coordinate table's
-\code{hugo_symbol} or \code{gene_name}, then through \link{expand_gene_aliases} (so e.g.
-"H1-3" finds HIST1H1D in grch37).}
+\item{genes}{Optional gene symbols. Default NULL returns every gene.
+Symbols are matched to the table's gene names, then by Entrez ID (so
+current and former names both work, e.g. "TSPOAP1" finds BZRAP1 in
+grch37) and through \link{expand_gene_aliases} (e.g. "H1-3" finds HIST1H1D).}
 
 \item{genome_build}{"grch37" (default) or "hg38".}
 
@@ -30,31 +31,43 @@ strings (with a "chr" prefix for hg38), e.g. for
 \code{GAMBLR.open::get_ssm_by_regions(regions_list = ...)}, and "bed" a data
 frame with chromosome, start, end and hugo_symbol. Both cover \code{window}
 (or the TSS alone).}
+
+\item{which}{For aSHM genes: "primary" (default; one TSS per gene, the
+most mutated), "active" (every well-mutated TSS, always including the
+primary one) or "all" (every distinct TSS).}
 }
 \value{
-With "df", a data frame with one row per gene: gene (as
-requested, or the coordinate table's symbol), chrom (without a "chr"
-prefix), start and end (the gene), strand ("+" or "-") and tss, plus
-window_start and window_end (genome coordinates) when \code{window} is given.
-With "region" or "bed", the window (or TSS) of each gene as described
-for \code{return_as}.
+With "df", a data frame with one row per TSS: gene (as
+requested), chrom (without a "chr" prefix), start and end (the gene),
+strand ("+" or "-"), tss, tss_source ("longest_isoform", "gene_span" or
+"ashm_mutations"), primary, active and n_samples (the last two NA for
+genes outside the aSHM catalogue), plus window_start and window_end
+(genome coordinates) when \code{window} is given. With "region" or "bed", the
+window (or TSS) of each row as described for \code{return_as}.
 }
 \description{
-Return the transcription start site (TSS) and strand of
-genes, from the gene coordinates in GAMBLR.data
-(\code{grch37_gene_coordinates} or \code{hg38_gene_coordinates}) and the strand in
-\pkg{org.Hs.eg.db}.
+Return the transcription start site(s) (TSS) and strand of
+genes, from the bundled \link{gene_tss} table.
 }
 \details{
-The gene coordinates are Ensembl gene spans (the union of the
-gene's transcripts), so the TSS is the most upstream transcription start:
-the gene start on the + strand and the gene end on the - strand. Only
-genes on chromosomes 1-22, X and Y are returned. The strand is looked up
-by Ensembl gene ID, then by symbol or alias; genes without one are left
-out with a message.
+Most genes have one TSS: that of their longest isoform. Genes in
+the aSHM catalogue (\verb{GAMBLR.data::somatic_hypermutation_locations_*})
+have one per distinct promoter instead, ranked by how many GAMBLR.open
+genomes are mutated in their first 4 kb: the most mutated is the gene's
+primary TSS, and the well-mutated ones are active (see \link{gene_tss}). This
+picks the hypermutated promoter where it isn't the longest isoform's (e.g.
+ETS1, SGK1, BLK), and finds genes with more than one (e.g. PAX5, IRF8).
+\code{which} only applies to aSHM genes; other genes always give their one TSS.
+Only genes on chromosomes 1-22, X and Y are included.
 }
 \examples{
 get_gene_tss(c("BCL2", "MYC", "PIM1"))
+
+# ETS1's hypermutated promoter is not its longest isoform's
+get_gene_tss("ETS1", which = "all")
+
+# PAX5 has two hypermutated promoters
+get_gene_tss("PAX5", which = "active")
 
 # regions covering the first 4 kb of each gene, to fetch the mutations
 # there (e.g. with GAMBLR.open::get_ssm_by_regions)
