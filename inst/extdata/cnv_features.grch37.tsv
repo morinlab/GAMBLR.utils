@@ -1,4 +1,4 @@
-name	type	region_name	chrom	start	end	direction	min_fraction	min_coverage	background_arm	representative_gene	genes	feature_set	dlbclass_name	include	core	citation	summary	lymphgen_level	max_event_length
+name	type	region_name	chrom	start	end	direction	min_fraction	min_coverage	background_arm	representative_gene	genes	feature_set	dlbclass_name	include	core	citation	summary	min_cn_change	max_event_length
 6q_loss	arm	6q	6	61000000	171115067	loss	0.5	0.5				DLBClass	6Q.DEL	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
 17p_loss	arm	17p	17	0	24000000	loss	0.5	0.5				DLBClass	17P.DEL	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
 1q_gain	arm	1q	1	125000000	249250621	gain	0.5	0.5				DLBClass	1Q.AMP	TRUE	TRUE	DLBClass: DLBCL_broad_significance.18Aug2024			
