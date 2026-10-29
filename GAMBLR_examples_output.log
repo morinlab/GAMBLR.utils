@@ -1,8 +1,39 @@
-[1] "=== STARTED AT 2026-07-16 06:34:13 ==="
+[1] "=== STARTED AT 2026-10-28 11:06:29.966299 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-Writing NAMESPACE
-Writing NAMESPACE
-── Running 57 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
+── Running 89 example files ───────────────────────────────────────────────────── GAMBLR.utils ──
+
+> arms = GAMBLR.data::chromosome_arms_grch37
+
+> chrom_end = tapply(arms$end, arms$chromosome, max)[as.character(1:22)]
+
+> seg = data.frame(ID = "s1", chrom = as.character(1:22), 
++     start = 1, end = as.numeric(chrom_end), CN = c(3, rep(2, 
++         21)))
+
+> add_segment_baseline(seg)
+   ID chrom start       end CN baseline_cn baseline_method
+1  s1     1     1 249250621  3           2            mode
+2  s1     2     1 243199373  2           2            mode
+3  s1     3     1 198022430  2           2            mode
+4  s1     4     1 191154276  2           2            mode
+5  s1     5     1 180915260  2           2            mode
+6  s1     6     1 171115067  2           2            mode
+7  s1     7     1 159138663  2           2            mode
+8  s1     8     1 146364022  2           2            mode
+9  s1     9     1 141213431  2           2            mode
+10 s1    10     1 135534747  2           2            mode
+11 s1    11     1 135006516  2           2            mode
+12 s1    12     1 133851895  2           2            mode
+13 s1    13     1 115169878  2           2            mode
+14 s1    14     1 107349540  2           2            mode
+15 s1    15     1 102531392  2           2            mode
+16 s1    16     1  90354753  2           2            mode
+17 s1    17     1  81195210  2           2            mode
+18 s1    18     1  78077248  2           2            mode
+19 s1    19     1  59128983  2           2            mode
+20 s1    20     1  63025520  2           2            mode
+21 s1    21     1  48129895  2           2            mode
+22 s1    22     1  51304566  2           2            mode
 
 > dlbcl_meta = GAMBLR.open::get_gambl_metadata() %>% 
 +     dplyr::filter(pathology == "DLBCL")
@@ -77,6 +108,97 @@ Showing first 10 rows:
 
 > library(GAMBLR.data)
 
+> library(dplyr)
+
+> meta = GAMBLR.open::get_gambl_metadata() %>% filter(pathology == 
++     "DLBCL", seq_type == "genome") %>% head(40)
+
+> genes = c("EZH2", "CREBBP", "KMT2D", "MYD88", "CD79B", 
++     "BCL2", "PIM1")
+
+> maf = GAMBLR.open::get_ssm_by_genes(genes, these_samples_metadata = meta)
+
+> sv = GAMBLR.open::get_manta_sv(these_samples_metadata = meta)
+
+> segs = GAMBLR.open::get_cn_segments(these_samples_metadata = meta)
+
+> features = assemble_genetic_features(maf, genes_coding = genes, 
++     genes_noncoding = c("BCL2", "PIM1"), noncoding_window = c(0, 
++         4000), these_samples_metadata = meta, sv_data = sv, seg_data = segs, 
++     unassessed_value = NA, verbose = TRUE)
+
+> features[1:5, c("EZH2", "BCL2", "PIM1", "BCL2_SV", 
++     "MYC_SV", "6q_loss")]
+          EZH2 BCL2 PIM1 BCL2_SV MYC_SV 6q_loss
+02-13135T    2    1    0       2      2       0
+02-20170T    0    0    0       0      0       2
+02-22991T    0    0    1      NA     NA       0
+04-24937T    0    1    2       0      0       0
+04-28140T    0    0    0       0      2       0
+
+> baseline_methods()
+[1] "mode"         "mode_rounded" "mean"        
+
+> arms = GAMBLR.data::chromosome_arms_grch37
+
+> chrom_end = tapply(arms$end, arms$chromosome, max)[as.character(1:22)]
+
+> seg = data.frame(ID = "s1", chrom = as.character(1:22), 
++     start = 1, end = as.numeric(chrom_end), CN = c(3, rep(4, 
++         21)))
+
+> centred = center_segments(seg)
+
+> head(centred[, c("ID", "chrom", "CN", "CN_uncentered", 
++     "centre_cn")])
+  ID chrom CN CN_uncentered centre_cn
+1 s1     1  1             3         4
+2 s1     2  2             4         4
+3 s1     3  2             4         4
+4 s1     4  2             4         4
+5 s1     5  2             4         4
+6 s1     6  2             4         4
+
+> seg = data.frame(ID = "s1", chrom = as.character(1:22), 
++     start = 1, end = 5e+07, CN = 2)
+
+> check_segment_coverage(seg)
+  ID  coverage n_autosomes    ok
+1 s1 0.3818075          22 FALSE
+
+> seg = data.frame(ID = "s1", chrom = "1", start = c(1, 
++     101, 101), end = c(100, 200, 200), CN = 2)
+
+> check_segment_overlaps(seg)
+  ID chrom start end overlap_bp same_coordinates duplicate_row
+1 s1     1   101 200         99             TRUE          TRUE
+
+> maf = data.frame(Variant_Classification = c("Nonsense_Mutation", 
++     "Splice_Region", "Silent"), HGVSp_Short = c("p.Q12*", "", 
++     "p.L5L"))
+
+> classify_mutations(maf)
+  Variant_Classification HGVSp_Short mutation_class protein_change
+1      Nonsense_Mutation      p.Q12*          trunc         p.Q12*
+2          Splice_Region                       <NA>               
+3                 Silent       p.L5L         silent          p.L5L
+
+> seg = data.frame(ID = c("s1", "s1", "s2"), chrom = "18", 
++     start = c(5e+07, 60800000, 5e+07), end = c(60800000, 7e+07, 
++         7e+07), CN = c(3, 2, 2))
+
+> cn_step(seg, chrom = "18", pos = 60800000)
+  sample_id cn_left cn_right step
+1        s1       3        2   -1
+2        s2       2        2    0
+
+> seg = data.frame(ID = "s1", chrom = "18", start = c(5e+07, 
++     60900000), end = c(60900000, 7e+07), CN = c(3, 2))
+
+> cn_transition(seg, chrom = "18", from = 6e+07, to = 6.2e+07)
+  sample_id      pos cn_left cn_right step
+1        s1 60900000       3        2   -1
+
 > ashm_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions, 
 +     fix_names = "concat", concat_cols = c("gene", "region"), 
 +     sep = "-")
@@ -123,6 +245,40 @@ Showing first 10 rows:
 > bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", 
 +     projection = "grch37")
 
+> dlbclass = get_classifier_features("DLBClass")
+
+> head(dlbclass[, c("classifier_feature", "feature", 
++     "value", "data_type")])
+  classifier_feature           feature value data_type
+1            SV.BCL6           BCL6_SV     3        sv
+2               DTX1    DTX1_nonsilent     2       ssm
+3               DTX1       DTX1_silent     1       ssm
+4               CD70    CD70_nonsilent     2       ssm
+5               CD70       CD70_silent     1       ssm
+6            TNFAIP3 TNFAIP3_nonsilent     2       ssm
+
+> both = intersect(get_classifier_features("DLBClass")$feature, 
++     get_classifier_features("LymphGen")$feature)
+
+> cnv_features = get_cnv_features("grch37")
+
+> dlbclass_features = get_cnv_features("grch37", feature_set = "DLBClass")
+
+> lymphgen_features = get_cnv_features("grch37", feature_set = "LymphGen")
+
+> every_feature = get_cnv_features("grch37", feature_set = "all")
+
+> get_gene_tss(c("BCL2", "MYC", "PIM1"))
+  gene chrom     start       end strand       tss
+1 BCL2    18  60790579  60987361      -  60987361
+2  MYC     8 128747680 128753674      + 128747680
+3 PIM1     6  37137979  37143202      +  37137979
+
+> get_gene_tss(c("BCL2", "MYC", "PIM1"), window = c(0, 
++     4000), return_as = "region")
+                   BCL2                     MYC                    PIM1 
+ "18:60983361-60987361" "8:128747680-128751680"   "6:37137979-37141979" 
+
 > bed <- grch37_ashm_regions
 
 > test <- liftover(data_df = bed, mode = "bed", target_build = "hg38")
@@ -148,6 +304,14 @@ Showing first 10 rows:
 1          8 128747680 128753674       MYC         MYC ENSG00000136997
 2         18  60790579  60987361      BCL2        BCL2 ENSG00000171791
 
+> seg = data.frame(ID = "s1", chrom = "1", start = c(1, 
++     101, 101, 150), end = c(100, 200, 200, 300), CN = c(2, 3, 
++     3, 4))
+
+> resolve_segment_overlaps(seg)
+[1] ID    chrom start end   CN   
+<0 rows> (or 0-length row.names)
+
 > cell_line_meta <- GAMBLR.open::get_gambl_metadata() %>% 
 +     dplyr::filter(cohort == "DLBCL_cell_lines")
 
@@ -157,10 +321,60 @@ Showing first 10 rows:
 +     genes_keep = c("MYC", "ID3", "ARID1A", "FOXO1", "TP53", "FAT4", 
 +         "IGLL5"))
 
+> arms = GAMBLR.data::chromosome_arms_grch37
+
+> chrom_end = tapply(arms$end, arms$chromosome, max)[as.character(1:22)]
+
+> seg = data.frame(ID = "s1", chrom = as.character(1:22), 
++     start = 1, end = as.numeric(chrom_end), CN = c(3, rep(4, 
++         21)))
+
+> seg_data_to_igv(center_segments(seg), file.path(tempdir(), 
++     "centred.seg"))
+
+> seg_data = data.frame(ID = c("s1", "s1", "s1", "s2", 
++     "s2"), chrom = c("1", "2", "X", "1", "2"), start = c(1, 1, 
++     1, 1, 1), end = c(2e+08, 1e+08, 1e+08, 2e+08, 1e+08), CN = c(2, 
++     3, 1, 4, 4))
+
+> segmented_data_to_ploidy_estimate(seg_data)
+  sample_id ploidy
+1        s1      2
+2        s2      4
+
+> segmented_data_to_ploidy_estimate(seg_data, method = "mean")
+  sample_id   ploidy
+1        s1 2.333333
+2        s2 4.000000
+
+> meta = GAMBLR.open::get_gambl_metadata()
+
+> meta = head(meta[meta$pathology == "DLBCL" & meta$seq_type == 
++     "genome", ], 40)
+
+> genes = c("BCL2", "PIM1", "MYC")
+
+> maf = GAMBLR.open::get_ssm_by_genes(genes, these_samples_metadata = meta)
+
+> synon = subset_ssm_by_tss(maf, genes = genes)
+
+> table(synon$tss_gene, synon$Variant_Classification)
+      
+       5'UTR Intron Silent Splice_Region
+  BCL2    70     75      7             1
+  MYC      0      3      0             0
+  PIM1     3     12      2             1
+
+> wider = subset_ssm_by_tss(maf, genes = genes, start = -2000, 
++     end = 6000)
+
+> range(wider$tss_distance)
+[1] -1778  4505
+
 > library(GAMBLR.data)
 
-> metadata = GAMBLR.data::gambl_metadata
+> metadata = GAMBLR.open::get_gambl_metadata()
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-07-16 06:36:32 ==="
+[1] "=== COMPLETED AT 2026-10-28 11:10:01.807037 ==="

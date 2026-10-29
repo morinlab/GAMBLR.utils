@@ -66,6 +66,11 @@ process_cn_segments_by_region = function(seg_data,
       print(paste("NO values found for",region))
     }
     #there is no data from any patients within this region!
+    if(missing(filler_values)){
+      # fill_missing_with = "nothing": no rows, so the region is left out
+      # of the matrix rather than filled with an assumed value
+      return(data.frame(ID = character(0), CN = numeric(0)))
+    }
     dummy_full = mutate(filler_values,
       chrom=chromosome,start=qstart,end=qend)
     return(dummy_full)
@@ -135,8 +140,40 @@ process_cn_segments_by_region = function(seg_data,
 #' @param n_bins_split Split genome into N equally sized bins
 #' @param use_cytoband_name Use cytoband names instead of region names, e.g p36.33.
 #' @param use_gistic_name When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates
-#' @param fill_missing_with Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")
-#' @param adjust_for_ploidy Whether to adjust for high ploidy
+#' @param fill_missing_with How to handle sample/region combinations with no segment data: "diploid" (default, CN 2), "avg_ploidy" (the sample's average CN) or "nothing" (leave them NA, and leave out regions with no data in any sample). Filled values are not real copy number: with "diploid", scaling a high-ploidy sample after the matrix is made (e.g. `scale_by_sample = TRUE` in `GAMBLR.viz::pretty_CN_heatmap()`) turns filled bins into apparent losses. Use `adjust_for_ploidy = TRUE` instead, which fills after adjusting; "nothing" additionally shows the gaps as missing.
+#' @param adjust_for_ploidy Set to TRUE to recentre each sample's CN values
+#' on 2 using its own baseline ploidy. The dominant CN level -- whichever
+#' (rounded) CN level covers the most total genomic length -- is found as a
+#' length-weighted mode, not a length-weighted mean: the mean isn't robust
+#' to a skewed CN distribution (a sample that's genuinely diploid at
+#' baseline but carries a real gain burden gets its mean pulled above 2 by
+#' those gains alone, which then over-corrects and pushes its truly-neutral
+#' majority into "loss" territory). The shift applied is the continuous,
+#' length-weighted mean CN of the segments within that dominant level, not
+#' the rounded level itself -- a sample whose dominant level rounds to 2
+#' but whose actual values there cluster at, say, 1.9 (common for
+#' low-signal/"boring" samples, where the caller's own neutral reference
+#' may be off by a similar amount) still gets shifted back to a true 2.0,
+#' instead of silently receiving no correction. See
+#' `ploidy_baseline_autosomes_only`. This is the same approach
+#' `GAMBLR.viz::segments_to_exact_cn_matrix()` uses, validated there on
+#' real cohort data before being ported here.
+#' This is the recommended way to correct for ploidy in matrices plotted with
+#' `GAMBLR.viz::pretty_CN_heatmap()` or `GAMBLR.viz::stacked_CN_heatmap()`:
+#' use it instead of their `scale_by_sample` option, not together with it.
+#' Bins with no data are filled after the adjustment, so they stay neutral.
+#' @param baseline_method The baseline `adjust_for_ploidy` shifts each
+#' sample by: "mode" (default; described above), "mode_rounded" (the
+#' dominant state as a whole number, so only whole-copy shifts) or "mean"
+#' (genome-wide mean). See [add_segment_baseline]. A `baseline_cn` column of
+#' that method already on `seg_data` (e.g. from
+#' `GAMBLR.results::get_cn_segments(baseline_method = ...)`) is used instead
+#' of estimating it from the segments.
+#' @param ploidy_baseline_autosomes_only When `adjust_for_ploidy = TRUE`,
+#' exclude chrX/chrY segments from the baseline calculation. Default TRUE:
+#' sex chromosome copy number reflects patient sex, not tumour biology, and
+#' would bias the baseline for roughly half of a mixed-sex cohort. The
+#' resulting (autosome-derived) shift is still applied to X/Y segments.
 #' @param max_CN_allowed CN values higher than this will be set to this value. Default 6.
 #' @param gistic_lesions_file Path to gistic lesions file (only needed if strategy="GISTIC")
 #' @param match_peak_direction Additional argument. TODO
@@ -182,6 +219,8 @@ segmented_data_to_cn_matrix = function(seg_data,
                             fill_missing_with = "diploid",
                             max_CN_allowed = 6,
                             adjust_for_ploidy=FALSE,
+                            baseline_method = "mode",
+                            ploidy_baseline_autosomes_only = TRUE,
                             genome_build,
                             gistic_lesions_file,
                             match_peak_direction = TRUE,
@@ -190,6 +229,7 @@ segmented_data_to_cn_matrix = function(seg_data,
   if(!is.numeric(max_CN_allowed)){
     stop("max_CN_allowed must be a numeric value")
   }
+  baseline_method = match.arg(baseline_method, baseline_methods())
   if(missing(these_samples_metadata)){
     if(verbose){
       print("missing these_samples_metadata")
@@ -203,40 +243,10 @@ segmented_data_to_cn_matrix = function(seg_data,
       stop("specify genome_build or provide a seg_data object")
     }
   }
-  if (fill_missing_with=="diploid") {
-    
-    
-    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
-    if(verbose){
-        print("Fill with diploid")
-        print(head(dummy_df))
-    }
-  } else if  (fill_missing_with=="avg_ploidy") {
-    #if(!"dummy_segment" %in% colnames(seg_data)){
-    #  stop("avg_ploidy mode only available when there's a dummy_segment column")
-    #}
-    dummy_df = seg_data %>% 
-      mutate(
-          length = end - start + 1,
-          CN_seg = CN * length,
-          logr_seg = log.ratio * length
-        ) %>%
-        group_by(ID) %>%
-        summarise(
-          CN = sum(CN_seg) / sum(length),
-          log.ratio = sum(logr_seg) / sum(length)
-        ) # actual average per base
-    if(verbose){
-      print(head(dummy_df))
-    }
-    
-  }else if(fill_missing_with == "nothing"){
-    #do nothing
-    if(verbose){
-      print("NOT filling gaps")
-    }
-    
-  }else{
+  # fill_missing_with is validated here (even though dummy_df itself isn't
+  # built until after adjust_for_ploidy, below) so an invalid value is
+  # caught immediately rather than after the GISTIC branch's work.
+  if(!fill_missing_with %in% c("diploid", "avg_ploidy", "nothing")){
     stop("fill_missing_with must be 'nothing', 'diploid' or 'avg_ploidy'")
   }
   if(strategy=="GISTIC"){
@@ -271,6 +281,8 @@ segmented_data_to_cn_matrix = function(seg_data,
                                          regions = regions_bed,
                                          fill_missing_with = fill_missing_with,
                                          adjust_for_ploidy = adjust_for_ploidy,
+                                         baseline_method = baseline_method,
+                                         ploidy_baseline_autosomes_only = ploidy_baseline_autosomes_only,
                                          these = these_samples_metadata,
                                          genome_build = genome_build,
                                          verbose=verbose)
@@ -311,14 +323,61 @@ segmented_data_to_cn_matrix = function(seg_data,
   }
 
   if(adjust_for_ploidy){
-    seg_data = mutate(seg_data,
-      size=end-start,
-      CN=ifelse(CN>max_CN_allowed,
-              max_CN_allowed,CN),
-              weighted = CN*size) %>%
-      group_by(ID) %>% 
-      mutate(average=sum(weighted)/sum(size)) %>%
-      mutate(CN=2+CN-average)
+    # see segmented_data_to_ploidy_estimate for why the mode is the default;
+    # the baseline is estimated before the values are capped at
+    # max_CN_allowed, with the cap every GAMBLR baseline uses
+    baseline_df = segmented_data_to_ploidy_estimate(
+      seg_data,
+      method = baseline_method,
+      autosomes_only = ploidy_baseline_autosomes_only
+    ) %>%
+      select(ID = sample_id, .baseline = ploidy)
+    seg_data = seg_data %>%
+      mutate(CN = ifelse(CN > max_CN_allowed, max_CN_allowed, CN))
+
+    seg_data = seg_data %>%
+      left_join(baseline_df, by = "ID") %>%
+      mutate(
+        # a sample with no segments left after the autosome filter (shouldn't
+        # normally happen) falls back to no adjustment rather than erroring
+        .baseline = ifelse(is.na(.baseline), 2, .baseline),
+        CN = 2 + CN - .baseline
+      ) %>%
+      select(-.baseline)
+  }
+
+  # Built from seg_data *after* adjust_for_ploidy (if requested), so that a
+  # gap filled via fill_missing_with = "avg_ploidy" lands on that sample's
+  # already-adjusted average rather than its pre-adjustment one -- using the
+  # pre-adjustment value here would leave filled regions inconsistent with
+  # the (shifted) real segments everywhere else in the matrix.
+  if (fill_missing_with=="diploid") {
+    dummy_df = data.frame(ID=unique(seg_data$ID),CN=2,log.ratio=0)
+    if(verbose){
+        print("Fill with diploid")
+        print(head(dummy_df))
+    }
+  } else if  (fill_missing_with=="avg_ploidy") {
+    # placeholder rows (dummy_segment == 1) don't count towards the average
+    dummy_df = seg_data[.real_segments(seg_data), , drop = FALSE] %>%
+      mutate(
+          length = end - start + 1,
+          CN_seg = CN * length,
+          logr_seg = log.ratio * length
+        ) %>%
+        group_by(ID) %>%
+        summarise(
+          CN = sum(CN_seg) / sum(length),
+          log.ratio = sum(logr_seg) / sum(length)
+        ) # actual average per base
+    if(verbose){
+      print(head(dummy_df))
+    }
+  }else if(fill_missing_with == "nothing"){
+    #do nothing
+    if(verbose){
+      print("NOT filling gaps")
+    }
   }
 
   #retrieve the CN value for this region for every segment that overlaps it
@@ -408,6 +467,18 @@ segmented_data_to_cn_matrix = function(seg_data,
   if(strategy != "cytobands"){
     if(!is.null(names(regions))){
       region_names = names(regions)
+    }
+  }
+  # regions are matched to segments by exact chromosome name, so use the
+  # segments' chr-prefix convention in case the two differ (e.g. "chr19"
+  # regions with "19" segments); names are kept
+  if(is.character(regions) && length(regions) > 0){
+    segments_have_prefix = any(grepl("^chr", unique(seg_data$chrom)))
+    regions_have_prefix = grepl("^chr", regions)
+    if(!segments_have_prefix && any(regions_have_prefix)){
+      regions[] = sub("^chr", "", regions)
+    }else if(segments_have_prefix && any(!regions_have_prefix)){
+      regions[!regions_have_prefix] = paste0("chr", regions[!regions_have_prefix])
     }
   }
   if(!missing(these_samples_metadata)){

@@ -68,32 +68,43 @@ region_to_gene = function(region,
 
   gene_list = as.data.frame(gene_list)
 
-  if(!is.data.frame(region)){
-    region_table = as.data.frame(region)
-  }else if(is.character(region)){
-    split_chunks = unlist(strsplit(region, ":"))
-    split_chunks = unlist(strsplit(split_chunks, "-"))
-    chromosome = split_chunks[1]
-    start = split_chunks[2]
-    end = split_chunks[3]
-    region = cbind(chromosome, start, end) %>%
-      as.data.frame()
-
-    region$chromosome = as.character(region$chromosome)
-    region$start = as.double(region$start)
-    region$end = as.double(region$end)
+  if(is.character(region)){
+    # one or more regions in "chromosome:start-end" format
+    region = gsub(",", "", region)
+    parsed = regmatches(region, regexec("^([^:]+):([0-9]+)-([0-9]+)$", region))
+    malformed = lengths(parsed) == 0
+    if(any(malformed)){
+      stop(paste("regions must be in chromosome:start-end format:",
+                 paste(region[malformed], collapse = ", ")))
+    }
+    region = data.frame(
+      chromosome = vapply(parsed, `[`, character(1), 2),
+      start = as.double(vapply(parsed, `[`, character(1), 3)),
+      end = as.double(vapply(parsed, `[`, character(1), 4))
+    )
+  }else if(is.data.frame(region)){
+    region = as.data.frame(region)
+  }else{
+    stop("region must be a character vector (chromosome:start-end) or a data frame with chromosome, start and end columns")
+  }
+  # match the chr-prefix convention of the gene coordinates
+  region$chromosome = as.character(region$chromosome)
+  if(grepl("^chr", gene_list$chromosome[1])){
+    region$chromosome = ifelse(grepl("^chr", region$chromosome),
+                               region$chromosome,
+                               paste0("chr", region$chromosome))
+  }else{
+    region$chromosome = gsub("^chr", "", region$chromosome)
   }
 
-  #intersect regions
-  intersect = suppressMessages(cool_overlaps(
-    region,
-    gene_list,
-    columns1 = c("chromosome", "start", "end"),
-    columns2 = c("chromosome", "start", "end")
-  ))
-  colnames(intersect)[2] = "region_start"
-  colnames(intersect)[3] = "region_end"
-  colnames(intersect) <- gsub("\\.y", "", colnames(intersect))
+  #intersect regions: any overlap, including genes that cross a region boundary
+  region_dt = data.table::as.data.table(region)[, c("chromosome", "start", "end")]
+  region_dt[, `:=`(start = as.numeric(start), end = as.numeric(end))]
+  gene_dt = data.table::as.data.table(gene_list)
+  gene_dt[, `:=`(start = as.numeric(start), end = as.numeric(end))]
+  data.table::setkey(gene_dt, chromosome, start, end)
+  intersect = data.table::foverlaps(region_dt, gene_dt, type = "any", nomatch = NULL)
+  data.table::setnames(intersect, c("i.start", "i.end"), c("region_start", "region_end"))
   #transform object to data frame
   inter_df = as.data.frame(intersect)
 
@@ -121,9 +132,8 @@ region_to_gene = function(region,
     }
   }
 
-  #paste chr in chromosome column, if not there
-  if(!grepl("chr", genes$chromosome[1])){
-    genes = mutate(genes, chromosome = paste0("chr", chromosome))}
+  # chromosome names follow the build's convention, as in gene_to_region():
+  # no prefix for grch37 ("19"), "chr" prefix for hg38 ("chr19")
 
   if(verbose){
     message(paste0(nrow(genes), " gene(s) returned for ", nrow(region), " region(s)")) 

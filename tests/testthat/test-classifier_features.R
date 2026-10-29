@@ -1,0 +1,167 @@
+maf_row = function(sample, gene, vc, change, chrom = "1", pos = 1){
+  data.frame(Tumor_Sample_Barcode = sample, Hugo_Symbol = gene,
+             Variant_Classification = vc, HGVSp_Short = change,
+             Chromosome = chrom, Start_Position = pos)
+}
+
+test_that("registry tables join and DLBClass is complete", {
+  dlbclass = get_classifier_features("DLBClass")
+  expect_equal(length(unique(dlbclass$classifier_feature)), 163)
+  expect_true(all(dlbclass$feature %in% genetic_features_grch37$feature))
+  expect_false(anyDuplicated(genetic_features_grch37$feature) > 0)
+  expect_error(get_classifier_features("nope"), "unknown classifier")
+})
+
+test_that("classify_mutations assigns classes", {
+  maf = rbind(maf_row("a", "X", "Nonsense_Mutation", "p.Q1*"),
+              maf_row("a", "X", "Splice_Region", ""),
+              maf_row("a", "X", "Splice_Region", "p.X5_splice"),
+              maf_row("a", "X", "Nonstop_Mutation", "p.*10Lext*5"),
+              maf_row("a", "X", "Intron", ""))
+  expect_equal(classify_mutations(maf)$mutation_class,
+               c("trunc", "noncoding", "splice_region", "nonstop", "noncoding"))
+})
+
+test_that("DLBClass mutation and SV encoding", {
+  meta = data.frame(sample_id = c("s1", "s2", "s3", "s4"),
+                    bcl2_ba = c("POS", "NEG", NA, NA),
+                    bcl6_ba = NA, myc_ba = NA)
+  maf = rbind(
+    maf_row("s1", "MYD88", "Missense_Mutation", "p.L265P", "3", 38182641),
+    maf_row("s1", "MYD88", "Silent", "p.L10L", "3", 38180000),
+    maf_row("s2", "MYD88", "Missense_Mutation", "p.S219C", "3", 38182000),
+    maf_row("s2", "MYD88", "Silent", "p.L10L", "3", 38180000),
+    maf_row("s3", "CREBBP", "Silent", "p.L10L", "16", 3800000)
+  )
+  sv = data.frame(tumour_sample_id = "s3", gene = "BCL2", partner = "IGH")
+  ft = assemble_classifier_features(meta, classifier = "DLBClass",
+                                    maf_data = maf, sv_data = sv)
+  gsm = classifier_feature_matrix(ft, "DLBClass")
+  expect_equal(colnames(gsm)[1:3], c("SV.BCL6", "DTX1", "CD70"))
+  expect_equal(gsm[, "MYD88.L265P"], c(2, 0, 0, 0))
+  # a silent mutation doesn't replace a non-silent one (unlike maf2gsm.py)
+  expect_equal(gsm[, "MYD88.OTHER"], c(1, 2, 0, 0))
+  expect_equal(gsm[, "MYD88"], c(2, 2, 0, 0))
+  expect_equal(gsm[, "CREBBP"], c(0, 0, 1, 0))
+  # SV from metadata (s1) or sv_data (s3)
+  expect_equal(gsm[, "SV.BCL2"], c(3, 0, 3, 0))
+  long = classifier_feature_matrix(ft, "DLBClass", output_format = "long",
+                                   unassessed_value = NA)
+  bcl2 = long[long$classifier_feature == "SV.BCL2", ]
+  # s4 has no breakapart result and isn't in sv_data, so its status is unknown
+  expect_equal(bcl2$assessed, c(TRUE, TRUE, TRUE, FALSE))
+  expect_true(all(is.na(long$value[long$classifier_feature == "X17P.DEL"])))
+  expect_equal(ft$source[ft$feature == "BCL2_SV"], c("metadata", NA, "sv_data", NA))
+})
+
+test_that("LymphGen features and position rules", {
+  lymphgen = get_classifier_features("LymphGen")
+  # every submodel's features; Full + A53 are the 117 used with complete data
+  expect_equal(length(unique(lymphgen$classifier_feature)), 140)
+  full = get_classifier_features("LymphGen", submodel = c("Full", "A53"))
+  expect_equal(length(unique(full$classifier_feature)), 117)
+  # stand-ins when BCL2 translocation status or copy number is missing
+  expect_true("BCL2:Synon" %in% get_classifier_features("LymphGen", submodel = "NoBCL2Fus")$classifier_feature)
+  expect_false("BCL2:Synon" %in% full$classifier_feature)
+  nocn = get_classifier_features("LymphGen", submodel = "NoCGH")
+  expect_true("TNFAIP3:TRUNC" %in% nocn$classifier_feature)
+  expect_false(any(nocn$data_type == "cnv"))
+  # without copy number, LymphGen 2 keeps the mutation part of a feature
+  # (TMEM30A:TRUNC|HETLOSS in the full model)
+  expect_true("TMEM30A:TRUNC|HETLOSS" %in% full$classifier_feature)
+  expect_true("TMEM30A:TRUNC" %in% nocn$classifier_feature)
+  # a feature selected for two subtypes, in different submodels
+  h1b = lymphgen[lymphgen$classifier_feature == "HIST1H1B:SubSyn", ]
+  expect_setequal(h1b$group, c("MCD", "ST2"))
+  expect_equal(length(unique(h1b$feature_order)), 1)
+  expect_false("MCD" %in% full$group[full$classifier_feature == "HIST1H1B:SubSyn"])
+  expect_error(get_classifier_features("LymphGen", submodel = "nope"), "unknown submodel")
+  expect_setequal(unique(lymphgen$group), c("BN2", "EZB", "MCD", "N1", "ST2", "A53"))
+
+  meta = data.frame(sample_id = c("s1", "s2", "s3"),
+                    ssm_available = c(TRUE, TRUE, FALSE))
+  maf = rbind(
+    # NOTCH1: truncations in the PEST domain only
+    maf_row("s1", "NOTCH1", "Nonsense_Mutation", "p.Q2440*", "9", 139390000),
+    maf_row("s2", "NOTCH1", "Nonsense_Mutation", "p.Q100*", "9", 139420000),
+    maf_row("s2", "NOTCH1", "Missense_Mutation", "p.R2400W", "9", 139390500),
+    maf_row("s1", "MYD88", "Missense_Mutation", "p.L265P", "3", 38182641),
+    # EZH2 outside the SET domain
+    maf_row("s2", "EZH2", "Missense_Mutation", "p.A100T", "7", 148530000),
+    # CD79B: mutations up to 62007172, truncations up to 62006800
+    maf_row("s1", "CD79B", "Missense_Mutation", "p.Y196H", "17", 62007172),
+    maf_row("s2", "CD79B", "Missense_Mutation", "p.X1X", "17", 62007173),
+    maf_row("s2", "CD79B", "Nonsense_Mutation", "p.X2*", "17", 62006801),
+    # PIM1 silent mutations near (s1) and far from (s2) the TSS
+    maf_row("s1", "PIM1", "Silent", "p.L5L", "6", 37138500),
+    maf_row("s2", "PIM1", "Silent", "p.L300L", "6", 37142500)
+  )
+  ft = assemble_classifier_features(meta, classifier = "LymphGen",
+                                    maf_data = maf, sv_from_metadata = NULL)
+  lg = classifier_feature_matrix(ft, "LymphGen", unassessed_value = NA)
+  expect_equal(lg[, "NOTCH1:MUTATION"], c(1, 0, NA))
+  expect_equal(lg[, "MYD88L265P:MUTATION"], c(1, 0, NA))
+  # SET isn't applied by default, as in LymphGen 2
+  expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 1, NA))
+  expect_equal(lg[, "PIM1:Synon"], c(1, 0, NA))
+  expect_equal(lg[, "CD79B:MUTATION"], c(1, 0, NA))
+  # without noncoding_maf, non-coding features come from maf_data
+  expect_true(all(ft$assessed[grepl("_noncoding_", ft$feature) & ft$sample_id != "s3"]))
+
+  # with the SET rule
+  ft = assemble_classifier_features(meta, classifier = "LymphGen",
+                                    maf_data = maf, sv_from_metadata = NULL,
+                                    position_rules = c("PEST", "ITAM", "SET", "tss4kb"))
+  lg = classifier_feature_matrix(ft, "LymphGen", unassessed_value = NA)
+  expect_equal(lg[, "EZH2:SubMUTATION"], c(0, 0, NA))
+
+  # without the tss4kb and ITAM rules
+  ft = assemble_classifier_features(meta, classifier = "LymphGen",
+                                    maf_data = maf, sv_from_metadata = NULL,
+                                    position_rules = "PEST")
+  lg = classifier_feature_matrix(ft, "LymphGen", unassessed_value = NA)
+  expect_equal(lg[, "CD79B:MUTATION"], c(1, 1, NA))
+  expect_equal(lg[, "PIM1:Synon"], c(1, 1, NA))
+  expect_equal(lg[, "NOTCH1:MUTATION"], c(1, 0, NA))
+})
+
+test_that("nonstop mutations have their own class and count as coding", {
+  maf = data.frame(Variant_Classification = c("Nonstop_Mutation", "De_novo_Start_InFrame"),
+                   Protein_Change = c("p.*245Rext*?", ""))
+  expect_equal(classify_mutations(maf)$mutation_class, c("nonstop", "other_nonsilent"))
+  f = get_classifier_features("LymphGen")
+  expect_true(all(grepl("nonstop", f$variant_class[f$feature == "DTX1_mutation"])))
+})
+
+test_that("mRNA-seq samples are dropped from the metadata, with a warning", {
+  meta = data.frame(sample_id = c("a", "b"), seq_type = c("genome", "mrna"))
+  expect_warning(out <- drop_mrna_samples(meta, "f"), "f: dropping 1 mrna sample")
+  expect_equal(out$sample_id, "a")
+  expect_silent(drop_mrna_samples(meta[1, ]))
+  expect_null(drop_mrna_samples(NULL))
+  maf = data.frame(Tumor_Sample_Barcode = "a", Hugo_Symbol = "KMT2D",
+                   Variant_Classification = "Nonsense_Mutation", Protein_Change = "p.Q10*",
+                   Chromosome = "12", Start_Position = 49420000)
+  expect_warning(ft <- assemble_classifier_features(meta, classifier = "LymphGen", maf_data = maf,
+                                                    sv_from_metadata = NULL),
+                 "mrna")
+  expect_equal(unique(ft$sample_id), "a")
+})
+
+test_that("non-coding features use maf_data's non-coding rows without noncoding_maf", {
+  meta = data.frame(sample_id = c("s1", "s2"))
+  # PIM1 5' UTR (s1) and splice region without a protein change (s2) in the Synon window
+  maf = rbind(maf_row("s1", "PIM1", "5'UTR", "", "6", 37138500),
+              maf_row("s2", "PIM1", "Splice_Region", "", "6", 37139000))
+  ft = assemble_classifier_features(meta, classifier = "LymphGen", maf_data = maf,
+                                    sv_from_metadata = NULL)
+  utr = ft[ft$feature == "PIM1_noncoding_tss4kb", ]
+  expect_equal(utr$value, c(1, 1))
+  expect_true(all(utr$assessed))
+  lg = classifier_feature_matrix(ft, "LymphGen")
+  expect_equal(lg[, "PIM1:Synon"], c(1, 1))
+  # a separate noncoding_maf replaces maf_data for them
+  ft = assemble_classifier_features(meta, classifier = "LymphGen", maf_data = maf,
+                                    noncoding_maf = maf[0, ], sv_from_metadata = NULL)
+  expect_equal(ft$value[ft$feature == "PIM1_noncoding_tss4kb"], c(0, 0))
+})

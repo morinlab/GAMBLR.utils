@@ -15,6 +15,8 @@ segmented_data_to_cn_matrix(
   fill_missing_with = "diploid",
   max_CN_allowed = 6,
   adjust_for_ploidy = FALSE,
+  baseline_method = "mode",
+  ploidy_baseline_autosomes_only = TRUE,
   genome_build,
   gistic_lesions_file,
   match_peak_direction = TRUE,
@@ -37,11 +39,45 @@ segmented_data_to_cn_matrix(
 
 \item{use_gistic_name}{When run with GISTIC strategy, this will use the GISTIC-assigned peak names such as 1p36.32 instead of the coordinates}
 
-\item{fill_missing_with}{Fill in any sample/region combinations with missing data as diploid or the average ploidy ("diploid" or "avg_ploidy")}
+\item{fill_missing_with}{How to handle sample/region combinations with no segment data: "diploid" (default, CN 2), "avg_ploidy" (the sample's average CN) or "nothing" (leave them NA, and leave out regions with no data in any sample). Filled values are not real copy number: with "diploid", scaling a high-ploidy sample after the matrix is made (e.g. \code{scale_by_sample = TRUE} in \code{GAMBLR.viz::pretty_CN_heatmap()}) turns filled bins into apparent losses. Use \code{adjust_for_ploidy = TRUE} instead, which fills after adjusting; "nothing" additionally shows the gaps as missing.}
 
 \item{max_CN_allowed}{CN values higher than this will be set to this value. Default 6.}
 
-\item{adjust_for_ploidy}{Whether to adjust for high ploidy}
+\item{adjust_for_ploidy}{Set to TRUE to recentre each sample's CN values
+on 2 using its own baseline ploidy. The dominant CN level -- whichever
+(rounded) CN level covers the most total genomic length -- is found as a
+length-weighted mode, not a length-weighted mean: the mean isn't robust
+to a skewed CN distribution (a sample that's genuinely diploid at
+baseline but carries a real gain burden gets its mean pulled above 2 by
+those gains alone, which then over-corrects and pushes its truly-neutral
+majority into "loss" territory). The shift applied is the continuous,
+length-weighted mean CN of the segments within that dominant level, not
+the rounded level itself -- a sample whose dominant level rounds to 2
+but whose actual values there cluster at, say, 1.9 (common for
+low-signal/"boring" samples, where the caller's own neutral reference
+may be off by a similar amount) still gets shifted back to a true 2.0,
+instead of silently receiving no correction. See
+\code{ploidy_baseline_autosomes_only}. This is the same approach
+\code{GAMBLR.viz::segments_to_exact_cn_matrix()} uses, validated there on
+real cohort data before being ported here.
+This is the recommended way to correct for ploidy in matrices plotted with
+\code{GAMBLR.viz::pretty_CN_heatmap()} or \code{GAMBLR.viz::stacked_CN_heatmap()}:
+use it instead of their \code{scale_by_sample} option, not together with it.
+Bins with no data are filled after the adjustment, so they stay neutral.}
+
+\item{baseline_method}{The baseline \code{adjust_for_ploidy} shifts each
+sample by: "mode" (default; described above), "mode_rounded" (the
+dominant state as a whole number, so only whole-copy shifts) or "mean"
+(genome-wide mean). See \link{add_segment_baseline}. A \code{baseline_cn} column of
+that method already on \code{seg_data} (e.g. from
+\code{GAMBLR.results::get_cn_segments(baseline_method = ...)}) is used instead
+of estimating it from the segments.}
+
+\item{ploidy_baseline_autosomes_only}{When \code{adjust_for_ploidy = TRUE},
+exclude chrX/chrY segments from the baseline calculation. Default TRUE:
+sex chromosome copy number reflects patient sex, not tumour biology, and
+would bias the baseline for roughly half of a mixed-sex cohort. The
+resulting (autosome-derived) shift is still applied to X/Y segments.}
 
 \item{genome_build}{Specify the genome build (usually not required)}
 

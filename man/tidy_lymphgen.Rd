@@ -34,7 +34,7 @@ In addition, the user can also run this function with \code{relevel = TRUE} (def
 to return the output column as a factor with plot friendly levels.
 }
 \examples{
-metadata = GAMBLR.data::gambl_metadata
+metadata = GAMBLR.open::get_gambl_metadata()
 lymphgen = tidy_lymphgen(df = metadata,
                          lymphgen_column_in = "lymphgen_with_cnv",
                          lymphgen_column_out = "lymphgen_with_cnv_tidy",

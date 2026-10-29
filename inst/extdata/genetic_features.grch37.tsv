@@ -1,0 +1,456 @@
+feature	data_type	gene	entrez	variant_class	protein_change	protein_change_exclude	chrom	start	end	position_rule	cnv_feature	cnv_feature_set	requires	summary
+DTX1_nonsilent	ssm	DTX1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+DTX1_silent	ssm	DTX1		silent									maf_data	
+CD70_nonsilent	ssm	CD70		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CD70_silent	ssm	CD70		silent									maf_data	
+TNFAIP3_nonsilent	ssm	TNFAIP3		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TNFAIP3_silent	ssm	TNFAIP3		silent									maf_data	
+NOTCH2_nonsilent	ssm	NOTCH2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+NOTCH2_silent	ssm	NOTCH2		silent									maf_data	
+BCL10_nonsilent	ssm	BCL10		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BCL10_silent	ssm	BCL10		silent									maf_data	
+B2M_nonsilent	ssm	B2M		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+B2M_silent	ssm	B2M		silent									maf_data	
+CD58_nonsilent	ssm	CD58		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CD58_silent	ssm	CD58		silent									maf_data	
+FAS_nonsilent	ssm	FAS		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+FAS_silent	ssm	FAS		silent									maf_data	
+UBE2A_nonsilent	ssm	UBE2A		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+UBE2A_silent	ssm	UBE2A		silent									maf_data	
+ZEB2_nonsilent	ssm	ZEB2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ZEB2_silent	ssm	ZEB2		silent									maf_data	
+BCL7A_nonsilent	ssm	BCL7A		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BCL7A_silent	ssm	BCL7A		silent									maf_data	
+TMEM30A_nonsilent	ssm	TMEM30A		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TMEM30A_silent	ssm	TMEM30A		silent									maf_data	
+EBF1_nonsilent	ssm	EBF1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+EBF1_silent	ssm	EBF1		silent									maf_data	
+GNAI2_nonsilent	ssm	GNAI2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+GNAI2_silent	ssm	GNAI2		silent									maf_data	
+NFKBIE_nonsilent	ssm	NFKBIE		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+NFKBIE_silent	ssm	NFKBIE		silent									maf_data	
+BCL6_nonsilent	ssm	BCL6		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BCL6_silent	ssm	BCL6		silent									maf_data	
+SPEN_nonsilent	ssm	SPEN		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+SPEN_silent	ssm	SPEN		silent									maf_data	
+CXCR4_nonsilent	ssm	CXCR4		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CXCR4_silent	ssm	CXCR4		silent									maf_data	
+IKZF3_nonsilent	ssm	IKZF3		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+IKZF3_silent	ssm	IKZF3		silent									maf_data	
+POU2F2_nonsilent	ssm	POU2F2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+POU2F2_silent	ssm	POU2F2		silent									maf_data	
+TUBGCP5_nonsilent	ssm	TUBGCP5		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TUBGCP5_silent	ssm	TUBGCP5		silent									maf_data	
+SMG7_nonsilent	ssm	SMG7		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+SMG7_silent	ssm	SMG7		silent									maf_data	
+CCDC27_nonsilent	ssm	CCDC27		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CCDC27_silent	ssm	CCDC27		silent									maf_data	
+FADD_nonsilent	ssm	FADD		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+FADD_silent	ssm	FADD		silent									maf_data	
+RHOA_nonsilent	ssm	RHOA		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+RHOA_silent	ssm	RHOA		silent									maf_data	
+TNIP1_nonsilent	ssm	TNIP1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TNIP1_silent	ssm	TNIP1		silent									maf_data	
+TP53_nonsilent	ssm	TP53		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TP53_silent	ssm	TP53		silent									maf_data	
+EP300_nonsilent	ssm	EP300		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+EP300_silent	ssm	EP300		silent									maf_data	
+ZNF423_nonsilent	ssm	ZNF423		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ZNF423_silent	ssm	ZNF423		silent									maf_data	
+BCL2_nonsilent	ssm	BCL2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BCL2_silent	ssm	BCL2		silent									maf_data	
+CREBBP_nonsilent	ssm	CREBBP		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CREBBP_silent	ssm	CREBBP		silent									maf_data	
+TNFRSF14_nonsilent	ssm	TNFRSF14		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TNFRSF14_silent	ssm	TNFRSF14		silent									maf_data	
+EZH2_nonsilent	ssm	EZH2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+EZH2_silent	ssm	EZH2		silent									maf_data	
+HVCN1_nonsilent	ssm	HVCN1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HVCN1_silent	ssm	HVCN1		silent									maf_data	
+KMT2D_nonsilent	ssm	KMT2D		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+KMT2D_silent	ssm	KMT2D		silent									maf_data	
+IRF8_nonsilent	ssm	IRF8		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+IRF8_silent	ssm	IRF8		silent									maf_data	
+GNA13_nonsilent	ssm	GNA13		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+GNA13_silent	ssm	GNA13		silent									maf_data	
+MAP2K1_nonsilent	ssm	MAP2K1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+MAP2K1_silent	ssm	MAP2K1		silent									maf_data	
+SOCS1_nonsilent	ssm	SOCS1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+SOCS1_silent	ssm	SOCS1		silent									maf_data	
+PTEN_nonsilent	ssm	PTEN		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+PTEN_silent	ssm	PTEN		silent									maf_data	
+MEF2C_nonsilent	ssm	MEF2C		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+MEF2C_silent	ssm	MEF2C		silent									maf_data	
+MEF2B_nonsilent	ssm	MEF2B		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+MEF2B_silent	ssm	MEF2B		silent									maf_data	
+EEF1A1_nonsilent	ssm	EEF1A1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+EEF1A1_silent	ssm	EEF1A1		silent									maf_data	
+POU2AF1_nonsilent	ssm	POU2AF1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+POU2AF1_silent	ssm	POU2AF1		silent									maf_data	
+HIST1H1E_nonsilent	ssm	HIST1H1E		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H1E_silent	ssm	HIST1H1E		silent									maf_data	
+SGK1_nonsilent	ssm	SGK1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+SGK1_silent	ssm	SGK1		silent									maf_data	
+DUSP2_nonsilent	ssm	DUSP2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+DUSP2_silent	ssm	DUSP2		silent									maf_data	
+LTB_nonsilent	ssm	LTB		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+LTB_silent	ssm	LTB		silent									maf_data	
+KLHL6_nonsilent	ssm	KLHL6		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+KLHL6_silent	ssm	KLHL6		silent									maf_data	
+ZFP36L1_nonsilent	ssm	ZFP36L1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ZFP36L1_silent	ssm	ZFP36L1		silent									maf_data	
+HIST1H2BC_nonsilent	ssm	HIST1H2BC		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H2BC_silent	ssm	HIST1H2BC		silent									maf_data	
+CD83_nonsilent	ssm	CD83		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CD83_silent	ssm	CD83		silent									maf_data	
+NFKBIA_nonsilent	ssm	NFKBIA		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+NFKBIA_silent	ssm	NFKBIA		silent									maf_data	
+TET2_nonsilent	ssm	TET2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TET2_silent	ssm	TET2		silent									maf_data	
+BRAF_nonsilent	ssm	BRAF		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BRAF_silent	ssm	BRAF		silent									maf_data	
+HIST1H1C_nonsilent	ssm	HIST1H1C		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H1C_silent	ssm	HIST1H1C		silent									maf_data	
+PTPN6_nonsilent	ssm	PTPN6		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+PTPN6_silent	ssm	PTPN6		silent									maf_data	
+YY1_nonsilent	ssm	YY1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+YY1_silent	ssm	YY1		silent									maf_data	
+CRIP1_nonsilent	ssm	CRIP1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CRIP1_silent	ssm	CRIP1		silent									maf_data	
+RAC2_nonsilent	ssm	RAC2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+RAC2_silent	ssm	RAC2		silent									maf_data	
+HIST1H1B_nonsilent	ssm	HIST1H1B		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H1B_silent	ssm	HIST1H1B		silent									maf_data	
+HIST1H2AM_nonsilent	ssm	HIST1H2AM		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H2AM_silent	ssm	HIST1H2AM		silent									maf_data	
+STAT3_nonsilent	ssm	STAT3		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+STAT3_silent	ssm	STAT3		silent									maf_data	
+HIST1H1D_nonsilent	ssm	HIST1H1D		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H1D_silent	ssm	HIST1H1D		silent									maf_data	
+ACTB_nonsilent	ssm	ACTB		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ACTB_silent	ssm	ACTB		silent									maf_data	
+SESN3_nonsilent	ssm	SESN3		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+SESN3_silent	ssm	SESN3		silent									maf_data	
+PABPC1_nonsilent	ssm	PABPC1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+PABPC1_silent	ssm	PABPC1		silent									maf_data	
+KRAS_nonsilent	ssm	KRAS		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+KRAS_silent	ssm	KRAS		silent									maf_data	
+HIST1H2AC_nonsilent	ssm	HIST1H2AC		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HIST1H2AC_silent	ssm	HIST1H2AC		silent									maf_data	
+CD274_nonsilent	ssm	CD274		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CD274_silent	ssm	CD274		silent									maf_data	
+METAP1D_nonsilent	ssm	METAP1D		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+METAP1D_silent	ssm	METAP1D		silent									maf_data	
+PIM1_nonsilent	ssm	PIM1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+PIM1_silent	ssm	PIM1		silent									maf_data	
+MYD88_nonsilent	ssm	MYD88		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+MYD88_silent	ssm	MYD88		silent									maf_data	
+BTG1_nonsilent	ssm	BTG1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BTG1_silent	ssm	BTG1		silent									maf_data	
+CD79B_nonsilent	ssm	CD79B		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CD79B_silent	ssm	CD79B		silent									maf_data	
+IGLL5_nonsilent	ssm	IGLL5		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+IGLL5_silent	ssm	IGLL5		silent									maf_data	
+ETV6_nonsilent	ssm	ETV6		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ETV6_silent	ssm	ETV6		silent									maf_data	
+TBL1XR1_nonsilent	ssm	TBL1XR1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TBL1XR1_silent	ssm	TBL1XR1		silent									maf_data	
+BTG2_nonsilent	ssm	BTG2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BTG2_silent	ssm	BTG2		silent									maf_data	
+TMSB4X_nonsilent	ssm	TMSB4X		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TMSB4X_silent	ssm	TMSB4X		silent									maf_data	
+PRDM1_nonsilent	ssm	PRDM1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+PRDM1_silent	ssm	PRDM1		silent									maf_data	
+GRHPR_nonsilent	ssm	GRHPR		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+GRHPR_silent	ssm	GRHPR		silent									maf_data	
+HLA-B_nonsilent	ssm	HLA-B		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HLA-B_silent	ssm	HLA-B		silent									maf_data	
+CARD11_nonsilent	ssm	CARD11		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+CARD11_silent	ssm	CARD11		silent									maf_data	
+HLA-A_nonsilent	ssm	HLA-A		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HLA-A_silent	ssm	HLA-A		silent									maf_data	
+IRF2BP2_nonsilent	ssm	IRF2BP2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+IRF2BP2_silent	ssm	IRF2BP2		silent									maf_data	
+OSBPL10_nonsilent	ssm	OSBPL10		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+OSBPL10_silent	ssm	OSBPL10		silent									maf_data	
+TOX_nonsilent	ssm	TOX		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+TOX_silent	ssm	TOX		silent									maf_data	
+HLA-C_nonsilent	ssm	HLA-C		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+HLA-C_silent	ssm	HLA-C		silent									maf_data	
+PIM2_nonsilent	ssm	PIM2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+PIM2_silent	ssm	PIM2		silent									maf_data	
+SF3B1_nonsilent	ssm	SF3B1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+SF3B1_silent	ssm	SF3B1		silent									maf_data	
+ZC3H12A_nonsilent	ssm	ZC3H12A		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ZC3H12A_silent	ssm	ZC3H12A		silent									maf_data	
+ATP2A2_nonsilent	ssm	ATP2A2		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ATP2A2_silent	ssm	ATP2A2		silent									maf_data	
+BCL11A_nonsilent	ssm	BCL11A		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+BCL11A_silent	ssm	BCL11A		silent									maf_data	
+IRF4_nonsilent	ssm	IRF4		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+IRF4_silent	ssm	IRF4		silent									maf_data	
+LYN_nonsilent	ssm	LYN		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+LYN_silent	ssm	LYN		silent									maf_data	
+ETS1_nonsilent	ssm	ETS1		trunc,missense,inframe,nonstop,splice_region,other_nonsilent									maf_data	
+ETS1_silent	ssm	ETS1		silent									maf_data	
+MYD88_L265P	ssm	MYD88		missense	p.L265P								maf_data	
+MYD88_nonsilent_other	ssm	MYD88		trunc,missense,inframe,nonstop,splice_region,other_nonsilent		p.L265P							maf_data	
+BCL2_SV	sv	BCL2											sv_data or sv_from_metadata	
+BCL6_SV	sv	BCL6											sv_data or sv_from_metadata	
+MYC_SV	sv	MYC											sv_data or sv_from_metadata	
+6q_loss_DLBClass	cnv										6q_loss	DLBClass	seg_data	
+17p_loss_DLBClass	cnv										17p_loss	DLBClass	seg_data	
+1q_gain_DLBClass	cnv										1q_gain	DLBClass	seg_data	
+3p_gain_DLBClass	cnv										3p_gain	DLBClass	seg_data	
+3q_gain_DLBClass	cnv										3q_gain	DLBClass	seg_data	
+5p_gain_DLBClass	cnv										5p_gain	DLBClass	seg_data	
+5q_gain_DLBClass	cnv										5q_gain	DLBClass	seg_data	
+6p_gain_DLBClass	cnv										6p_gain	DLBClass	seg_data	
+7p_gain_DLBClass	cnv										7p_gain	DLBClass	seg_data	
+7q_gain_DLBClass	cnv										7q_gain	DLBClass	seg_data	
+9q_gain_DLBClass	cnv										9q_gain	DLBClass	seg_data	
+11p_gain_DLBClass	cnv										11p_gain	DLBClass	seg_data	
+11q_gain_DLBClass	cnv										11q_gain	DLBClass	seg_data	
+12p_gain_DLBClass	cnv										12p_gain	DLBClass	seg_data	
+12q_gain_DLBClass	cnv										12q_gain	DLBClass	seg_data	
+13q_gain_DLBClass	cnv										13q_gain	DLBClass	seg_data	
+18p_gain_DLBClass	cnv										18p_gain	DLBClass	seg_data	
+18q_gain_DLBClass	cnv										18q_gain	DLBClass	seg_data	
+19q_gain_DLBClass	cnv										19q_gain	DLBClass	seg_data	
+21q_gain_DLBClass	cnv										21q_gain	DLBClass	seg_data	
+1q23.3_gain_DLBClass	cnv										1q23.3_gain	DLBClass	seg_data	
+1q32.1_gain_DLBClass	cnv										1q32.1_gain	DLBClass	seg_data	
+2p16.1_gain_DLBClass	cnv										2p16.1_gain	DLBClass	seg_data	
+3q28_gain_DLBClass	cnv										3q28_gain	DLBClass	seg_data	
+6p21.1_gain_DLBClass	cnv										6p21.1_gain	DLBClass	seg_data	
+7q22.1_gain_DLBClass	cnv										7q22.1_gain	DLBClass	seg_data	
+8q24.22_gain_DLBClass	cnv										8q24.22_gain	DLBClass	seg_data	
+9p24.1_gain_DLBClass	cnv										9p24.1_gain	DLBClass	seg_data	
+11q23.3_gain_DLBClass	cnv										11q23.3_gain	DLBClass	seg_data	
+17q24.3_gain_DLBClass	cnv										17q24.3_gain	DLBClass	seg_data	
+18q21.32_gain_DLBClass	cnv										18q21.32_gain	DLBClass	seg_data	
+18q22.2_gain_DLBClass	cnv										18q22.2_gain	DLBClass	seg_data	
+19q13.42_gain_DLBClass	cnv										19q13.42_gain	DLBClass	seg_data	
+1p36.32_loss_DLBClass	cnv										1p36.32_loss	DLBClass	seg_data	
+1p36.11_loss_DLBClass	cnv										1p36.11_loss	DLBClass	seg_data	
+1p31.1_loss_DLBClass	cnv										1p31.1_loss	DLBClass	seg_data	
+1p13.1_loss_DLBClass	cnv										1p13.1_loss	DLBClass	seg_data	
+1q42.12_loss_DLBClass	cnv										1q42.12_loss	DLBClass	seg_data	
+2q22.2_loss_DLBClass	cnv										2q22.2_loss	DLBClass	seg_data	
+3p21.31_loss_DLBClass	cnv										3p21.31_loss	DLBClass	seg_data	
+3q28_loss_DLBClass	cnv										3q28_loss	DLBClass	seg_data	
+4q21.22_loss_DLBClass	cnv										4q21.22_loss	DLBClass	seg_data	
+4q35.1_loss_DLBClass	cnv										4q35.1_loss	DLBClass	seg_data	
+6p21.33_loss_DLBClass	cnv										6p21.33_loss	DLBClass	seg_data	
+6q14.1_loss_DLBClass	cnv										6q14.1_loss	DLBClass	seg_data	
+6q21_loss_DLBClass	cnv										6q21_loss	DLBClass	seg_data	
+8q12.1_loss_DLBClass	cnv										8q12.1_loss	DLBClass	seg_data	
+9p21.3_loss_DLBClass	cnv										9p21.3_loss	DLBClass	seg_data	
+9q21.13_loss_DLBClass	cnv										9q21.13_loss	DLBClass	seg_data	
+10q23.31_loss_DLBClass	cnv										10q23.31_loss	DLBClass	seg_data	
+12p13.2_loss_DLBClass	cnv										12p13.2_loss	DLBClass	seg_data	
+13q14.2_loss_DLBClass	cnv										13q14.2_loss	DLBClass	seg_data	
+13q34_loss_DLBClass	cnv										13q34_loss	DLBClass	seg_data	
+14q32.31_loss_DLBClass	cnv										14q32.31_loss	DLBClass	seg_data	
+15q15.3_loss_DLBClass	cnv										15q15.3_loss	DLBClass	seg_data	
+16q12.1_loss_DLBClass	cnv										16q12.1_loss	DLBClass	seg_data	
+17q25.1_loss_DLBClass	cnv										17q25.1_loss	DLBClass	seg_data	
+18q23_loss_DLBClass	cnv										18q23_loss	DLBClass	seg_data	
+19p13.3_loss_DLBClass	cnv										19p13.3_loss	DLBClass	seg_data	
+19p13.2_loss_DLBClass	cnv										19p13.2_loss	DLBClass	seg_data	
+19q13.32_loss_DLBClass	cnv										19q13.32_loss	DLBClass	seg_data	
+CD70_mutation	ssm	CD70	970	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+NOTCH2_trunc_PEST	ssm	NOTCH2	4853	trunc			1	1	120459150	PEST			maf_data	LymphGen: truncations only, up to the given position (PEST domain)
+UBE2A_mutation	ssm	UBE2A	7319	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+UBE2A_silent_tss4kb	ssm	UBE2A	7319	silent,splice_region,other_nonsilent			X	118708429	118712429	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+UBE2A_noncoding_tss4kb	ssm	UBE2A	7319	utr5,noncoding			X	118708429	118712429	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+DTX1_mutation	ssm	DTX1	1840	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+TNFAIP3_trunc	ssm	TNFAIP3	7128	trunc									maf_data	
+TNFAIP3_loss_LymphGen	cnv	TNFAIP3	7128								TNFAIP3_loss	LymphGen_model	seg_data	
+BCL10_mutation	ssm	BCL10	8915	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SPEN_trunc	ssm	SPEN	23013	trunc									maf_data	
+NOL9_mutation	ssm	NOL9	79707	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+NOL9_silent_tss4kb	ssm	NOL9	79707	silent,splice_region,other_nonsilent			1	6610658	6614658	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+NOL9_noncoding_tss4kb	ssm	NOL9	79707	utr5,noncoding			1	6610658	6614658	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+ETS1_mutation	ssm	ETS1	2113	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ETS1_silent_tss4kb	ssm	ETS1	2113	silent,splice_region,other_nonsilent			11	128388205	128392205	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+ETS1_noncoding_tss4kb	ssm	ETS1	2113	utr5,noncoding			11	128388205	128392205	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+TMEM30A_trunc	ssm	TMEM30A	55754	trunc									maf_data	
+TMEM30A_loss_LymphGen	cnv	TMEM30A	55754								TMEM30A_loss	LymphGen_model	seg_data	
+HIST1H1D_mutation	ssm	HIST1H1D	3007	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+HIST1H1D_silent_tss4kb	ssm	HIST1H1D	3007	silent,splice_region,other_nonsilent			6	26234439	26235216	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+HIST1H1D_noncoding_tss4kb	ssm	HIST1H1D	3007	utr5,noncoding			6	26234439	26235216	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+KLF2_mutation	ssm	KLF2	10365	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+KLF2_silent_tss4kb	ssm	KLF2	10365	silent,splice_region,other_nonsilent			19	16435650	16438339	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+KLF2_noncoding_tss4kb	ssm	KLF2	10365	utr5,noncoding			19	16435650	16438339	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BTG2_mutation	ssm	BTG2	7832	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+BTG2_silent_tss4kb	ssm	BTG2	7832	silent,splice_region,other_nonsilent			1	203274663	203278663	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BTG2_noncoding_tss4kb	ssm	BTG2	7832	utr5,noncoding			1	203274663	203278663	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+TNFRSF14_mutation	ssm	TNFRSF14	8764	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+TNFRSF14_loss_LymphGen	cnv	TNFRSF14	8764								TNFRSF14_loss	LymphGen_model	seg_data	
+EZH2_mutation_SET	ssm	EZH2	2146	trunc,missense,inframe,nonstop			7	148506238	148508764	SET			maf_data	LymphGen: catalytic (SET) domain (not applied by the LymphGen code, which uses the wrong Entrez ID)
+CREBBP_mutation	ssm	CREBBP	1387	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+REL_gain_LymphGen	cnv	REL	5966								REL_gain	LymphGen_model	seg_data	
+S1PR2_trunc	ssm	S1PR2	9294	trunc									maf_data	
+S1PR2_mutation	ssm	S1PR2	9294	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+EP300_loss_LymphGen	cnv	EP300	2033								EP300_loss	LymphGen_model	seg_data	
+EP300_mutation	ssm	EP300	2033	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+STAT6_gain_LymphGen	cnv	STAT6	6778								STAT6_gain	LymphGen_model	seg_data	
+STAT6_mutation	ssm	STAT6	6778	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+MEF2B_mutation	ssm	MEF2B	100271849	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+IRF8_gain_LymphGen	cnv	IRF8	3394								IRF8_gain	LymphGen_model	seg_data	
+IRF8_mutation	ssm	IRF8	3394	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ARID1A_loss_LymphGen	cnv	ARID1A	8289								ARID1A_loss	LymphGen_model	seg_data	
+ARID1A_trunc	ssm	ARID1A	8289	trunc									maf_data	
+CIITA_mutation	ssm	CIITA	4261	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+CIITA_loss_LymphGen	cnv	CIITA	4261								CIITA_loss	LymphGen_model	seg_data	
+KMT2D_trunc	ssm	KMT2D	8085	trunc									maf_data	
+SOCS1_mutation	ssm	SOCS1	8651	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PIM1_mutation	ssm	PIM1	5292	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PIM1_silent_tss4kb	ssm	PIM1	5292	silent,splice_region,other_nonsilent			6	37137921	37141921	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+PIM1_noncoding_tss4kb	ssm	PIM1	5292	utr5,noncoding			6	37137921	37141921	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+GRHPR_trunc	ssm	GRHPR	9380	trunc									maf_data	
+GRHPR_mutation	ssm	GRHPR	9380	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+GRHPR_silent_tss4kb	ssm	GRHPR	9380	silent,splice_region,other_nonsilent			9	37422706	37426706	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+GRHPR_noncoding_tss4kb	ssm	GRHPR	9380	utr5,noncoding			9	37422706	37426706	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+OSBPL10_mutation	ssm	OSBPL10	114884	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ETV6_trunc	ssm	ETV6	2120	trunc									maf_data	
+ETV6_mutation	ssm	ETV6	2120	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ETV6_silent_tss4kb	ssm	ETV6	2120	silent,splice_region,other_nonsilent			12	11802787	11806787	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+ETV6_noncoding_tss4kb	ssm	ETV6	2120	utr5,noncoding			12	11802787	11806787	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+ETV6_loss_LymphGen	cnv	ETV6	2120								ETV6_loss	LymphGen_model	seg_data	
+HLA-B_mutation	ssm	HLA-B	3106	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+HLA-B_loss_LymphGen	cnv	HLA-B	3106								HLA-B_loss	LymphGen_model	seg_data	
+CD79B_trunc_ITAM	ssm	CD79B	974	trunc			17	1	62006800	ITAM			maf_data	LymphGen: up to the given position (ITAM region)
+CD79B_missense_inframe_ITAM	ssm	CD79B	974	missense,inframe,nonstop			17	1	62007172	ITAM			maf_data	LymphGen: up to the given position (ITAM region)
+MPEG1_mutation	ssm	MPEG1	219972	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+MPEG1_silent_tss4kb	ssm	MPEG1	219972	silent,splice_region,other_nonsilent			11	58976494	58980494	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+MPEG1_noncoding_tss4kb	ssm	MPEG1	219972	utr5,noncoding			11	58976494	58980494	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BTG1_loss_LymphGen	cnv	BTG1	694								BTG1_loss	LymphGen_model	seg_data	
+BTG1_mutation	ssm	BTG1	694	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+BTG1_silent_tss4kb	ssm	BTG1	694	silent,splice_region,other_nonsilent			12	92535673	92539673	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BTG1_noncoding_tss4kb	ssm	BTG1	694	utr5,noncoding			12	92535673	92539673	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+KLHL14_mutation	ssm	KLHL14	57565	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+KLHL14_silent_tss4kb	ssm	KLHL14	57565	silent,splice_region,other_nonsilent			18	30348974	30352974	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+KLHL14_noncoding_tss4kb	ssm	KLHL14	57565	utr5,noncoding			18	30348974	30352974	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+SPIB_gain_LymphGen	cnv	SPIB	6689								SPIB_gain	LymphGen_model	seg_data	
+TOX_trunc	ssm	TOX	9760	trunc									maf_data	
+TOX_loss_LymphGen	cnv	TOX	9760								TOX_loss	LymphGen_model	seg_data	
+CDKN2A_loss_LymphGen	cnv	CDKN2A	1029								CDKN2A_loss	LymphGen_model	seg_data	
+CDKN2A_mutation	ssm	CDKN2A	1029	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SETD1B_mutation	ssm	SETD1B	23067	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SETD1B_loss_LymphGen	cnv	SETD1B	23067								SETD1B_loss	LymphGen_model	seg_data	
+TBL1XR1_mutation	ssm	TBL1XR1	79718	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+FOXC1_trunc	ssm	FOXC1	2296	trunc									maf_data	
+FOXC1_mutation	ssm	FOXC1	2296	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PRDM1_trunc	ssm	PRDM1	639	trunc									maf_data	
+PRDM1_mutation	ssm	PRDM1	639	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PIM2_mutation	ssm	PIM2	11040	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PIM2_silent_tss4kb	ssm	PIM2	11040	silent,splice_region,other_nonsilent			X	48772413	48776413	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+PIM2_noncoding_tss4kb	ssm	PIM2	11040	utr5,noncoding			X	48772413	48776413	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+HLA-A_mutation	ssm	HLA-A	3105	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+CD58_loss_LymphGen	cnv	CD58	965								CD58_loss	LymphGen_model	seg_data	
+CD58_trunc	ssm	CD58	965	trunc									maf_data	
+BTG2_trunc	ssm	BTG2	7832	trunc									maf_data	
+IRF4_trunc	ssm	IRF4	3662	trunc									maf_data	
+IRF4_loss_LymphGen	cnv	IRF4	3662								IRF4_loss	LymphGen_model	seg_data	
+IRF4_mutation	ssm	IRF4	3662	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+IRF4_silent_tss4kb	ssm	IRF4	3662	silent,splice_region,other_nonsilent			6	391738	395738	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+IRF4_noncoding_tss4kb	ssm	IRF4	3662	utr5,noncoding			6	391738	395738	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+NOTCH1_trunc_PEST	ssm	NOTCH1	4851	trunc			9	1	139391455	PEST			maf_data	LymphGen: truncations only, up to the given position (PEST domain)
+ID3_trunc	ssm	ID3	3399	trunc									maf_data	
+ID3_mutation	ssm	ID3	3399	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SGK1_trunc	ssm	SGK1	6446	trunc									maf_data	
+BCL2L1_mutation	ssm	BCL2L1	598	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+BCL2L1_silent_tss4kb	ssm	BCL2L1	598	silent,splice_region,other_nonsilent			20	30306656	30310656	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BCL2L1_noncoding_tss4kb	ssm	BCL2L1	598	utr5,noncoding			20	30306656	30310656	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+JUNB_mutation	ssm	JUNB	3726	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+CD83_trunc	ssm	CD83	9308	trunc									maf_data	
+CD83_mutation	ssm	CD83	9308	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+CD83_silent_tss4kb	ssm	CD83	9308	silent,splice_region,other_nonsilent			6	14117864	14121864	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+CD83_noncoding_tss4kb	ssm	CD83	9308	utr5,noncoding			6	14117864	14121864	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+ZFP36L1_mutation	ssm	ZFP36L1	677	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ACTG1_mutation	ssm	ACTG1	71	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PRRC2A_trunc	ssm	PRRC2A	7916	trunc									maf_data	
+EDRF1_mutation	ssm	EDRF1	26098	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SOCS1_trunc	ssm	SOCS1	8651	trunc									maf_data	
+DUSP2_trunc	ssm	DUSP2	1844	trunc									maf_data	
+DUSP2_mutation	ssm	DUSP2	1844	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+TET2_mutation	ssm	TET2	54790	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+DYSF_loss_LymphGen	cnv	DYSF	8291								DYSF_loss	LymphGen_model	seg_data	
+DYSF_mutation	ssm	DYSF	8291	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+SEC24C_mutation	ssm	SEC24C	9632	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+RFTN1_mutation	ssm	RFTN1	23180	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+RFTN1_silent_tss4kb	ssm	RFTN1	23180	silent,splice_region,other_nonsilent			3	16551222	16555222	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+RFTN1_noncoding_tss4kb	ssm	RFTN1	23180	utr5,noncoding			3	16551222	16555222	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+DDX3X_mutation	ssm	DDX3X	1654	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+MED16_mutation	ssm	MED16	10025	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+EIF4A2_mutation	ssm	EIF4A2	1974	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+EIF4A2_loss_LymphGen	cnv	EIF4A2	1974								EIF4A2_loss	LymphGen_model	seg_data	
+NFKBIA_mutation	ssm	NFKBIA	4792	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+MBTPS1_mutation	ssm	MBTPS1	8720	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PIK3CG_gain_LymphGen	cnv	PIK3CG	5294								PIK3CG_gain	LymphGen_model	seg_data	
+PIK3CG_mutation	ssm	PIK3CG	5294	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+PIK3CG_silent_tss4kb	ssm	PIK3CG	5294	silent,splice_region,other_nonsilent			7	106505722	106509722	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+PIK3CG_noncoding_tss4kb	ssm	PIK3CG	5294	utr5,noncoding			7	106505722	106509722	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+PRRC2C_mutation	ssm	PRRC2C	23215	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ITPKB_mutation	ssm	ITPKB	3707	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+HIST1H2BC_mutation	ssm	HIST1H2BC	8347	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+HIST1H1B_mutation	ssm	HIST1H1B	3009	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+HIST1H1B_silent_tss4kb	ssm	HIST1H1B	3009	silent,splice_region,other_nonsilent			6	27834569	27835359	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+HIST1H1B_noncoding_tss4kb	ssm	HIST1H1B	3009	utr5,noncoding			6	27834569	27835359	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+WEE1_mutation	ssm	WEE1	7465	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+WEE1_silent_tss4kb	ssm	WEE1	7465	silent,splice_region,other_nonsilent			11	9595227	9599227	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+WEE1_noncoding_tss4kb	ssm	WEE1	7465	utr5,noncoding			11	9595227	9599227	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+PRKDC_loss_LymphGen	cnv	PRKDC	5591								PRKDC_loss	LymphGen_model	seg_data	
+PRKDC_mutation	ssm	PRKDC	5591	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+STAT3_mutation	ssm	STAT3	6774	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+ACTB_mutation	ssm	ACTB	60	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+TBCC_loss_LymphGen	cnv	TBCC	6903								TBCC_loss	LymphGen_model	seg_data	
+TBCC_mutation	ssm	TBCC	6903	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+TBCC_silent_tss4kb	ssm	TBCC	6903	silent,splice_region,other_nonsilent			6	42712233	42713884	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+TBCC_noncoding_tss4kb	ssm	TBCC	6903	utr5,noncoding			6	42712233	42713884	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+TP53_loss_LymphGen	cnv	TP53	7157								TP53_loss	LymphGen_model	seg_data	
+TP53_mutation	ssm	TP53	7157	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+12q_loss_LymphGen	cnv										12q_loss	LymphGen_model	seg_data	
+2q_loss_LymphGen	cnv										2q_loss	LymphGen_model	seg_data	
+8p_loss_LymphGen	cnv										8p_loss	LymphGen_model	seg_data	
+RYR3_loss_LymphGen	cnv	RYR3	6263								RYR3_loss	LymphGen_model	seg_data	
+6q_loss_LymphGen	cnv										6q_loss	LymphGen_model	seg_data	
+IGFBP7_loss_LymphGen	cnv	IGFBP7	3490								IGFBP7_loss	LymphGen_model	seg_data	
+22q_loss_LymphGen	cnv										22q_loss	LymphGen_model	seg_data	
+ADAM8_loss_LymphGen	cnv	ADAM8	101								ADAM8_loss	LymphGen_model	seg_data	
+LOC107986596_gain_LymphGen	cnv	LOC107986596	107986596								LOC107986596_gain	LymphGen_model	seg_data	
+TMEM121_loss_LymphGen	cnv	TMEM121	80757								TMEM121_loss	LymphGen_model	seg_data	
+TENM3_gain_LymphGen	cnv	TENM3	55714								TENM3_gain	LymphGen_model	seg_data	
+20p_loss_LymphGen	cnv										20p_loss	LymphGen_model	seg_data	
+APRT_loss_LymphGen	cnv	APRT	353								APRT_loss	LymphGen_model	seg_data	
+SEMA4A_loss_LymphGen	cnv	SEMA4A	64218								SEMA4A_loss	LymphGen_model	seg_data	
+SEMA4A_mutation	ssm	SEMA4A	64218	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+INTS1_gain_LymphGen	cnv	INTS1	26173								INTS1_gain	LymphGen_model	seg_data	
+INTS1_mutation	ssm	INTS1	26173	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+NECTIN3_gain_LymphGen	cnv	NECTIN3	25945								NECTIN3_gain	LymphGen_model	seg_data	
+TNK2_gain_LymphGen	cnv	TNK2	10188								TNK2_gain	LymphGen_model	seg_data	
+PACRGL_loss_LymphGen	cnv	PACRGL	133015								PACRGL_loss	LymphGen_model	seg_data	
+1p_loss_LymphGen	cnv										1p_loss	LymphGen_model	seg_data	
+C1R_loss_LymphGen	cnv	C1R	715								C1R_loss	LymphGen_model	seg_data	
+ZNF595_loss_LymphGen	cnv	ZNF595	152687								ZNF595_loss	LymphGen_model	seg_data	
+ANKRD30B_gain_LymphGen	cnv	ANKRD30B	374860								ANKRD30B_gain	LymphGen_model	seg_data	
+9q_loss_LymphGen	cnv										9q_loss	LymphGen_model	seg_data	
+ARID3A_loss_LymphGen	cnv	ARID3A	1820								ARID3A_loss	LymphGen_model	seg_data	
+ZNF552_loss_LymphGen	cnv	ZNF552	79818								ZNF552_loss	LymphGen_model	seg_data	
+CNKSR2_gain_LymphGen	cnv	CNKSR2	22866								CNKSR2_gain	LymphGen_model	seg_data	
+SERPINB1_loss_LymphGen	cnv	SERPINB1	1992								SERPINB1_loss	LymphGen_model	seg_data	
+ANO8_loss_LymphGen	cnv	ANO8	57719								ANO8_loss	LymphGen_model	seg_data	
+OR2M4_loss_LymphGen	cnv	OR2M4	26245								OR2M4_loss	LymphGen_model	seg_data	
+SNX13_gain_LymphGen	cnv	SNX13	23161								SNX13_gain	LymphGen_model	seg_data	
+FHIT_loss_LymphGen	cnv	FHIT	2272								FHIT_loss	LymphGen_model	seg_data	
+MKLN1_gain_LymphGen	cnv	MKLN1	4289								MKLN1_gain	LymphGen_model	seg_data	
+PRDM15_gain_LymphGen	cnv	PRDM15	63977								PRDM15_gain	LymphGen_model	seg_data	
+PRDM15_mutation	ssm	PRDM15	63977	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+NHLRC1_gain_LymphGen	cnv	NHLRC1	378884								NHLRC1_gain	LymphGen_model	seg_data	
+RARRES2_gain_LymphGen	cnv	RARRES2	5919								RARRES2_gain	LymphGen_model	seg_data	
+BCL2_mutation	ssm	BCL2	596	trunc,missense,inframe,nonstop									maf_data	LymphGen MUTATION: any truncating or non-truncating coding mutation
+BCL2_silent_tss4kb	ssm	BCL2	596	silent,splice_region,other_nonsilent			18	60982613	60986613	tss4kb			maf_data	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BCL2_noncoding_tss4kb	ssm	BCL2	596	utr5,noncoding			18	60982613	60986613	tss4kb			noncoding_maf	LymphGen Synon: first 4 kb of the gene from the TSS, within the gene (the LymphGen 2 window)
+BCL6_trunc	ssm	BCL6	604	trunc									maf_data	
