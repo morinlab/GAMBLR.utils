@@ -7,7 +7,9 @@ utils::globalVariables(c(
   # columns in the result tibble used inside mutate
   "gene_requested", "status", "suggested_symbol",
   # columns from annotate_curated_drivers output
-  "driver_alias"
+  "driver_alias",
+  # columns created inside summarise_mutation_status
+  "Variant"
 ))
 
 #' @title Check gene symbols against a LymphGen feature matrix

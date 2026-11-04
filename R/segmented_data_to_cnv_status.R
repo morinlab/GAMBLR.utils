@@ -148,14 +148,24 @@
 # again with the segments at that level; with none overlapping the feature,
 # the call drops again (a long homozygous deletion counts as nothing, while
 # one inside an arm-level loss keeps level 2).
+# With gene_rule = "lymphgen", features with a max_event_length are instead
+# called as LymphGen's training data are (see segmented_data_to_cnv_status).
 .drop_broad_cnv_calls = function(calls, segs, cnv_features, single_thresh,
-                                 high_thresh){
+                                 high_thresh, event_extent = "run", levels = NULL,
+                                 gene_rule = "fraction"){
   limited = cnv_features[!is.na(cnv_features$max_event_length), , drop = FALSE]
-  check = which(calls$name %in% limited$name & calls$level > 0)
+  # with LymphGen's rule a feature can be called from any overlap, so every
+  # assessed feature is checked, not just those already called
+  check = if(gene_rule == "lymphgen"){
+    which(calls$name %in% limited$name & !is.na(calls$.event_value))
+  } else which(calls$name %in% limited$name & calls$level > 0)
   if(length(check) == 0){
+    if(gene_rule == "lymphgen") calls$.rule_status = NA_character_
     return(calls)
   }
-  segs_by_sample = split(segs[, c("chrom", "start", "end", ".value")], segs$ID)
+  if(!".centre" %in% colnames(segs)) segs$.centre = NA_real_
+  if(!".rule_len" %in% colnames(segs)) segs$.rule_len = segs$end - segs$start
+  segs_by_sample = split(segs[, c("chrom", "start", "end", ".value", ".centre", ".rule_len")], segs$ID)
   feature = limited[match(calls$name[check], limited$name), , drop = FALSE]
   extent = function(sg, f_start, f_end, in_state){
     hit = which(in_state & sg$end > f_start & sg$start < f_end)
@@ -168,14 +178,58 @@
     while(last < nrow(sg) && in_state[last + 1]) last = last + 1
     sg$end[last] - sg$start[first]
   }
-  calls$level[check] = vapply(seq_along(check), function(k){
-    i = check[k]
+  sample_segs = function(i, k){
     sg = segs_by_sample[[calls$ID[i]]]
     sg = sg[sg$chrom == feature$chrom[k], , drop = FALSE]
-    sg = sg[order(sg$start), , drop = FALSE]
-    signed = if(calls$direction[i] == "gain") sg$.value else -sg$.value
-    seg_level = ifelse(signed > high_thresh, 2, ifelse(signed > single_thresh, 1, 0))
+    sg[order(sg$start), , drop = FALSE]
+  }
+  if(gene_rule == "lymphgen"){
+    # one state per gene, decided by one segment no longer than
+    # max_event_length: level 2 (HOMDEL, AMP) beats level 1 in either
+    # direction, then the largest overlap with the feature; the feature gets
+    # that segment's level if it is in the feature's direction. The value is
+    # the deciding segment's change, and .rule_status says why the feature
+    # is or isn't called
+    decided = lapply(seq_along(check), function(k){
+      i = check[k]
+      sg = sample_segs(i, k)
+      overlap = pmin(sg$end, feature$end[k]) - pmax(sg$start, feature$start[k])
+      gain_level = .seg_levels(sg, "gain", high_thresh, single_thresh, levels)
+      loss_level = .seg_levels(sg, "loss", high_thresh, single_thresh, levels)
+      seg_level = pmax(gain_level, loss_level)
+      short = sg$.rule_len <= feature$max_event_length[k]
+      cand = which(overlap > 0 & short & seg_level > 0)
+      if(length(cand) == 0){
+        own = if(calls$direction[i] == "gain") gain_level else loss_level
+        too_long = any(overlap > 0 & !short & own > 0)
+        return(list(level = 0, value = calls$.event_value[i],
+                    status = if(too_long) "event too long" else "below threshold"))
+      }
+      pick = cand[order(-seg_level[cand], -overlap[cand])[1]]
+      pick_direction = if(gain_level[pick] > 0) "gain" else "loss"
+      if(pick_direction == calls$direction[i]){
+        list(level = seg_level[pick], value = sg$.value[pick], status = "called")
+      }else{
+        list(level = 0, value = sg$.value[pick], status = "outweighed by opposite change")
+      }
+    })
+    calls$.rule_status = NA_character_
+    calls$level[check] = vapply(decided, `[[`, 0, "level")
+    calls$.event_value[check] = vapply(decided, `[[`, 0, "value")
+    calls$.rule_status[check] = vapply(decided, `[[`, "", "status")
+    return(calls)
+  }
+  calls$level[check] = vapply(seq_along(check), function(k){
+    i = check[k]
+    sg = sample_segs(i, k)
+    seg_level = .seg_levels(sg, calls$direction[i], high_thresh, single_thresh, levels)
     level = calls$level[i]
+    if(event_extent == "segment"){
+      # each overlapping segment on its own raw length (LGenIC, LymphGen)
+      hit = sg$end > feature$start[k] & sg$start < feature$end[k] &
+        sg$.rule_len <= feature$max_event_length[k]
+      return(min(level, max(c(0, seg_level[hit]))))
+    }
     while(level > 0){
       if(extent(sg, feature$start[k], feature$end[k], seg_level == level) <=
          feature$max_event_length[k]){
@@ -186,6 +240,15 @@
     level
   }, numeric(1))
   calls
+}
+
+# Each segment's level (0, 1, 2) in one direction
+.seg_levels = function(sg, direction, high_thresh, single_thresh, levels){
+  if(is.null(levels)){
+    signed = if(direction == "gain") sg$.value else -sg$.value
+    return(ifelse(signed > high_thresh, 2, ifelse(signed > single_thresh, 1, 0)))
+  }
+  .cnv_levels(sg$.value, sg$.centre, rep(direction, nrow(sg)), levels)
 }
 
 # Feature names with the representative gene inserted before the direction,
@@ -365,7 +428,8 @@
                                  these_samples_metadata, value_scale,
                                  centering, centering_autosomes_only,
                                  blacklist, blacklist_min_feature_overlap,
-                                 blacklist_drop_fraction, background){
+                                 blacklist_drop_fraction, background,
+                                 hygiene = NULL){
   if(!value_scale %in% c("log_ratio", "CN")){
     stop("value_scale must be \"log_ratio\" or \"CN\"")
   }
@@ -425,6 +489,18 @@
     segs$.value = 2^(raw - centre + 1) - 2
   }else{
     segs$.value = raw - centre
+  }
+  segs$.centre = centre
+  segs$.rule_len = segs$end - segs$start
+  # optional segment hygiene: isolated short gain spikes are ignored, and
+  # small gaps between segments at the same level are bridged
+  if(!is.null(hygiene)){
+    if(hygiene$min_gain_spike > 0){
+      segs = .drop_gain_spikes(segs, hygiene$min_gain_spike, hygiene$single_thresh)
+    }
+    if(hygiene$bridge_gaps > 0){
+      segs = .bridge_small_gaps(segs, hygiene$bridge_gaps, hygiene)
+    }
   }
 
   # overlap of every segment with every feature on its chromosome
@@ -503,12 +579,34 @@
 #'     gaps or the centromere) are stepped over without adding to the extent,
 #'     so segments split by liftOver give the same result as the unsplit
 #'     segment, while a segment at another level ends the change (as in
-#'     LymphGen, which judges each segment by its own length). A level 2 call
+#'     LymphGen, which judges each segment by its own length). With
+#'     `event_extent = "segment"`, each overlapping segment is instead judged
+#'     on its own raw length, as LGenIC and LymphGen's training data do: the
+#'     call is the highest level among the overlapping segments no longer than
+#'     `max_event_length`, so a broad change split into shorter segments
+#'     counts in each of them. A level 2 call
 #'     that is too long is checked again as level 1 using the level 1
 #'     segments overlapping the feature, if any; a deeper focal change inside
 #'     a broad one (e.g. a homozygous deletion in an arm-level loss) keeps its
 #'     level. With
 #'     `encoding = "value"`, the measured change is still reported.
+#'   \item With `gene_rule = "lymphgen"`, features with a `max_event_length`
+#'     are called as LymphGen's training data are (recovered exactly from the
+#'     segment labels behind them): one segment decides each feature, and
+#'     only segments no longer than `max_event_length` on their own raw
+#'     length that overlap the feature at all count (`min_fraction` and
+#'     `event_extent` don't apply). A level 2 segment (HOMDEL or AMP) beats
+#'     a level 1 segment in either direction; among segments of the same
+#'     level, the one overlapping the feature most decides. The feature gets
+#'     that segment's level if it is in the feature's direction and 0
+#'     otherwise, so a gene never has both a gain and a loss: a short loss
+#'     inside a larger gain over the gene is not a loss. `min_coverage`
+#'     still applies. With `encoding = "value"` the value is the deciding
+#'     segment's change (positive for a gain, even for a loss feature it
+#'     outweighs), and the "long" output gets a `rule_status` column:
+#'     "called", "outweighed by opposite change", "event too long" (only
+#'     longer changes in the feature's direction overlap it) or "below
+#'     threshold" (NA for features without a `max_event_length`).
 #' }
 #' Overlaps are inclusive and coverage uses segment lengths clipped to each
 #' feature.
@@ -594,6 +692,30 @@
 #' name goes in an added label column. Default FALSE.
 #' @param gene_separator Separator between the region and the gene when
 #' `gene_labels = TRUE`. Default "~".
+#' @param homdel_max_cn On the CN scale, the copy number at or below which a
+#' loss is level 2 (a homozygous deletion), whatever the sample's baseline;
+#' level 2 gains then need a change of `high_thresh` scaled by baseline / 2
+#' (e.g. 3 copies on a tetraploid baseline). Default 0.5. NULL (or NA) judges
+#' level 2 as a change of `high_thresh` from the baseline, as on the log ratio
+#' scale (where it always is), and as LymphGen's training data do: its
+#' homozygous deletions and amplifications are changes of at least 1.5 copies
+#' from the tumour's own baseline (e.g. 4 to 2 copies in a tetraploid tumour).
+#' @param bridge_gaps Gaps between neighbouring segments up to this length
+#' (bp) are bridged when both segments are at the same level, at the less
+#' extreme of their values, so a feature in the gap (e.g. a gene without
+#' capture targets) can be assessed. Default 1e6; 0 to leave gaps.
+#' @param min_gain_spike Isolated gain segments shorter than this (bp) are
+#' ignored: those more than `single_thresh` above both neighbours, whose
+#' values agree, e.g. single-bin spikes. Losses are always kept. Default 1e5;
+#' 0 to keep every segment.
+#' @param event_extent How the length of a change is measured for features
+#' with a `max_event_length` (see Details): "run" (default; the change's run
+#' of neighbouring segments at the call's level) or "segment" (each segment
+#' on its own raw length, as LGenIC and LymphGen's training data).
+#' @param gene_rule How features with a `max_event_length` are called:
+#' "fraction" (default; the level reached by `min_fraction` of the feature,
+#' then `event_extent`) or "lymphgen" (one segment per feature, as
+#' LymphGen's training data; see Details).
 #'
 #' @return A data frame in the requested format. The "long" format is sorted
 #' by sample, then by feature in the order of `cnv_features`.
@@ -638,7 +760,14 @@ segmented_data_to_cnv_status = function(seg_data,
                                         encoding = "level",
                                         output_format = "matrix",
                                         gene_labels = FALSE,
-                                        gene_separator = "~"){
+                                        gene_separator = "~",
+                                        event_extent = "run",
+                                        gene_rule = "fraction",
+                                        homdel_max_cn = 0.5,
+                                        bridge_gaps = 1e6,
+                                        min_gain_spike = 1e5){
+  event_extent = match.arg(event_extent, c("run", "segment"))
+  gene_rule = match.arg(gene_rule, c("fraction", "lymphgen"))
   if(!encoding %in% c("level", "binary", "value")){
     stop("encoding must be \"level\", \"binary\" or \"value\"")
   }
@@ -659,18 +788,26 @@ segmented_data_to_cnv_status = function(seg_data,
   if(missing(genome_build)){
     genome_build = NULL
   }
+  thresholds = .resolve_cnv_thresholds(value_scale, single_thresh, high_thresh)
+  single_thresh = thresholds[["single"]]
+  high_thresh = thresholds[["high"]]
+  # level 2 on the CN scale is judged against the sample's ploidy (see
+  # .cnv_levels); NULL keeps it relative to the baseline
+  levels = list(value_scale = value_scale, single = single_thresh, high = high_thresh,
+                homdel_max_cn = if(value_scale == "CN" && !is.null(homdel_max_cn) && !is.na(homdel_max_cn)) homdel_max_cn else NULL)
   prepared = .prepare_cnv_segments(
     seg_data, cnv_features, genome_build, these_samples_metadata,
     value_scale, centering, centering_autosomes_only, blacklist,
     blacklist_min_feature_overlap, blacklist_drop_fraction,
-    background
+    background,
+    hygiene = c(levels, list(single_thresh = single_thresh, bridge_gaps = bridge_gaps,
+                             min_gain_spike = min_gain_spike))
   )
   cnv_features = prepared$cnv_features
   all_samples = prepared$all_samples
-  thresholds = .resolve_cnv_thresholds(value_scale, single_thresh, high_thresh)
-  single_thresh = thresholds[["single"]]
-  high_thresh = thresholds[["high"]]
 
+  centres = prepared$segs$.centre[match(unique(prepared$segs$ID), prepared$segs$ID)]
+  names(centres) = unique(prepared$segs$ID)
   calls = prepared$overlaps %>%
     dplyr::group_by(ID, name, direction, f_start, f_end,
                     min_fraction, min_coverage) %>%
@@ -684,16 +821,11 @@ segmented_data_to_cnv_status = function(seg_data,
     dplyr::mutate(
       .event_value = ifelse(.covered < min_coverage * (f_end - f_start),
                             NA_real_, .event_value),
-      .signed = ifelse(direction == "gain", .event_value, -.event_value),
-      level = dplyr::case_when(
-        is.na(.signed) ~ 0,
-        .signed > high_thresh ~ 2,
-        .signed > single_thresh ~ 1,
-        TRUE ~ 0
-      )
+      .signed = ifelse(direction == "gain", .event_value, -.event_value)
     )
+  calls$level = .cnv_levels(calls$.event_value, centres[calls$ID], calls$direction, levels)
   calls = .drop_broad_cnv_calls(calls, prepared$segs, cnv_features,
-                                single_thresh, high_thresh)
+                                single_thresh, high_thresh, event_extent, levels, gene_rule)
 
   result = matrix(ifelse(encoding == "value", NA_real_, 0),
                   nrow = length(all_samples), ncol = nrow(cnv_features),
@@ -749,6 +881,13 @@ segmented_data_to_cnv_status = function(seg_data,
     long$end = cnv_features$end[feature_ix]
     # rows are sample-major, so read the matrix row by row
     long[[encoding]] = as.vector(t(result))
+    if(gene_rule == "lymphgen"){
+      # why each feature called by LymphGen's gene rule is or isn't called
+      status = matrix(NA_character_, nrow = length(all_samples), ncol = n_features)
+      has = !is.na(calls$.rule_status)
+      status[cell[has, , drop = FALSE]] = calls$.rule_status[has]
+      long$rule_status = as.vector(t(status))
+    }
     return(long)
   }
   colnames(result) = feature_labels
@@ -909,4 +1048,73 @@ annotate_cnv = function(seg_data,
     dplyr::select(-.seg_row)
   rownames(segs) = NULL
   segs
+}
+
+# Event level (0, 1, 2) of copy number changes in a feature's direction.
+# Level 1 needs a change beyond `single`. Level 2 needs a change beyond
+# `high` on the log ratio scale (relative to a diploid baseline); on the CN
+# scale it is judged against the sample's ploidy: a loss is level 2 only when
+# the copy number itself is at most homdel_max_cn (a homozygous deletion,
+# whatever the baseline), and a gain only when the change reaches `high`
+# scaled by baseline / 2 (so 3 copies on a tetraploid baseline). With
+# homdel_max_cn NULL, level 2 is relative to the baseline as on the log ratio
+# scale.
+.cnv_levels = function(change, centre, direction, levels){
+  signed = ifelse(direction == "gain", change, -change)
+  level = ifelse(is.na(signed), 0, ifelse(signed > levels$single, 1, 0))
+  if(is.null(levels$homdel_max_cn)){
+    level[!is.na(signed) & signed > levels$high] = 2
+    return(level)
+  }
+  centre = ifelse(is.na(centre), 2, centre)
+  absolute = centre + change
+  deep_loss = direction == "loss" & !is.na(absolute) & absolute <= levels$homdel_max_cn & level > 0
+  big_gain = direction == "gain" & !is.na(signed) & signed > levels$high * pmax(centre, 2) / 2
+  level[deep_loss | big_gain] = 2
+  level
+}
+
+# Segments ignored as artefacts: isolated short gains (shorter than
+# max_len, more than `single` above both neighbours, whose own values agree
+# within `single`), e.g. single-bin spikes. Losses are kept: a short, deep,
+# isolated loss is what a focal homozygous deletion looks like.
+.drop_gain_spikes = function(segs, max_len, single){
+  segs = segs[order(segs$ID, segs$chrom, segs$start), , drop = FALSE]
+  n = nrow(segs)
+  if(n < 3) return(segs)
+  same_prev = c(FALSE, segs$ID[-1] == segs$ID[-n] & segs$chrom[-1] == segs$chrom[-n])
+  same_next = c(same_prev[-1], FALSE)
+  v = segs$.value
+  prev_v = c(NA, v[-n]); next_v = c(v[-1], NA)
+  spike = same_prev & same_next & (segs$end - segs$start) < max_len &
+    v - pmax(prev_v, next_v) > single & abs(prev_v - next_v) < single
+  spike[is.na(spike)] = FALSE
+  segs[!spike, , drop = FALSE]
+}
+
+# Small gaps (up to max_gap) between neighbouring segments at the same level
+# are bridged with a segment at the less extreme of the two values, so a
+# feature in the gap (e.g. a gene without capture targets) can be assessed.
+# Gaps between segments at different levels are left: the breakpoint could
+# be anywhere in them. A bridge carries the longer flank's length for the
+# max_event_length rule.
+.bridge_small_gaps = function(segs, max_gap, levels){
+  segs = segs[order(segs$ID, segs$chrom, segs$start), , drop = FALSE]
+  n = nrow(segs)
+  if(n < 2) return(segs)
+  i = which(segs$ID[-1] == segs$ID[-n] & segs$chrom[-1] == segs$chrom[-n])
+  gap = segs$start[i + 1] - segs$end[i]
+  i = i[gap > 0 & gap <= max_gap]
+  if(length(i) == 0) return(segs)
+  lvl = function(rows, direction) .cnv_levels(segs$.value[rows], segs$.centre[rows], rep(direction, length(rows)), levels)
+  same = lvl(i, "gain") == lvl(i + 1, "gain") & lvl(i, "loss") == lvl(i + 1, "loss")
+  i = i[same]
+  if(length(i) == 0) return(segs)
+  milder = ifelse(abs(segs$.value[i]) <= abs(segs$.value[i + 1]), i, i + 1)
+  bridge = segs[milder, , drop = FALSE]
+  bridge$start = segs$end[i]
+  bridge$end = segs$start[i + 1]
+  bridge$.rule_len = pmax(segs$end[i] - segs$start[i], segs$end[i + 1] - segs$start[i + 1])
+  out = rbind(segs, bridge)
+  out[order(out$ID, out$chrom, out$start), , drop = FALSE]
 }

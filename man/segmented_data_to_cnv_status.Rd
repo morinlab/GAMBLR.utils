@@ -21,7 +21,12 @@ segmented_data_to_cnv_status(
   encoding = "level",
   output_format = "matrix",
   gene_labels = FALSE,
-  gene_separator = "~"
+  gene_separator = "~",
+  event_extent = "run",
+  gene_rule = "fraction",
+  homdel_max_cn = 0.5,
+  bridge_gaps = 1e+06,
+  min_gain_spike = 1e+05
 )
 }
 \arguments{
@@ -112,6 +117,35 @@ name goes in an added label column. Default FALSE.}
 
 \item{gene_separator}{Separator between the region and the gene when
 \code{gene_labels = TRUE}. Default "~".}
+
+\item{event_extent}{How the length of a change is measured for features
+with a \code{max_event_length} (see Details): "run" (default; the change's run
+of neighbouring segments at the call's level) or "segment" (each segment
+on its own raw length, as LGenIC and LymphGen's training data).}
+
+\item{gene_rule}{How features with a \code{max_event_length} are called:
+"fraction" (default; the level reached by \code{min_fraction} of the feature,
+then \code{event_extent}) or "lymphgen" (one segment per feature, as
+LymphGen's training data; see Details).}
+
+\item{homdel_max_cn}{On the CN scale, the copy number at or below which a
+loss is level 2 (a homozygous deletion), whatever the sample's baseline;
+level 2 gains then need a change of \code{high_thresh} scaled by baseline / 2
+(e.g. 3 copies on a tetraploid baseline). Default 0.5. NULL (or NA) judges
+level 2 as a change of \code{high_thresh} from the baseline, as on the log ratio
+scale (where it always is), and as LymphGen's training data do: its
+homozygous deletions and amplifications are changes of at least 1.5 copies
+from the tumour's own baseline (e.g. 4 to 2 copies in a tetraploid tumour).}
+
+\item{bridge_gaps}{Gaps between neighbouring segments up to this length
+(bp) are bridged when both segments are at the same level, at the less
+extreme of their values, so a feature in the gap (e.g. a gene without
+capture targets) can be assessed. Default 1e6; 0 to leave gaps.}
+
+\item{min_gain_spike}{Isolated gain segments shorter than this (bp) are
+ignored: those more than \code{single_thresh} above both neighbours, whose
+values agree, e.g. single-bin spikes. Losses are always kept. Default 1e5;
+0 to keep every segment.}
 }
 \value{
 A data frame in the requested format. The "long" format is sorted
@@ -158,12 +192,34 @@ at that level; uncovered stretches between segments (e.g. liftOver
 gaps or the centromere) are stepped over without adding to the extent,
 so segments split by liftOver give the same result as the unsplit
 segment, while a segment at another level ends the change (as in
-LymphGen, which judges each segment by its own length). A level 2 call
+LymphGen, which judges each segment by its own length). With
+\code{event_extent = "segment"}, each overlapping segment is instead judged
+on its own raw length, as LGenIC and LymphGen's training data do: the
+call is the highest level among the overlapping segments no longer than
+\code{max_event_length}, so a broad change split into shorter segments
+counts in each of them. A level 2 call
 that is too long is checked again as level 1 using the level 1
 segments overlapping the feature, if any; a deeper focal change inside
 a broad one (e.g. a homozygous deletion in an arm-level loss) keeps its
 level. With
 \code{encoding = "value"}, the measured change is still reported.
+\item With \code{gene_rule = "lymphgen"}, features with a \code{max_event_length}
+are called as LymphGen's training data are (recovered exactly from the
+segment labels behind them): one segment decides each feature, and
+only segments no longer than \code{max_event_length} on their own raw
+length that overlap the feature at all count (\code{min_fraction} and
+\code{event_extent} don't apply). A level 2 segment (HOMDEL or AMP) beats
+a level 1 segment in either direction; among segments of the same
+level, the one overlapping the feature most decides. The feature gets
+that segment's level if it is in the feature's direction and 0
+otherwise, so a gene never has both a gain and a loss: a short loss
+inside a larger gain over the gene is not a loss. \code{min_coverage}
+still applies. With \code{encoding = "value"} the value is the deciding
+segment's change (positive for a gain, even for a loss feature it
+outweighs), and the "long" output gets a \code{rule_status} column:
+"called", "outweighed by opposite change", "event too long" (only
+longer changes in the feature's direction overlap it) or "below
+threshold" (NA for features without a \code{max_event_length}).
 }
 Overlaps are inclusive and coverage uses segment lengths clipped to each
 feature.

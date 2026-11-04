@@ -39,7 +39,10 @@ test_that("rows are chosen by priority curated > LymphGen > DLBClass", {
 })
 
 test_that("arm boundaries are the same in every set", {
-  f = cnv_features_grch37[cnv_features_grch37$type == "arm", ]
+  # except LymphGen_model, which uses LymphGen's own arm boundaries
+  # (Full.Uber.2020), as its training arm features do
+  f = cnv_features_grch37[cnv_features_grch37$type == "arm" &
+                            !cnv_features_grch37$feature_set %in% "LymphGen_model", ]
   key = paste(f$chrom, f$region_name)
   expect_true(all(tapply(paste(f$start, f$end), key, function(v) length(unique(v))) == 1))
 })
