@@ -37,6 +37,15 @@
 #' \code{genes_noncoding} alongside a coding MAF for many more genes. Its
 #' coding mutations are ignored, as are \code{unannotated_maf}'s non-coding
 #' ones. Default NULL uses \code{unannotated_maf} for both.
+#' @param noncoding_classes Optional character vector of
+#' \code{Variant_Classification} values that count as non-coding mutations,
+#' e.g. \code{c("Silent", "5'UTR")} for LymphGen's Synon features. Default
+#' NULL counts every non-coding class (anything not in
+#' \code{GAMBLR.helpers::vc_nonSynonymous}). Applied before
+#' \code{noncoding_window}. Genes in \code{genes_hotspot}, \code{genes_driver}
+#' or \code{gene_reporting_policy} keep all their non-coding mutations, so
+#' curated non-coding regions (e.g. \code{NFKBIZ_UTR}, a 3' UTR region) can
+#' still be annotated.
 #' @param genes_hotspot Character vector of genes with hotspot annotations (default: MYD88).
 #' @param genes_driver Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).
 #' @param gene_reporting_policy Optional named list of per-gene column output,
@@ -236,6 +245,7 @@ assemble_genetic_features <- function(unannotated_maf,
                                      genes_noncoding,
                                      noncoding_window = NULL,
                                      noncoding_maf = NULL,
+                                     noncoding_classes = NULL,
                                      genes_hotspot = c("MYD88"),
                                      genes_driver = c("CD79B","EZH2","NOTCH1","NOTCH2"),
                                      gene_reporting_policy = NULL,
@@ -285,7 +295,16 @@ assemble_genetic_features <- function(unannotated_maf,
   if(use_window && (!is.numeric(noncoding_window) || length(noncoding_window) != 2)){
     stop("noncoding_window must be c(start, end), in bp relative to the TSS")
   }
-  if(!is.null(noncoding_maf) || use_window){
+  if(!is.null(noncoding_classes)){
+    if(!is.character(noncoding_classes) || length(noncoding_classes) == 0){
+      stop("noncoding_classes must be a character vector of Variant_Classification values")
+    }
+    coding_given = intersect(noncoding_classes, GAMBLR.helpers::vc_nonSynonymous)
+    if(length(coding_given) > 0){
+      stop("noncoding_classes can't include coding classes: ", paste(coding_given, collapse = ", "))
+    }
+  }
+  if(!is.null(noncoding_maf) || use_window || !is.null(noncoding_classes)){
     # coding mutations come from unannotated_maf; non-coding ones from
     # noncoding_maf if given, otherwise also from unannotated_maf
     maf = as.data.frame(unannotated_maf)
@@ -294,6 +313,20 @@ assemble_genetic_features <- function(unannotated_maf,
     noncoding_source = if(is.null(noncoding_maf)) maf else as.data.frame(noncoding_maf)
     noncoding_rows = noncoding_source[!noncoding_source$Variant_Classification %in%
                                         GAMBLR.helpers::vc_nonSynonymous, , drop = FALSE]
+    if(!is.null(noncoding_classes)){
+      # only these classes count as non-coding mutations, except for genes
+      # annotated with curated regions, whose non-coding regions (e.g.
+      # NFKBIZ_UTR, a 3' UTR region) must stay available for annotation
+      curated_genes = unique(c(genes_hotspot, genes_driver, policy_genes))
+      keep = noncoding_rows$Variant_Classification %in% noncoding_classes |
+        noncoding_rows$Hugo_Symbol %in% curated_genes
+      if(verbose){
+        message("noncoding_classes: kept ", sum(keep), " of ", nrow(noncoding_rows),
+                " non-coding mutations (", paste(noncoding_classes, collapse = ", "),
+                ", plus any in curated-region genes)")
+      }
+      noncoding_rows = noncoding_rows[keep, , drop = FALSE]
+    }
     if(use_window){
       # only non-coding mutations in each gene's TSS window count for it,
       # assigned to genes by position

@@ -10,6 +10,7 @@ assemble_genetic_features(
   genes_noncoding,
   noncoding_window = NULL,
   noncoding_maf = NULL,
+  noncoding_classes = NULL,
   genes_hotspot = c("MYD88"),
   genes_driver = c("CD79B", "EZH2", "NOTCH1", "NOTCH2"),
   gene_reporting_policy = NULL,
@@ -66,6 +67,16 @@ instead of \code{unannotated_maf}, e.g. \code{get_ssm_by_genes} for
 \code{genes_noncoding} alongside a coding MAF for many more genes. Its
 coding mutations are ignored, as are \code{unannotated_maf}'s non-coding
 ones. Default NULL uses \code{unannotated_maf} for both.}
+
+\item{noncoding_classes}{Optional character vector of
+\code{Variant_Classification} values that count as non-coding mutations,
+e.g. \code{c("Silent", "5'UTR")} for LymphGen's Synon features. Default
+NULL counts every non-coding class (anything not in
+\code{GAMBLR.helpers::vc_nonSynonymous}). Applied before
+\code{noncoding_window}. Genes in \code{genes_hotspot}, \code{genes_driver}
+or \code{gene_reporting_policy} keep all their non-coding mutations, so
+curated non-coding regions (e.g. \code{NFKBIZ_UTR}, a 3' UTR region) can
+still be annotated.}
 
 \item{genes_hotspot}{Character vector of genes with hotspot annotations (default: MYD88).}
 

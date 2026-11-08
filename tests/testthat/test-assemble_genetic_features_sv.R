@@ -124,6 +124,41 @@ test_that("noncoding_window counts only non-coding mutations in each gene's TSS 
   expect_error(run(4000), "c\\(start, end\\)")
 })
 
+test_that("noncoding_classes restricts which non-coding mutations count", {
+  skip_if_not_installed("GAMBLR.open")
+  skip_if_not("get_ssm_by_genes" %in% getNamespaceExports("GAMBLR.open"),
+              "GAMBLR.open has no get_ssm_by_genes yet")
+  meta = utils::head(open_dlbcl_meta(), 40)
+  maf = as.data.frame(suppressMessages(GAMBLR.open::get_ssm_by_genes(c("BCL2", "PIM1"),
+                                                                     these_samples_metadata = meta)))
+  # samples with both intronic and silent/5' UTR mutations in these genes
+  ids = utils::head(unique(maf$Tumor_Sample_Barcode[maf$Variant_Classification == "Intron"]), 15)
+  maf = maf[maf$Tumor_Sample_Barcode %in% ids, ]
+  meta = data.frame(sample_id = ids)
+  classes = c("Silent", "5'UTR")
+  run = function(nc_classes){
+    out = assemble_genetic_features(maf, genes_coding = c("BCL2", "PIM1"),
+                                    genes_noncoding = c("BCL2", "PIM1"),
+                                    noncoding_classes = nc_classes,
+                                    these_samples_metadata = meta, sv_from_metadata = NULL,
+                                    return_everything = TRUE)
+    out$full_status[ids, ]
+  }
+  every = run(NULL)
+  restricted = run(classes)
+  column = function(df, name) if(name %in% colnames(df)) unname(df[[name]]) else rep(0, nrow(df))
+  for(g in c("BCL2", "PIM1")){
+    # coding indicators don't change
+    expect_equal(column(restricted, paste0(g, "_coding")), column(every, paste0(g, "_coding")))
+    # the non-coding indicator counts only the given classes
+    hit = maf$Tumor_Sample_Barcode[maf$Hugo_Symbol == g & maf$Variant_Classification %in% classes]
+    expect_equal(column(restricted, paste0(g, "_noncoding")), ifelse(ids %in% hit, 1, 0))
+  }
+  # intronic mutations made some samples non-coding positive that no longer are
+  expect_true(sum(column(every, "BCL2_noncoding")) > sum(column(restricted, "BCL2_noncoding")))
+  expect_error(run("Missense_Mutation"), "coding classes")
+})
+
 test_that("one get_ssm_by_genes MAF, or a coding MAF plus noncoding_maf, give the same result", {
   skip_if_not_installed("GAMBLR.open")
   skip_if_not("get_ssm_by_genes" %in% getNamespaceExports("GAMBLR.open"),
