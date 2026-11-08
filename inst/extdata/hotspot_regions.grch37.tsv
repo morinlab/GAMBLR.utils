@@ -85,16 +85,16 @@ FBXW7	FBXW7_T385	hotspot	missense	4	153250906	153250907	-	LOF	TRUE	15150404	The 
 FBXW7	FBXW7_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	4	1	300000000	-	LOF	TRUE	15150404	FBXW7 inactivation directly impairs MYC degradation and therefore increase MYC stability
 FOXO1	FOXO1_Nterm	region	missense,inframe,startloss,trunc	13	41240271	41240351	-	GOF	TRUE	23460611	FOXO1 hotspot mutations disrupt AKT-mediated phosphorylation, enforcing constitutive nuclear localization and transcriptional activity.
 FOXO1	FOXO1_DBD	region	missense,inframe,trunc	13	41134885	41239920	-	LOF	TRUE	PMC9482095	FOXO1 mutations affecting the forkhead DNA-binding domain impair DNA binding and transcriptional activity, indicating a loss-of-function mechanism distinct from AKT-site mutations that promote constitutive FOXO1 activation
-GNA13	GNA13_14-19	hotspot	missense,inframe	17	63052656	63052671			TRUE		
+GNA13	GNA13_14-19	hotspot	missense,inframe	17	63052655	63052672			TRUE		
 GNA13	GNA13_21-26	hotspot	missense,inframe	17	63052636	63052651			TRUE		
-GNA13	GNA13_27-35	hotspot	missense,inframe	17	63052609	63052633	-	unknown	TRUE		
+GNA13	GNA13_27-35	hotspot	missense,inframe	17	63052607	63052633	-	unknown	TRUE		
 GNA13	GNA13_G1motif	hotspot	missense,inframe	17	63052524	63052562	-	unknown	TRUE	AA 58-63	
 GNA13	GNA13_G3motif	hotspot	missense,inframe	17	63010829	63010862	-	unknown	TRUE	AA 218-227	
 GNA13	GNA13_M68	hotspot	missense,inframe	17	63052509	63052510	-	unknown	TRUE		
 GNA13	GNA13_trunc	truncation	trunc,splicesite,spliceregion,startloss	17	1	300000000	-	LOF	TRUE		
 GNA13	GNA13_G4motif	hotspot	missense,inframe	17	63010628	63010650	-	unknown	TRUE	AA 287-294	
 GNA13	GNA13_G2motif	hotspot	missense,inframe	17	63010897	63010925	-	unknown	TRUE	AA 195-203	
-GNA13	GNA13_228-286	hotspot	missense,inframe	17	63010651	63010820	-	unknown	TRUE		
+GNA13	GNA13_228-286	hotspot	missense,inframe	17	63010651	63010827	-	unknown	TRUE		
 GNAI2	GNAI2_G1motif	hotspot	missense,inframe	3	50273870	50289569	+		TRUE	AA 35-52	
 GNAI2	GNAI2_trunc	truncation	trunc,splicesite,spliceregion,startloss	3	1	300000000	+	LOF	TRUE		
 GNAI2	GNAI2_G2motif	hotspot	missense,inframe	3	50293680	50293704	+		TRUE	AA 174-182	
@@ -110,7 +110,7 @@ HVCN1	HVCN1_Y42	hotspot	missense	12	111099150	111099151	-	unknown	TRUE
 HVCN1	HVCN1_W45	hotspot	missense	12	111099142	111099142	-	unknown	TRUE		
 HVCN1	HVCN1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	12	1	300000000	-	LOF	TRUE		
 IKZF3	IKZF3_I128	hotspot	missense	17	37948968	37948968	+	unknown	TRUE		
-IKZF3	IKZF3_213-219	hotspot	missense	17	37944564	37944582	+	unknown	TRUE		
+IKZF3	IKZF3_213-219	hotspot	missense	17	37944563	37944583	+	unknown	TRUE		
 IL4R	IL4R_I242	hotspot	missense	16	27367183	27367183	+	GOF	TRUE		
 IRF4	IRF4_K59	hotspot	missense	6	393328	393328			TRUE		
 IRF4	IRF4_N63	hotspot	missense	6	393340	393340			TRUE		
@@ -133,7 +133,7 @@ KLF2	KLF2_H210	hotspot	missense	19	16436578	16436579			TRUE
 KLF2	KLF2_256-259	hotspot	missense	19	16436719	16436726			TRUE		
 KLF2	KLF2_269-278	hotspot	missense	19	16436755	16436784			TRUE		
 KLHL14	KLHL14_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	18	1	300000000			TRUE		
-KLHL14	KLHL14_90-92	hotspot	missense,inframe	18	30350279	30350281			TRUE		
+KLHL14	KLHL14_90-92	hotspot	missense,inframe	18	30350279	30350287			TRUE		
 KLHL14	KLHL14_216-218	hotspot	missense	18	30349902	30349909			TRUE		
 KLHL14	KLHL14_L225	hotspot	missense	18	30349882	30349882			TRUE		
 KLHL14	KLHL14_E235	hotspot	missense	18	30349850	30349852			TRUE		
@@ -177,7 +177,7 @@ NFKBIZ	NFKBIZ_UTR	region	utr_3	3	101578214	101578365	+	GOF	TRUE
 NOTCH1	NOTCH1_PEST	region	trunc,splicesite,spliceregion	9	1	139396897	-	GOF	TRUE		NOTCH1 PEST domain mutations act as gain-of-function alterations by disrupting FBXW7-mediated degradation of the NOTCH1 intracellular domain, resulting in prolonged nuclear signalling and sustained transcriptional activation
 NOTCH2	NOTCH2_PEST	region	trunc	1	1	120459150	-	GOF	TRUE		
 POU2AF1	POU2AF1_trunc	truncation	trunc,splicesite,spliceregion,startloss,stoploss	11	1	300000000	-	LOF	TRUE		
-POU2F2	POU2F2_T223	hotspot	missense,inframe	19	42600029	42600030	-	NEO	TRUE		
+POU2F2	POU2F2_T223	hotspot	missense,inframe	19	42600076	42600078	-	NEO	TRUE		
 POU2F2	POU2F2_Q238	hotspot	missense,inframe	19	42600031	42600031			TRUE		
 POU2F2	POU2F2_T239	hotspot	missense,inframe	19	42600030	42600030			TRUE		
 PRDM1	PRDM1_trunc	truncation	trunc,splicesite,spliceregion	6	1	300000000	+	LOF	TRUE		
@@ -207,7 +207,7 @@ STAT3	STAT3_E616	hotspot	missense,inframe	17	40475062	40475064	-	GOF	TRUE	293782
 STAT3	STAT3_V637	hotspot	missense	17	40474491	40474492		unknown	TRUE		
 STAT3	STAT3_Y640	hotspot	missense	17	40474482	40474483	-	GOF	TRUE		canonical activating mutation
 STAT3	STAT3_N647	hotspot	missense	17	40474461	40474462			TRUE		
-STAT3	STAT3_K658	hotspot	missense	17	40474423	40474427		GOF	TRUE	 27345172	activating
+STAT3	STAT3_K658	hotspot	missense	17	40474427	40474429		GOF	TRUE	 27345172	activating
 STAT3	STAT3_I659	hotspot	missense	17	40474425	40474426		unknown	TRUE		
 STAT3	STAT3_D661	hotspot	missense	17	40474419	40474420	-	GOF	TRUE		activating
 STAT3	STAT3_P715	hotspot	missense	17	40469200	40469201	-	GOF	TRUE	36446385	 The most frequent germline mutations causing STAT3 GOF syndrome are T716M and P715 L in 17% and 12% of patients, respectively
