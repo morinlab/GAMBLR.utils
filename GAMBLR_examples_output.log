@@ -1,6 +1,6 @@
-[1] "=== STARTED AT 2026-10-28 11:06:29.966299 ==="
+[1] "=== STARTED AT 2026-11-16 10:00:32.159257 ==="
 [1] "=== RUNNING devtools::run_examples() ==="
-── Running 89 example files ───────────────────────────────────────────────────── GAMBLR.utils ──
+── Running 100 example files ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── GAMBLR.utils ──
 
 > arms = GAMBLR.data::chromosome_arms_grch37
 
@@ -180,8 +180,19 @@ Showing first 10 rows:
 > classify_mutations(maf)
   Variant_Classification HGVSp_Short mutation_class protein_change
 1      Nonsense_Mutation      p.Q12*          trunc         p.Q12*
-2          Splice_Region                       <NA>               
+2          Splice_Region                  noncoding               
 3                 Silent       p.L5L         silent          p.L5L
+
+> cn_pipeline_types()
+       pipeline  cn_type
+1    battenberg absolute
+2        purecn absolute
+3      sequenza absolute
+4  controlfreec absolute
+5      dlbclass absolute
+6        cnvkit relative
+7      gatk_cnv relative
+8 schmitz_array relative
 
 > seg = data.frame(ID = c("s1", "s1", "s2"), chrom = "18", 
 +     start = c(5e+07, 60800000, 5e+07), end = c(60800000, 7e+07, 
@@ -198,6 +209,20 @@ Showing first 10 rows:
 > cn_transition(seg, chrom = "18", from = 6e+07, to = 6.2e+07)
   sample_id      pos cn_left cn_right step
 1        s1 60900000       3        2   -1
+
+> cnv_calling_settings(c("battenberg", "gatk_cnv"), 
++     feature_set = "LymphGen")
+    pipeline  cn_type value_scale centering single_thresh high_thresh gene_rule homdel_max_cn
+1 battenberg absolute          CN      mode           0.5         1.5  fraction            NA
+2   gatk_cnv relative   log_ratio    median           0.5         1.5  fraction            NA
+
+> segs = data.frame(ID = "s1", chrom = c("1", "2"), 
++     start = 1, end = c(2e+08, 1e+08), CN = c(2, 1), log.ratio = c(0, 
++         -1))
+
+> cnv_sample_baseline(segs, "CN", "mode")
+s1 
+ 2 
 
 > ashm_bed = create_bed_data(GAMBLR.data::grch37_ashm_regions, 
 +     fix_names = "concat", concat_cols = c("gene", "region"), 
@@ -236,6 +261,21 @@ Showing first 10 rows:
 > get_genome_build(gene_regions)
 [1] "hg38"
 
+> meta = data.frame(sample_id = c("a", "b"), seq_type = c("genome", 
++     "mrna"))
+
+> drop_mrna_samples(meta)
+  sample_id seq_type
+1         a   genome
+
+> segs = data.frame(ID = "s1", chrom = as.character(1:4), 
++     start = 1, end = 5e+07, CN = c(2, 1, 3, 2), log.ratio = log2(c(1, 
++         0.7, 1.3, 1)))
+
+> estimate_purity_from_segments(segs)
+  sample_id purity slope intercept r_squared n_states altered_fraction cn2_fraction flag
+1        s1    0.6   0.3       0.4         1        3              0.5          0.5   ok
+
 > expand_gene_aliases(c("HIST1H1C", "TP53"))
 [1] "HIST1H1C" "TP53"     "H1-2"    
 
@@ -244,6 +284,12 @@ Showing first 10 rows:
 
 > bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791", 
 +     projection = "grch37")
+
+> lymphoma_bed = gene_to_region(gene_symbol = c("BCL2", 
++     "MYC", "EZH2"), return_as = "bed")
+
+> get_genome_build(lymphoma_bed)
+[1] "grch37"
 
 > dlbclass = get_classifier_features("DLBClass")
 
@@ -269,15 +315,27 @@ Showing first 10 rows:
 > every_feature = get_cnv_features("grch37", feature_set = "all")
 
 > get_gene_tss(c("BCL2", "MYC", "PIM1"))
-  gene chrom     start       end strand       tss
-1 BCL2    18  60790579  60987361      -  60987361
-2  MYC     8 128747680 128753674      + 128747680
-3 PIM1     6  37137979  37143202      +  37137979
+  gene chrom     start       end strand       tss     tss_source primary active n_samples
+1 BCL2    18  60790579  60987361      -  60987361 ashm_mutations    TRUE   TRUE       357
+2  MYC     8 128747680 128753674      + 128748315 ashm_mutations    TRUE   TRUE       276
+3 PIM1     6  37137979  37143202      +  37137922 ashm_mutations    TRUE   TRUE       189
+
+> get_gene_tss("ETS1", which = "all")
+  gene chrom     start       end strand       tss     tss_source primary active n_samples
+1 ETS1    11 128328656 128457453      - 128392205 ashm_mutations    TRUE   TRUE       171
+2 ETS1    11 128328656 128457453      - 128333845 ashm_mutations   FALSE  FALSE         0
+3 ETS1    11 128328656 128457453      - 128375289 ashm_mutations   FALSE  FALSE         0
+4 ETS1    11 128328656 128457453      - 128457453 ashm_mutations   FALSE  FALSE         0
+
+> get_gene_tss("PAX5", which = "active")
+  gene chrom    start      end strand      tss     tss_source primary active n_samples
+1 PAX5     9 36833272 37034103      - 37026572 ashm_mutations    TRUE   TRUE       302
+2 PAX5     9 36833272 37034103      - 37034265 ashm_mutations   FALSE   TRUE       143
 
 > get_gene_tss(c("BCL2", "MYC", "PIM1"), window = c(0, 
 +     4000), return_as = "region")
                    BCL2                     MYC                    PIM1 
- "18:60983361-60987361" "8:128747680-128751680"   "6:37137979-37141979" 
+ "18:60983361-60987361" "8:128748315-128752315"   "6:37137922-37141922" 
 
 > bed <- grch37_ashm_regions
 
@@ -332,6 +390,14 @@ Showing first 10 rows:
 > seg_data_to_igv(center_segments(seg), file.path(tempdir(), 
 +     "centred.seg"))
 
+> segs = data.frame(ID = "s1", chrom = c("1", "1", "2"), 
++     start = c(1, 5e+07, 1), end = c(5e+07, 2.4e+08, 2.4e+08), 
++     CN = c(2, 1, 2), log.ratio = c(0, -1, 0))
+
+> segmented_data_qc(segs)
+  sample_id n_segments covered_mb segments_per_100mb short_segment_fraction median_step baseline_mode  mean_cn supplied_baseline baseline_delta altered_fraction deep_loss_fraction deep_loss_logratio
+1        s1          3        480              0.625                      0           1             2 1.604167                NA             NA        0.3958333                  0                 NA
+
 > seg_data = data.frame(ID = c("s1", "s1", "s1", "s2", 
 +     "s2"), chrom = c("1", "2", "X", "1", "2"), start = c(1, 1, 
 +     1, 1, 1), end = c(2e+08, 1e+08, 1e+08, 2e+08, 1e+08), CN = c(2, 
@@ -361,7 +427,7 @@ Showing first 10 rows:
 > table(synon$tss_gene, synon$Variant_Classification)
       
        5'UTR Intron Silent Splice_Region
-  BCL2    70     75      7             1
+  BCL2    70     76      7             1
   MYC      0      3      0             0
   PIM1     3     12      2             1
 
@@ -369,7 +435,7 @@ Showing first 10 rows:
 +     end = 6000)
 
 > range(wider$tss_distance)
-[1] -1778  4505
+[1] -1778  4644
 
 > library(GAMBLR.data)
 
@@ -377,4 +443,15 @@ Showing first 10 rows:
 
 > lymphgen = tidy_lymphgen(df = metadata, lymphgen_column_in = "lymphgen_with_cnv", 
 +     lymphgen_column_out = "lymphgen_with_cnv_tidy", relevel = TRUE)
-[1] "=== COMPLETED AT 2026-10-28 11:10:01.807037 ==="
+
+> calls = data.frame(Subtype.Prediction = c("EZB/ST2", 
++     "BN2/ST2", "MCD"), Confidence.EZB = c(0.55, 0.02, 0.01), 
++     Confidence.ST2 = c(0.91, 0.62, 0), Confidence.BN2 = c(0.01, 
++         0.95, 0.03), Confidence.MCD = c(0, 0.01, 0.98))
+
+> tidy_lymphgen(calls, composite_rule = "confidence")
+  Subtype.Prediction Confidence.EZB Confidence.ST2 Confidence.BN2 Confidence.MCD
+1           ST2-COMP           0.55           0.91           0.01           0.00
+2           BN2-COMP           0.02           0.62           0.95           0.01
+3                MCD           0.01           0.00           0.03           0.98
+[1] "=== COMPLETED AT 2026-11-16 10:01:14.131029 ==="
