@@ -2,44 +2,85 @@
 % Please edit documentation in R/annotate_ssm_context.R
 \name{annotate_ssm_context}
 \alias{annotate_ssm_context}
-\title{Annotate mutations target motif}
+\title{Annotate mutations with their sequence-motif context}
 \usage{
-annotate_ssm_context(maf, motif = "WRCY", index = 3, genome_build, fastaPath)
+annotate_ssm_context(
+  maf,
+  motif = "WRCY",
+  index = 3,
+  genome_build,
+  fastaPath,
+  aid_alleles = FALSE,
+  motif_strand = FALSE
+)
 }
 \arguments{
-\item{maf}{MAF data frame (required columns: Reference_Allele, Chromosome, Start_Position, End_Position)}
+\item{maf}{MAF data frame (required columns: Chromosome, Start_Position,
+Reference_Allele, Tumor_Seq_Allele2).}
 
-\item{motif}{The motif sequence (default is WRCY)}
+\item{motif}{Motif in IUPAC code (default "WRCY"). A vector annotates
+several motifs at once, adding one column per motif.}
 
-\item{index}{Position of the mutated allele in the motif}
+\item{index}{Position of the target base within the motif (default 3, the
+C of WRCY). Recycled to the length of \code{motif}.}
 
-\item{genome_build}{The genome build for the variants you are working with (default is grch37)}
+\item{genome_build}{"grch37" or "hg38". Taken from \code{maf} when it is a
+maf_data object.}
 
-\item{fastaPath}{Can be a path to a FASTA file}
+\item{fastaPath}{Optional path to an indexed FASTA of the matching build.}
+
+\item{aid_alleles}{If TRUE, require an AID-type substitution for SITE (see
+Details). Default FALSE.}
+
+\item{motif_strand}{If TRUE, add a \verb{<motif>_strand} column giving the strand
+on which the motif was found for SITE calls: "+" (the reference base is
+the motif's target) or "-" (it is the target's complement on the reverse
+strand). Default FALSE.}
 }
 \value{
-A data frame with two extra columns (seq and motif).
+\code{maf} with a \code{seq} column (reference sequence centred on the
+variant, spanning the first motif's length either side) and one column per
+motif, named after the motif, with values "SITE", "MOTIF", "FALSE" or NA.
 }
 \description{
-Checks for the presence of mutations at a given motif
+Labels each single-nucleotide variant by whether it falls at
+the target base of a sequence motif (e.g. the C of the AID hotspot WRCY),
+elsewhere within the motif, or outside it. Both strands are checked.
 }
 \details{
-In positions that reference allele has been mutated, it will capture (motif length - 1) before and (motif length + 1) alleles after the mutated position.
-Then, it looks for the presence of motif in the captured sequence and check if the mutation has occurred in the indexed position, it will return
-SITE and if the the motif is present, but the mutation is not in the indexed position, it will return MOTIF. In other cases, it will return FALSE.
-NA will be shown if the mutation is an indel mutation.
+For each SNV the reference sequence around the mutated base is
+retrieved (once per distinct position). A variant is labelled:
+\describe{
+\item{SITE}{the mutated base is the \code{index} base of the motif on the
+forward strand, or the corresponding base of its reverse complement
+(e.g. the G of RGYW for WRCY);}
+\item{MOTIF}{the mutated base lies inside an occurrence of the motif
+(either strand) but not at the indexed base;}
+\item{FALSE}{neither.}
+}
+Indels and multi-base substitutions are not assessed and get \code{NA}.
+
+With \code{aid_alleles = TRUE}, a SITE also requires the substitution expected
+from AID/error-prone repair, read on the motif's strand: C>T or C>G at a C
+target, A>G or A>T at an A target (e.g. the WA motif of polymerase eta).
+Substitutions at the site with other alleles are then labelled MOTIF.
+
+The reference comes from \code{fastaPath} (an indexed FASTA) when given,
+otherwise from the BSgenome package for \code{genome_build}
+(BSgenome.Hsapiens.UCSC.hg19 for grch37, BSgenome.Hsapiens.UCSC.hg38 for
+hg38). Chromosome names with or without a "chr" prefix are matched to the
+reference's naming automatically.
 }
 \examples{
 \dontrun{
-my_maf <- GAMBLR.open::get_coding_ssm() \%>\% 
-  dplyr::filter(Hugo_Symbol=="BCL2") \%>\%
-  dplyr::arrange(Chromosome,Start_Position,Tumor_Sample_Barcode) \%>\%
-  head()
+my_maf <- GAMBLR.open::get_coding_ssm() \%>\%
+  dplyr::filter(Hugo_Symbol=="BCL2")
 
 annotated = annotate_ssm_context(maf = my_maf,
-                                 motif = "WRCY",
-                                 genome_build="grch37")
-
-dplyr::select(annotated,1,5,6,11,13,16,seq,WRCY)
+                                 motif = c("WRCY", "AGCT", "WA"),
+                                 index = c(3, 3, 2),
+                                 genome_build = "grch37",
+                                 aid_alleles = TRUE)
+table(annotated$WRCY, useNA = "ifany")
 }
 }
