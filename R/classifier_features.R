@@ -244,8 +244,11 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #'     from [annotate_sv], which is run if `sv_data` has no gene column) or
 #'     the metadata column in `sv_from_metadata` is positive. A gene named
 #'     only as the `partner` (the locus driving the rearranged gene, e.g.
-#'     BCL6 in a BCL6-MYC) doesn't count. Assessed when either source has
-#'     information for the sample.
+#'     BCL6 in a BCL6-MYC) doesn't count. For genes named in `sv_partners`,
+#'     only SVs with one of the listed partners count (by default BCL2 needs
+#'     an immunoglobulin partner and BCL6 one of a curated list, as in
+#'     GAMBL's curation of SVs for LymphGen). Assessed when either source has information for the
+#'     sample.
 #'   \item Copy number: the feature's level (0, 1 or 2) from
 #'     [segmented_data_to_cnv_status], called separately for each
 #'     [cnv_features_grch37] set used (so that, e.g., DLBClass features are
@@ -279,6 +282,15 @@ classify_mutations = function(maf_data, protein_change_column = NULL){
 #' MYC = "myc_ba")`. NULL to use only `sv_data`.
 #' @param sv_positive_values Metadata values that indicate an SV. Default
 #' "POS".
+#' @param sv_partners Named list restricting, per rearranged gene, which
+#' annotated partners count (the `partner` column of [annotate_sv]); genes
+#' not named take any annotated partner, NULL for no restriction. Default:
+#' BCL2 needs an immunoglobulin partner (IGH, IGK, IGL; e.g. TP63 or FOXP1
+#' don't count); BCL6 takes the immunoglobulin loci, the non-IG partners
+#' GAMBL's curation of SVs for LymphGen accepts (seen in a BCL6
+#' FISH-positive GAMBL tumour, 2026-11-23: CIITA, HIST1H2BK, LEPREL1, LRMP,
+#' MBNL1, PAX5, RFTN1, ZEB2) and RHOH (e.g. ST6GAL1, TP63 or TBL1XR1 don't
+#' count).
 #' @param genome_build Genome build. Default "grch37" (the only one
 #' currently supported).
 #' @param protein_change_column Passed to [classify_mutations].
@@ -325,6 +337,9 @@ assemble_classifier_features = function(these_samples_metadata,
                                                              BCL6 = "bcl6_ba",
                                                              MYC = "myc_ba"),
                                         sv_positive_values = "POS",
+                                        sv_partners = list(BCL2 = c("IGH", "IGK", "IGL"),
+                                                           BCL6 = c("IGH", "IGK", "IGL", "CIITA", "HIST1H2BK", "LEPREL1", "LRMP",
+                                                                    "MBNL1", "PAX5", "RFTN1", "RHOH", "ZEB2")),
                                         genome_build = "grch37",
                                         protein_change_column = NULL,
                                         cnv_args = list(),
@@ -419,6 +434,10 @@ assemble_classifier_features = function(these_samples_metadata,
       # the locus driving the gene (e.g. BCL6 in a BCL6-MYC), not a target
       sv_data = sv_data[sv_data$tumour_sample_id %in% samples &
                           !is.na(sv_data$partner), , drop = FALSE]
+      # genes whose SVs count only with listed partners (e.g. BCL2: IG loci)
+      for(g in intersect(names(sv_partners), unique(sv_data$gene))){
+        sv_data = sv_data[sv_data$gene != g | sv_data$partner %in% sv_partners[[g]], , drop = FALSE]
+      }
       sv_genes = split(sv_data$gene, sv_data$tumour_sample_id)
       sv_assessed = available("sv_available")
       if(is.null(sv_assessed)) sv_assessed = samples %in% sv_samples
