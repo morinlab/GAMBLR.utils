@@ -143,6 +143,21 @@ maf_column_classes = function(){
 #' @param maf_file_path Path to maf that is about to be read.
 #' @param select_cols Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.
 #' @param return_cols Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.
+#' @param genes Optional gene symbols: keep only rows whose Hugo_Symbol is one
+#' of these. Applied while the file is read, so rows of other genes never
+#' reach memory.
+#' @param sample_ids Optional sample IDs: keep only rows whose
+#' Tumor_Sample_Barcode is one of these. Applied while the file is read.
+#' @param chunk_size Rows read at a time when `genes` or `sample_ids` is
+#' given. Default 500000.
+#'
+#' @details With `genes` and/or `sample_ids`, the file is read in chunks
+#' ([readr::read_tsv_chunked]) and only the matching rows of each chunk are
+#' kept, and columns outside `select_cols` are skipped rather than read, so
+#' peak memory follows the rows and columns kept instead of the whole file.
+#' Columns get the same types as a full read: those of
+#' [maf_column_classes], and for any others readr's guess from the first 1000
+#' rows. Without them, the whole file is read as before.
 #'
 #' @return A data frame containing MAF data from a MAF file.
 #'
@@ -164,11 +179,19 @@ maf_column_classes = function(){
 #'                                    Start_Position = "integer",
 #'                                    End_Position = "integer",
 #'                                    Variant_Type = "character"))
+#'
+#' #only some genes and samples, without holding the whole file in memory
+#' my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf",
+#'                    genes = c("MYD88", "CD79B"),
+#'                    sample_ids = c("sample_1", "sample_2"))
 #' }
 #'
 fread_maf = function(maf_file_path,
                      select_cols,
-                     return_cols = FALSE){
+                     return_cols = FALSE,
+                     genes = NULL,
+                     sample_ids = NULL,
+                     chunk_size = 500000){
 
   colClasses = maf_column_classes()
 
@@ -179,11 +202,45 @@ fread_maf = function(maf_file_path,
       return(select_cols)
     }
   }
-  maf_df = read_tsv(
-    file = maf_file_path,
-    col_types = colClasses
-    ) %>%
-    dplyr::select(any_of(select_cols))
+  if(is.null(genes) && is.null(sample_ids)){
+    maf_df = read_tsv(
+      file = maf_file_path,
+      col_types = colClasses
+      ) %>%
+      dplyr::select(any_of(select_cols))
+    return(maf_df)
+  }
 
-  return(maf_df)
+  # filtered read, chunk by chunk. The column spec is the one a full read
+  # uses (maf_column_classes, readr's guess from the first 1000 rows for
+  # other columns), with the columns not kept or filtered on skipped.
+  full_spec = readr::spec(suppressWarnings(read_tsv(file = maf_file_path, col_types = colClasses,
+                                                    n_max = 1000, progress = FALSE)))
+  header = names(full_spec$cols)
+  # select_cols as any_of() reads it: positions, or names
+  keep = if(is.numeric(select_cols)) header[select_cols[select_cols <= length(header)]] else
+    intersect(as.character(select_cols), header)
+  needed = union(keep, c(if(!is.null(genes)) "Hugo_Symbol", if(!is.null(sample_ids)) "Tumor_Sample_Barcode"))
+  missing_filter_cols = setdiff(needed, header)
+  if(length(missing_filter_cols) > 0){
+    stop("fread_maf: ", maf_file_path, " has no ", paste(missing_filter_cols, collapse = ", "), " column")
+  }
+  for(col in setdiff(header, needed)) full_spec$cols[[col]] = readr::col_skip()
+  genes = if(is.null(genes)) NULL else as.character(genes)
+  sample_ids = if(is.null(sample_ids)) NULL else as.character(sample_ids)
+  keep_rows = function(chunk, pos){
+    if(!is.null(genes)) chunk = chunk[chunk$Hugo_Symbol %in% genes, , drop = FALSE]
+    if(!is.null(sample_ids)) chunk = chunk[chunk$Tumor_Sample_Barcode %in% sample_ids, , drop = FALSE]
+    chunk
+  }
+  maf_df = readr::read_tsv_chunked(file = maf_file_path,
+                                   callback = readr::DataFrameCallback$new(keep_rows),
+                                   chunk_size = chunk_size,
+                                   col_types = full_spec,
+                                   progress = FALSE)
+  if(is.null(maf_df)){
+    # no rows kept: an empty table with the kept columns and their types
+    maf_df = read_tsv(file = maf_file_path, col_types = full_spec, n_max = 0, progress = FALSE)
+  }
+  dplyr::select(maf_df, any_of(keep))
 }

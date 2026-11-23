@@ -93,9 +93,40 @@
   if(length(values) == 0){
     return(NA_real_)
   }
-  o = order(values, decreasing = from_top)
+  # base::order: BiocGenerics' S4 order() can mask it, and its dispatch is
+  # slow when this runs once per sample and feature
+  o = base::order(values, decreasing = from_top)
   cumulative = cumsum(lengths[o])
   values[o][which(cumulative >= fraction * sum(lengths))[1]]
+}
+
+# .weighted_region_value() for many groups at once (e.g. every sample and
+# feature), without a function call per group: rows are sorted once by group
+# and value (most extreme first in each group's direction, NA last, as
+# order() does), lengths accumulated within each group, and each group's value
+# is that of its first row reaching `fraction` of the group's total length.
+# `group` is an integer index (1..n); `fraction` and `from_top` are per row
+# and constant within a group. Returns one value per group index (NA for
+# groups without a row of positive length).
+.weighted_region_values = function(group, values, lengths, fraction, from_top){
+  out = rep(NA_real_, max(c(0L, group)))
+  lengths = as.numeric(lengths)
+  keep = !is.na(lengths) & lengths > 0
+  g = group[keep]
+  if(length(g) == 0) return(out)
+  v = values[keep]
+  key = ifelse(from_top[keep], -v, v)
+  o = base::order(g, key, na.last = TRUE)
+  g = g[o]; v = v[o]; l = lengths[keep][o]; fr = fraction[keep][o]
+  cs = cumsum(l)
+  first = match(g, g)
+  within = cs - c(0, cs)[first]
+  last = c(which(diff(g) != 0), length(g))
+  total = within[last][match(g, g[last])]
+  hit = which(within >= fr * total)
+  hit = hit[!duplicated(g[hit])]
+  out[g[hit]] = v[hit]
+  out
 }
 
 .validate_cnv_features = function(cnv_features){
@@ -503,27 +534,38 @@
     }
   }
 
-  # overlap of every segment with every feature on its chromosome
+  # overlap of every segment with every feature: an interval join, so only
+  # overlapping pairs are built (not every segment x feature pair on a
+  # chromosome); touching intervals are dropped by .overlap > 0, and rows keep
+  # the segment, then feature, order
+  # only the segment columns used downstream are carried into the (large)
+  # overlap table; .seg_row links back to segs for anything else
   overlaps = dplyr::inner_join(
-    dplyr::mutate(segs, .seg_row = dplyr::row_number()),
+    dplyr::mutate(segs, .seg_row = dplyr::row_number()) %>%
+      dplyr::select(ID, chrom, start, end, .value, .seg_row),
     dplyr::select(cnv_features, name, type, region_name, chrom,
                   f_start = start, f_end = end, direction, min_fraction,
-                  min_coverage, .background),
-    by = "chrom", relationship = "many-to-many"
+                  min_coverage, .background) %>%
+      dplyr::mutate(.feature_row = dplyr::row_number()),
+    by = dplyr::join_by(chrom, overlaps(start, end, f_start, f_end)),
+    relationship = "many-to-many"
   ) %>%
     dplyr::mutate(.overlap = pmin(end, f_end) - pmax(start, f_start)) %>%
-    dplyr::filter(.overlap > 0)
+    dplyr::filter(.overlap > 0) %>%
+    dplyr::arrange(.seg_row, .feature_row) %>%
+    dplyr::select(-.feature_row)
 
   overlaps$.event_value = overlaps$.value
   if(any(!is.na(cnv_features$.background))){
-    arm_levels = overlaps %>%
+    arm_rows = overlaps %>%
       dplyr::filter(type == "arm",
                     region_name %in% cnv_features$.background) %>%
       dplyr::distinct(ID, region_name, .seg_row, .keep_all = TRUE) %>%
-      dplyr::group_by(ID, .background = region_name) %>%
-      dplyr::summarise(.arm_level = .weighted_region_value(.value, .overlap,
-                                                           0.5, FALSE),
-                       .groups = "drop")
+      dplyr::group_by(ID, .background = region_name)
+    arm_levels = dplyr::summarise(arm_rows, .groups = "drop")
+    arm_levels$.arm_level = .weighted_region_values(dplyr::group_indices(arm_rows), arm_rows$.value,
+                                                    arm_rows$.overlap, rep(0.5, nrow(arm_rows)),
+                                                    rep(FALSE, nrow(arm_rows)))
     overlaps = dplyr::left_join(overlaps, arm_levels,
                                 by = c("ID", ".background")) %>%
       dplyr::mutate(
@@ -708,6 +750,11 @@
 #' ignored: those more than `single_thresh` above both neighbours, whose
 #' values agree, e.g. single-bin spikes. Losses are always kept. Default 1e5;
 #' 0 to keep every segment.
+#' @param chunk_size With more samples than this, the samples are called in
+#' blocks of this many and the results combined, which gives the same result
+#' (each sample's calls depend only on its own segments) while keeping memory
+#' to that of one block, e.g. for thousands of samples and many features.
+#' Default 500; NULL calls every sample at once.
 #' @param event_extent How the length of a change is measured for features
 #' with a `max_event_length` (see Details): "run" (default; the change's run
 #' of neighbouring segments at the call's level) or "segment" (each segment
@@ -765,7 +812,8 @@ segmented_data_to_cnv_status = function(seg_data,
                                         gene_rule = "fraction",
                                         homdel_max_cn = 0.5,
                                         bridge_gaps = 1e6,
-                                        min_gain_spike = 1e5){
+                                        min_gain_spike = 1e5,
+                                        chunk_size = 500){
   event_extent = match.arg(event_extent, c("run", "segment"))
   gene_rule = match.arg(gene_rule, c("fraction", "lymphgen"))
   if(!encoding %in% c("level", "binary", "value")){
@@ -788,6 +836,34 @@ segmented_data_to_cnv_status = function(seg_data,
   if(missing(genome_build)){
     genome_build = NULL
   }
+  # many samples: one call per block of samples, combined. Each sample's calls
+  # depend only on its own segments (centring, backgrounds and calls are per
+  # sample; the blacklist and features are the same for all), so the result is
+  # the same, while memory follows the block size rather than the cohort.
+  # Samples are returned sorted, so contiguous blocks of the sorted IDs combine
+  # in order.
+  sample_ids = sort(unique(as.character(
+    if(is.null(these_samples_metadata)) seg_data$ID else these_samples_metadata$sample_id)))
+  if(!is.null(chunk_size) && length(sample_ids) > chunk_size){
+    call_args = mget(setdiff(names(formals(sys.function())), "chunk_size"), envir = environment())
+    blocks = split(sample_ids, ceiling(seq_along(sample_ids) / chunk_size))
+    parts = lapply(blocks, function(ids){
+      a = call_args
+      a$seg_data = seg_data[as.character(seg_data$ID) %in% ids, , drop = FALSE]
+      if(!is.null(these_samples_metadata)){
+        a$these_samples_metadata = these_samples_metadata[as.character(these_samples_metadata$sample_id) %in% ids, , drop = FALSE]
+      }
+      a$chunk_size = NULL
+      do.call(segmented_data_to_cnv_status, a)
+    })
+    if(output_format == "gsm"){
+      out = do.call(cbind, unname(c(parts[1], lapply(parts[-1], function(p) p[, -1, drop = FALSE]))))
+    }else{
+      out = do.call(rbind, unname(parts))
+      if(output_format == "long") rownames(out) = NULL
+    }
+    return(out)
+  }
   thresholds = .resolve_cnv_thresholds(value_scale, single_thresh, high_thresh)
   single_thresh = thresholds[["single"]]
   high_thresh = thresholds[["high"]]
@@ -808,16 +884,15 @@ segmented_data_to_cnv_status = function(seg_data,
 
   centres = prepared$segs$.centre[match(unique(prepared$segs$ID), prepared$segs$ID)]
   names(centres) = unique(prepared$segs$ID)
-  calls = prepared$overlaps %>%
-    dplyr::group_by(ID, name, direction, f_start, f_end,
-                    min_fraction, min_coverage) %>%
-    dplyr::summarise(
-      .covered = sum(.overlap),
-      .event_value = .weighted_region_value(.event_value, .overlap,
-                                            min_fraction[1],
-                                            direction[1] == "gain"),
-      .groups = "drop"
-    ) %>%
+  grouped = dplyr::group_by(prepared$overlaps, ID, name, direction, f_start, f_end,
+                            min_fraction, min_coverage)
+  calls = dplyr::summarise(grouped, .covered = sum(.overlap), .groups = "drop")
+  # every sample x feature's value in one pass (see .weighted_region_values)
+  calls$.event_value = .weighted_region_values(dplyr::group_indices(grouped), grouped$.event_value,
+                                               grouped$.overlap, grouped$min_fraction,
+                                               grouped$direction == "gain")
+  rm(grouped)
+  calls = calls %>%
     dplyr::mutate(
       .event_value = ifelse(.covered < min_coverage * (f_end - f_start),
                             NA_real_, .event_value),

@@ -26,7 +26,8 @@ segmented_data_to_cnv_status(
   gene_rule = "fraction",
   homdel_max_cn = 0.5,
   bridge_gaps = 1e+06,
-  min_gain_spike = 1e+05
+  min_gain_spike = 1e+05,
+  chunk_size = 500
 )
 }
 \arguments{
@@ -146,6 +147,12 @@ capture targets) can be assessed. Default 1e6; 0 to leave gaps.}
 ignored: those more than \code{single_thresh} above both neighbours, whose
 values agree, e.g. single-bin spikes. Losses are always kept. Default 1e5;
 0 to keep every segment.}
+
+\item{chunk_size}{With more samples than this, the samples are called in
+blocks of this many and the results combined, which gives the same result
+(each sample's calls depend only on its own segments) while keeping memory
+to that of one block, e.g. for thousands of samples and many features.
+Default 500; NULL calls every sample at once.}
 }
 \value{
 A data frame in the requested format. The "long" format is sorted
