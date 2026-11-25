@@ -73,10 +73,12 @@ ones. Default NULL uses \code{unannotated_maf} for both.}
 e.g. \code{c("Silent", "5'UTR")} for LymphGen's Synon features. Default
 NULL counts every non-coding class (anything not in
 \code{GAMBLR.helpers::vc_nonSynonymous}). Applied before
-\code{noncoding_window}. Genes in \code{genes_hotspot}, \code{genes_driver}
-or \code{gene_reporting_policy} keep all their non-coding mutations, so
-curated non-coding regions (e.g. \code{NFKBIZ_UTR}, a 3' UTR region) can
-still be annotated.}
+\code{noncoding_window}. Non-coding mutations of other classes are kept
+only when they fall in a curated region of a gene in \code{genes_hotspot},
+\code{genes_driver} or \code{gene_reporting_policy} (e.g.
+\code{NFKBIZ_UTR}, a 3' UTR region), so those regions can still be
+annotated; the genes' other non-coding mutations (e.g. introns) follow
+\code{noncoding_classes} like any gene's.}
 
 \item{genes_hotspot}{Character vector of genes with hotspot annotations (default: MYD88).}
 

@@ -42,10 +42,12 @@
 #' e.g. \code{c("Silent", "5'UTR")} for LymphGen's Synon features. Default
 #' NULL counts every non-coding class (anything not in
 #' \code{GAMBLR.helpers::vc_nonSynonymous}). Applied before
-#' \code{noncoding_window}. Genes in \code{genes_hotspot}, \code{genes_driver}
-#' or \code{gene_reporting_policy} keep all their non-coding mutations, so
-#' curated non-coding regions (e.g. \code{NFKBIZ_UTR}, a 3' UTR region) can
-#' still be annotated.
+#' \code{noncoding_window}. Non-coding mutations of other classes are kept
+#' only when they fall in a curated region of a gene in \code{genes_hotspot},
+#' \code{genes_driver} or \code{gene_reporting_policy} (e.g.
+#' \code{NFKBIZ_UTR}, a 3' UTR region), so those regions can still be
+#' annotated; the genes' other non-coding mutations (e.g. introns) follow
+#' \code{noncoding_classes} like any gene's.
 #' @param genes_hotspot Character vector of genes with hotspot annotations (default: MYD88).
 #' @param genes_driver Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).
 #' @param gene_reporting_policy Optional named list of per-gene column output,
@@ -314,16 +316,25 @@ assemble_genetic_features <- function(unannotated_maf,
     noncoding_rows = noncoding_source[!noncoding_source$Variant_Classification %in%
                                         GAMBLR.helpers::vc_nonSynonymous, , drop = FALSE]
     if(!is.null(noncoding_classes)){
-      # only these classes count as non-coding mutations, except for genes
-      # annotated with curated regions, whose non-coding regions (e.g.
-      # NFKBIZ_UTR, a 3' UTR region) must stay available for annotation
+      # only these classes count as non-coding mutations, except mutations
+      # in a curated region of a curated gene (e.g. NFKBIZ_UTR, a 3' UTR
+      # region), which must stay available for annotation. Other non-coding
+      # mutations in those genes (e.g. SGK1 introns) follow noncoding_classes.
+      keep = noncoding_rows$Variant_Classification %in% noncoding_classes
       curated_genes = unique(c(genes_hotspot, genes_driver, policy_genes))
-      keep = noncoding_rows$Variant_Classification %in% noncoding_classes |
-        noncoding_rows$Hugo_Symbol %in% curated_genes
+      in_curated = which(!keep & noncoding_rows$Hugo_Symbol %in% curated_genes)
+      if(length(in_curated) > 0){
+        candidates = noncoding_rows[in_curated, , drop = FALSE]
+        candidates$.row = in_curated
+        annotated = as.data.frame(annotate_curated_drivers(maf_data = candidates,
+                                                           genes_of_interest = curated_genes,
+                                                           genome_build = genome_build))
+        keep[annotated$.row[grepl("_driver$", annotated$driver_alias)]] = TRUE
+      }
       if(verbose){
         message("noncoding_classes: kept ", sum(keep), " of ", nrow(noncoding_rows),
                 " non-coding mutations (", paste(noncoding_classes, collapse = ", "),
-                ", plus any in curated-region genes)")
+                ", plus any in curated non-coding regions)")
       }
       noncoding_rows = noncoding_rows[keep, , drop = FALSE]
     }

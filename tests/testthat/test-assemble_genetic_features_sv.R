@@ -159,6 +159,32 @@ test_that("noncoding_classes restricts which non-coding mutations count", {
   expect_error(run("Missense_Mutation"), "coding classes")
 })
 
+test_that("noncoding_classes keeps curated non-coding regions but not curated genes' other non-coding mutations", {
+  # s1: NFKBIZ 3' UTR in the curated NFKBIZ_UTR region; s2: SGK1 intron (SGK1 a driver gene);
+  # s3: SGK1 5' UTR (a listed class); s4: SGK1 missense, so every sample has a row
+  maf = data.frame(Hugo_Symbol = c("NFKBIZ", "SGK1", "SGK1", "SGK1"),
+                   Tumor_Sample_Barcode = c("s1", "s2", "s3", "s4"),
+                   Chromosome = c("3", "6", "6", "6"),
+                   Start_Position = c(101578300, 134493000, 134495000, 134494000),
+                   End_Position = c(101578300, 134493000, 134495000, 134494000),
+                   Variant_Classification = c("3'UTR", "Intron", "5'UTR", "Missense_Mutation"),
+                   HGVSp_Short = c(NA, NA, NA, "p.A100T"),
+                   Reference_Allele = "A", Tumor_Seq_Allele2 = "G", Variant_Type = "SNP")
+  out = suppressWarnings(suppressMessages(assemble_genetic_features(
+    maf, genes_coding = c("NFKBIZ", "SGK1"), genes_noncoding = c("NFKBIZ", "SGK1"),
+    genes_hotspot = character(0), genes_driver = c("NFKBIZ", "SGK1"),
+    noncoding_classes = c("Silent", "5'UTR"), sv_from_metadata = NULL,
+    these_samples_metadata = data.frame(sample_id = c("s1", "s2", "s3", "s4")), return_everything = TRUE)))
+  fs = out$full_status
+  value = function(sample, col) if(col %in% colnames(fs)) fs[sample, col] else 0
+  # the 3' UTR mutation in the curated NFKBIZ_UTR region is kept although 3'UTR isn't a listed class
+  expect_gt(value("s1", "NFKBIZ_noncoding"), 0)
+  # the SGK1 intron is outside noncoding_classes and outside SGK1's curated region: not counted
+  expect_equal(value("s2", "SGK1_noncoding"), 0)
+  # a listed class still counts
+  expect_gt(value("s3", "SGK1_noncoding"), 0)
+})
+
 test_that("one get_ssm_by_genes MAF, or a coding MAF plus noncoding_maf, give the same result", {
   skip_if_not_installed("GAMBLR.open")
   skip_if_not("get_ssm_by_genes" %in% getNamespaceExports("GAMBLR.open"),
