@@ -68,6 +68,14 @@ annotations but where you do not want alias-level resolution.}
 per-alias columns, \code{GENE_driver}/\code{GENE_other}, and
 \code{GENE_any}. If the gene is also in \code{genes_noncoding},
 \code{GENE_noncoding} is included in \code{GENE_any}.}
+\item{\code{truncating}}{Produce \code{GENE_trunc} (truncating
+mutations: those matching the gene's curated \code{GENE_trunc} alias,
+which can include splice-region or start-loss changes, plus any
+\code{vc_truncating} class) and \code{GENE_nontrunc} (every other
+coding mutation: missense, in-frame and the rest), each encoded with
+\code{encoding_policy$coding}. No \code{GENE_coding}, driver or
+hotspot columns are made for these genes. Works for any gene, with or
+without curated aliases.}
 }
 A gene may appear under only one key. Default \code{NULL} (all genes use
 the default driver/coding behaviour).}

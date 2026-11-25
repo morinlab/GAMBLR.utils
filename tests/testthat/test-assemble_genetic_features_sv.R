@@ -249,3 +249,31 @@ test_that("seg_data adds copy number columns; unassessed_value marks missing dat
     these_samples_metadata = meta, seg_data = segs, unassessed_value = NA)))
   expect_true(all(is.na(na2[meta$sample_id[3], intersect(c("EZH2", "CREBBP", "KMT2D"), colnames(na2))])))
 })
+
+test_that("the truncating policy splits a gene into _trunc and _nontrunc", {
+  # TET2: s1 nonsense, s2 frameshift, s3 missense, s4 in-frame deletion, s5 splice region (not a coding class, so
+  # in neither column), s6 missense + nonsense; KMT2D (no policy) in s1
+  maf = data.frame(Hugo_Symbol = c("TET2", "TET2", "TET2", "TET2", "TET2", "TET2", "TET2", "KMT2D"),
+                   Tumor_Sample_Barcode = c("s1", "s2", "s3", "s4", "s5", "s6", "s6", "s1"),
+                   Chromosome = c(rep("4", 7), "12"),
+                   Start_Position = c(106155100, 106156200, 106157300, 106158400, 106164000, 106180000, 106182000, 49420000),
+                   End_Position = c(106155100, 106156201, 106157300, 106158402, 106164000, 106180000, 106182000, 49420000),
+                   Variant_Classification = c("Nonsense_Mutation", "Frame_Shift_Del", "Missense_Mutation", "In_Frame_Del",
+                                              "Splice_Region", "Missense_Mutation", "Nonsense_Mutation", "Missense_Mutation"),
+                   HGVSp_Short = c("p.Q100*", "p.K200fs", "p.A300T", "p.E400del", NA, "p.S500L", "p.Q600*", "p.A10T"),
+                   Reference_Allele = "A", Tumor_Seq_Allele2 = "G", Variant_Type = "SNP")
+  ids = paste0("s", 1:7)   # s7 has no mutation
+  out = suppressWarnings(suppressMessages(assemble_genetic_features(
+    maf, genes_coding = c("TET2", "KMT2D"), genes_noncoding = NULL, genes_hotspot = character(0), genes_driver = character(0),
+    gene_reporting_policy = list(truncating = "TET2"), sv_from_metadata = NULL,
+    these_samples_metadata = data.frame(sample_id = ids))))
+  expect_true(all(c("TET2_trunc", "TET2_nontrunc") %in% colnames(out)))
+  expect_false(any(c("TET2", "TET2_coding", "TET2_other", "TET2_driver") %in% colnames(out)))
+  expect_equal(unname(out[ids, "TET2_trunc"]), c(2, 2, 0, 0, 0, 2, 0))
+  expect_equal(unname(out[ids, "TET2_nontrunc"]), c(0, 0, 2, 2, 0, 2, 0))
+  # other genes are unaffected
+  expect_equal(unname(out[ids, "KMT2D"]), c(2, 0, 0, 0, 0, 0, 0))
+  # a gene can't be under truncating and another policy
+  expect_error(summarise_mutation_status(maf, genes_coding = "TET2", gene_reporting_policy = list(truncating = "TET2", detailed = "TET2")),
+               "truncating and another policy")
+})

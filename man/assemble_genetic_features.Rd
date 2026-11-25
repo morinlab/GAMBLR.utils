@@ -88,8 +88,10 @@ annotated; the genes' other non-coding mutations (e.g. introns) follow
 passed to \code{\link{summarise_mutation_status}}. For example
 \code{list(detailed = "CREBBP")} gives one column per mutation alias
 (\code{CREBBP_KAT}, \code{CREBBP_trunc}) plus \code{CREBBP_other} for
-mutations matching no alias. Genes under \code{detailed} or \code{maximal}
-keep these columns (they are not collapsed into one gene column; a
+mutations matching no alias. \code{list(truncating = "TET2")} gives
+\code{TET2_trunc} and \code{TET2_nontrunc} (see
+\code{\link{summarise_mutation_status}}). Genes under \code{detailed},
+\code{maximal} or \code{truncating} keep these columns (they are not collapsed into one gene column; a
 \code{GENE_noncoding} column, if any, stays separate). A gene can't be both
 under a policy and in \code{genes_hotspot} or \code{genes_driver}.}
 
