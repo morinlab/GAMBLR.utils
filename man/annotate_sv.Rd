@@ -48,8 +48,8 @@ Annotate a data frame of SV breakpoints represented in an extended BEDPE format.
 }
 \details{
 Specify a data frame with SVs (preferably the output from \code{GAMBLR.results::get_manta_sv}
-if the user has GSC-restricted access, or \code{GAMBLR.data::sample_data$grch37$bedpe} or
-\code{GAMBLR.data::sample_data$hg38$bedpe} otherwise) to the \code{sv_df} parameter and get back the same
+if the user has GSC-restricted access, or \code{GAMBLR.open::get_manta_sv} otherwise, which reads the
+bundled SV calls) to the \code{sv_df} parameter and get back the same
 data frame with SV annotations. Alternatively, you can also provide your own data frame to the
 \code{sv_data} argument, which should contain the following columns: CHROM_A, START_A, END_A, CHROM_B,
 START_B, END_B, NAME, SOMATIC_SCORE, STRAND_A, STRAND_B, TYPE, FILTER, VAF_tumour, VAF_normal,
