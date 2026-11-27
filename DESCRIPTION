@@ -33,6 +33,7 @@ Imports:
     Rsamtools,
     rtracklayer,
     stringr,
+    survival,
     S4Vectors,
     tibble,
     tidyr
