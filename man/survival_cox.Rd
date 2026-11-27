@@ -29,8 +29,9 @@ categorical covariates, e.g. \code{list(COO_consensus = "GCB")}.}
 }
 \value{
 A list with \code{coefficients} (a data frame: term, hr, hr_lower,
-hr_upper, p, ph_p), \code{n}, \code{events}, \code{ph_global_p}, \code{stratified_by} and
-\code{n_dropped}.
+hr_upper, p, ph_p), \code{n}, \code{events}, \code{ph_global_p}, \code{stratified_by},
+\code{n_dropped} and \code{warnings} (messages from fitting, e.g. a coefficient
+that may be infinite because a group has no events).
 }
 \description{
 Fit a Cox model and return hazard ratios with 95\% confidence

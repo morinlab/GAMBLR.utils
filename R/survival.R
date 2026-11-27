@@ -106,8 +106,9 @@ summarize_survival = function(data, time_col = "OS_YEARS", event_col = "CODE_OS"
 #'   categorical covariates, e.g. `list(COO_consensus = "GCB")`.
 #'
 #' @return A list with `coefficients` (a data frame: term, hr, hr_lower,
-#'   hr_upper, p, ph_p), `n`, `events`, `ph_global_p`, `stratified_by` and
-#'   `n_dropped`.
+#'   hr_upper, p, ph_p), `n`, `events`, `ph_global_p`, `stratified_by`,
+#'   `n_dropped` and `warnings` (messages from fitting, e.g. a coefficient
+#'   that may be infinite because a group has no events).
 #'
 #' @export
 #'
@@ -136,7 +137,12 @@ survival_cox = function(data, time_col = "OS_YEARS", event_col = "CODE_OS", cova
   rhs = paste(sprintf("`%s`", covariates), collapse = " + ")
   if(!is.null(strata_col)) rhs = paste0(rhs, " + strata(`", strata_col, "`)")
   f = stats::as.formula(paste0("survival::Surv(`", time_col, "`, `", event_col, "`) ~ ", rhs))
-  fit = survival::coxph(f, data = d)
+  # keep fitting warnings (e.g. a coefficient that may be infinite, from a group with no events) for the caller
+  fit_warnings = character(0)
+  fit = withCallingHandlers(survival::coxph(f, data = d), warning = function(w){
+    fit_warnings <<- c(fit_warnings, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
   s = summary(fit)
   ci = s$conf.int
   coefs = data.frame(term = rownames(ci), hr = ci[, "exp(coef)"], hr_lower = ci[, "lower .95"],
@@ -156,7 +162,7 @@ survival_cox = function(data, time_col = "OS_YEARS", event_col = "CODE_OS", cova
   coefs$term = gsub("`", "", coefs$term)
   rownames(coefs) = NULL
   list(coefficients = coefs, n = fit$n, events = fit$nevent, ph_global_p = ph_global,
-       stratified_by = strata_col, n_dropped = n_dropped)
+       stratified_by = strata_col, n_dropped = n_dropped, warnings = unique(fit_warnings))
 }
 
 #' @title Table 1: patient characteristics
@@ -218,6 +224,20 @@ table_one = function(data, variables, group_col = NULL, test = TRUE){
     }else{
       x = as.character(x)
       levels_v = sort(unique(stats::na.omit(x)))
+      if(length(levels_v) == 0){
+        # no values at all: only the missing row below
+        rows = data.frame(variable = character(0), level = character(0), overall = character(0),
+                          stringsAsFactors = FALSE)
+        for(g in groups) rows[[g]] = character(0)
+        p = NA_real_
+        n_missing = sum(is.na(x))
+        miss = data.frame(variable = v, level = "(missing)", overall = as.character(n_missing), stringsAsFactors = FALSE)
+        for(g in groups) miss[[g]] = as.character(sum(is.na(sub(g))))
+        rows = miss
+        if(length(groups) > 0) rows$p = NA_real_
+        out[[length(out) + 1]] = rows
+        next
+      }
       rows = data.frame(variable = v, level = levels_v,
                         overall = vapply(levels_v, function(l) pct(sum(x %in% l), sum(!is.na(x))), ""),
                         stringsAsFactors = FALSE)

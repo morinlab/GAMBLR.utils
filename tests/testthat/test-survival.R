@@ -62,3 +62,12 @@ test_that("table_one counts categorical and numeric variables, with missing and 
   expect_false(is.na(t1$p[t1$variable == "ecog" & t1$level == "0"]))
   expect_false("p" %in% colnames(table_one(d, "age")))
 })
+
+test_that("table_one copes with a variable that has no values", {
+  d = data.frame(a = c("x", "y", "x"), empty = NA_character_, g = c("1", "2", "1"))
+  t1 = table_one(d, c("a", "empty"), group_col = "g")
+  expect_equal(t1$level[t1$variable == "empty"], "(missing)")
+  expect_equal(t1$overall[t1$variable == "empty"], "3")
+  expect_equal(nrow(table_one(d, "empty")), 2)
+})
+
