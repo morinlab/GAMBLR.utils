@@ -31,7 +31,7 @@ hotspot_regions_hg38 = mutate(hotspot_regions_hg38,
                               end=ifelse(fake_e,300000000,end),
                               start=ifelse(fake_s,1,start))
 
-hotspot_regions_hg38 = select(hotspot_regions_hg38,all_of(col_ord))
+hotspot_regions_hg38 = select(hotspot_regions_hg38,all_of(dcol_ord))
 
 #lost during liftover due to fake start-end
 missing_hg38 = filter(hotspot_regions_grch37,

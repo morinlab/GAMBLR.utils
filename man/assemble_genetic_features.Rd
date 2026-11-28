@@ -10,6 +10,7 @@ assemble_genetic_features(
   genes_noncoding,
   noncoding_window = NULL,
   noncoding_maf = NULL,
+  noncoding_classes = NULL,
   genes_hotspot = c("MYD88"),
   genes_driver = c("CD79B", "EZH2", "NOTCH1", "NOTCH2"),
   gene_reporting_policy = NULL,
@@ -67,6 +68,18 @@ instead of \code{unannotated_maf}, e.g. \code{get_ssm_by_genes} for
 coding mutations are ignored, as are \code{unannotated_maf}'s non-coding
 ones. Default NULL uses \code{unannotated_maf} for both.}
 
+\item{noncoding_classes}{Optional character vector of
+\code{Variant_Classification} values that count as non-coding mutations,
+e.g. \code{c("Silent", "5'UTR")} for LymphGen's Synon features. Default
+NULL counts every non-coding class (anything not in
+\code{GAMBLR.helpers::vc_nonSynonymous}). Applied before
+\code{noncoding_window}. Non-coding mutations of other classes are kept
+only when they fall in a curated region of a gene in \code{genes_hotspot},
+\code{genes_driver} or \code{gene_reporting_policy} (e.g.
+\code{NFKBIZ_UTR}, a 3' UTR region), so those regions can still be
+annotated; the genes' other non-coding mutations (e.g. introns) follow
+\code{noncoding_classes} like any gene's.}
+
 \item{genes_hotspot}{Character vector of genes with hotspot annotations (default: MYD88).}
 
 \item{genes_driver}{Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).}
@@ -75,8 +88,10 @@ ones. Default NULL uses \code{unannotated_maf} for both.}
 passed to \code{\link{summarise_mutation_status}}. For example
 \code{list(detailed = "CREBBP")} gives one column per mutation alias
 (\code{CREBBP_KAT}, \code{CREBBP_trunc}) plus \code{CREBBP_other} for
-mutations matching no alias. Genes under \code{detailed} or \code{maximal}
-keep these columns (they are not collapsed into one gene column; a
+mutations matching no alias. \code{list(truncating = "TET2")} gives
+\code{TET2_trunc} and \code{TET2_nontrunc} (see
+\code{\link{summarise_mutation_status}}). Genes under \code{detailed},
+\code{maximal} or \code{truncating} keep these columns (they are not collapsed into one gene column; a
 \code{GENE_noncoding} column, if any, stays separate). A gene can't be both
 under a policy and in \code{genes_hotspot} or \code{genes_driver}.}
 

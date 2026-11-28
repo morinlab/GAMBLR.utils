@@ -100,3 +100,80 @@ test_that("a change at another level ends the extent", {
                                      value_scale = "CN", centering = "none")
   expect_equal(out$CDKN2A_gain, 1)
 })
+
+test_that("gene_rule lymphgen calls one state per gene, as LymphGen's training data", {
+  # a 1 Mb gene on chromosome 9 (9:30-31 Mb) with a loss and a gain feature
+  gene_loss = gene_feature("G_loss", "9", 30e6, 31e6)
+  gene_gain = gene_feature("G_gain", "9", 30e6, 31e6)
+  gene_gain$direction = "gain"
+  features = rbind(gene_loss, gene_gain)
+  segs = rbind(
+    # a short loss inside a gain covering most of the gene: a gain only
+    chrom9("loss_in_gain", list(c(25e6, 30.4e6, 3), c(30.4e6, 30.5e6, 1), c(30.5e6, 35e6, 3))),
+    # a tiny homozygous deletion inside the gain: HOMDEL beats GAIN, however small
+    chrom9("homdel_in_gain", list(c(25e6, 30.4e6, 3), c(30.4e6, 30.41e6, 0), c(30.41e6, 35e6, 3))),
+    # a loss over most of the gene, a gain over the rest: the loss
+    chrom9("mostly_loss", list(c(20e6, 30.8e6, 1), c(30.8e6, 35e6, 3))),
+    # two adjacent 20 Mb losses (different values): each is judged on its own length
+    chrom9("adjacent_losses", list(c(11e6, 30.5e6, 1.1), c(30.5e6, 50e6, 0.9))),
+    # a 35 Mb loss is too long, even at level 2 inside it
+    chrom9("long_loss", list(c(0, 35e6, 1)))
+  )
+  call = function(rule) segmented_data_to_cnv_status(segs, cnv_features = features, genome_build = "grch37",
+                                                     value_scale = "CN", centering = "none", gene_rule = rule,
+                                                     bridge_gaps = 0, min_gain_spike = 0)
+  lg = call("lymphgen")
+  expect_equal(lg["loss_in_gain", "G_loss"], 0)
+  expect_equal(lg["loss_in_gain", "G_gain"], 1)
+  expect_equal(lg["homdel_in_gain", "G_loss"], 2)
+  expect_equal(lg["homdel_in_gain", "G_gain"], 0)
+  expect_equal(lg["mostly_loss", "G_loss"], 1)
+  expect_equal(lg["mostly_loss", "G_gain"], 0)
+  expect_equal(lg["adjacent_losses", "G_loss"], 1)
+  expect_equal(lg["long_loss", "G_loss"], 0)
+  # the default rule calls both directions where both are present, and
+  # measures the run of adjacent losses together (39 Mb, too long)
+  # long output: the deciding segment's change, and why
+  long = function(enc) segmented_data_to_cnv_status(segs, cnv_features = features, genome_build = "grch37",
+                                                    value_scale = "CN", centering = "none", gene_rule = "lymphgen",
+                                                    bridge_gaps = 0, min_gain_spike = 0, output_format = "long",
+                                                    encoding = enc)
+  v = long("value"); key = paste(v$sample_id, v$name)
+  status = stats::setNames(v$rule_status, key); value = stats::setNames(v$value, key)
+  expect_equal(status[["loss_in_gain G_loss"]], "outweighed by opposite change")
+  expect_equal(value[["loss_in_gain G_loss"]], 1)
+  expect_equal(status[["loss_in_gain G_gain"]], "called")
+  expect_equal(status[["homdel_in_gain G_loss"]], "called")
+  expect_equal(value[["homdel_in_gain G_loss"]], -2)
+  expect_equal(status[["long_loss G_loss"]], "event too long")
+  expect_equal(status[["long_loss G_gain"]], "below threshold")
+  expect_equal(long("level")$rule_status, v$rule_status)
+  fr = call("fraction")
+  expect_equal(fr["loss_in_gain", "G_loss"], 1)
+  expect_equal(fr["adjacent_losses", "G_loss"], 0)
+})
+
+test_that("cnv_calling_settings gives LymphGen its gene rule on arrays, run lengths on sequencing", {
+  st = cnv_calling_settings(c("gatk_cnv", "battenberg"), feature_set = "LymphGen")
+  expect_equal(st$gene_rule, rep("fraction", 2))
+  expect_equal(cnv_calling_settings("schmitz_array", feature_set = "LymphGen")$gene_rule, "lymphgen")
+  expect_equal(cnv_calling_settings("gatk_cnv", "LymphGen", list(gene_rule = "lymphgen"))$gene_rule, "lymphgen")
+  expect_equal(st$value_scale, c("log_ratio", "CN"))
+  expect_equal(st$centering, c("median", "mode"))
+  expect_equal(cnv_calling_settings("gatk_cnv")$gene_rule, "fraction")
+  expect_equal(cnv_calling_settings("gatk_cnv", "LymphGen", list(gene_rule = "fraction"))$gene_rule, "fraction")
+  # level 2 relative to the baseline for LymphGen (NA), absolute otherwise
+  expect_true(all(is.na(st$homdel_max_cn)))
+  expect_equal(cnv_calling_settings("battenberg")$homdel_max_cn, 0.5)
+  expect_true(is.na(cnv_calling_settings("battenberg", cnv_args = list(homdel_max_cn = NULL))$homdel_max_cn))
+})
+
+test_that("homdel_max_cn NA judges level 2 relative to the baseline, as NULL", {
+  # a tetraploid sample: 4 copies genome-wide, 2 over the gene
+  segs = data.frame(ID = "tetraploid", chrom = "9", start = c(0, 21e6, 23e6), end = c(21e6, 23e6, 141213431), CN = c(4, 2, 4))
+  call = function(h) segmented_data_to_cnv_status(segs, cnv_features = cdkn2a, genome_build = "grch37", value_scale = "CN",
+                                                  centering = "mode", homdel_max_cn = h)[["CDKN2A_loss"]]
+  expect_equal(call(0.5), 1)
+  expect_equal(call(NULL), 2)
+  expect_equal(call(NA), 2)
+})

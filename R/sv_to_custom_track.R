@@ -20,7 +20,7 @@
 #' @examples
 #' \dontrun{
 #' #custom track with annotations
-#' all_sv = GAMBLR.data::sample_data$grch37$bedpe
+#' all_sv = GAMBLR.open::get_manta_sv(projection = "grch37")
 #' annotated_sv = annotate_sv(sv_data = all_sv)
 #' sv_to_custom_track(annotated_sv,
 #'                    output_file = "GAMBL_sv_custom_track_annotated.bed",

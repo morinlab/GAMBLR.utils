@@ -8,7 +8,9 @@ tidy_lymphgen(
   df,
   lymphgen_column_in = "Subtype.Prediction",
   lymphgen_column_out = "Subtype.Prediction",
-  relevel = FALSE
+  relevel = FALSE,
+  composite_rule = "precedence",
+  confidence_columns = NULL
 )
 }
 \arguments{
@@ -19,6 +21,16 @@ tidy_lymphgen(
 \item{lymphgen_column_out}{The name of the column to write the tidied results (optional).}
 
 \item{relevel}{If TRUE, will return the output column as a factor with plot-friendly levels.}
+
+\item{composite_rule}{How the parent class of a composite is chosen:
+"precedence" (default; EZB > MCD > N1 > BN2 > ST2) or "confidence" (the
+member class with the highest confidence; see details).}
+
+\item{confidence_columns}{With \code{composite_rule = "confidence"}: optional
+named list giving, for each class (BN2, EZB, MCD, N1, ST2), the column(s)
+of \code{df} holding its confidence. Default NULL: found from the column names
+\verb{Confidence.<class>}, \verb{NoCN.Confidence.<class>} (LymphGen output, GAMBL-U
+union), \verb{CN_conf_<class>} and \verb{noCN_conf_<class>}.}
 }
 \value{
 A data frame with a tidied lymphGen column
@@ -32,6 +44,20 @@ Specify the column with the lymphgen data to be processed with \code{lymphgen_co
 what column to write the tidied data to with \code{lymphgen_column_out}.
 In addition, the user can also run this function with \code{relevel = TRUE} (default is FALSE),
 to return the output column as a factor with plot friendly levels.
+
+Composite calls (e.g. "EZB/ST2") are labelled "X-COMP" after one of their
+classes. By default (\code{composite_rule = "precedence"}) that class follows a
+fixed order, EZB > MCD > N1 > BN2 > ST2, so ST2 is the parent only when no
+other class is present (e.g. "ST2/A53"). With \code{composite_rule = "confidence"}
+the parent is the member class with the highest LymphGen confidence. A53 is
+never the parent.
+
+For models that report confidences from more than one pass (GAMBL-U's
+union of a copy-number and a no-copy-number pass: \verb{Confidence.<class>} and
+\verb{NoCN.Confidence.<class>}), a class's confidence is the highest across its
+columns, i.e. its strongest support from either pass. Ties go to the
+precedence order. Composites with no confidence for any of their classes
+keep the precedence label (with a message).
 }
 \examples{
 metadata = GAMBLR.open::get_gambl_metadata()
@@ -39,5 +65,13 @@ lymphgen = tidy_lymphgen(df = metadata,
                          lymphgen_column_in = "lymphgen_with_cnv",
                          lymphgen_column_out = "lymphgen_with_cnv_tidy",
                          relevel = TRUE)
+
+# parent class of composites by confidence
+calls = data.frame(Subtype.Prediction = c("EZB/ST2", "BN2/ST2", "MCD"),
+                   Confidence.EZB = c(0.55, 0.02, 0.01),
+                   Confidence.ST2 = c(0.91, 0.62, 0.00),
+                   Confidence.BN2 = c(0.01, 0.95, 0.03),
+                   Confidence.MCD = c(0.00, 0.01, 0.98))
+tidy_lymphgen(calls, composite_rule = "confidence")
 
 }

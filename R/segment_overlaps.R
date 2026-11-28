@@ -218,12 +218,14 @@ resolve_segment_overlaps = function(seg_data, method = "trim", by = NULL,
 #' "resolve": clean up with [resolve_segment_overlaps] (method "trim");
 #' "none": skip the check.
 #' @param by Columns identifying one profile (see [check_segment_overlaps]).
+#' @param list_samples Name (up to 10 of) the samples in the message. Default
+#' TRUE.
 #'
 #' @return `seg_data`, cleaned up with `action = "resolve"`.
 #'
 #' @export
 #' @keywords internal
-handle_segment_overlaps = function(seg_data, action = "warn", by = NULL){
+handle_segment_overlaps = function(seg_data, action = "warn", by = NULL, list_samples = TRUE){
   action = match.arg(action, c("warn", "error", "resolve", "none"))
   if(action == "none" || is.null(seg_data) || nrow(seg_data) == 0){
     return(seg_data)
@@ -234,10 +236,10 @@ handle_segment_overlaps = function(seg_data, action = "warn", by = NULL){
   ov = check_segment_overlaps(seg_data, by = by)
   if(nrow(ov) > 0){
     ids = unique(ov$ID)
+    listed = if(list_samples) paste0(": ", paste(utils::head(ids, 10), collapse = ", "),
+                                     if(length(ids) > 10) ", ..." else "") else ""
     text = paste0(nrow(ov), " overlapping segment(s) in ", length(ids),
-                  " sample(s) (", sum(ov$duplicate_row), " duplicate rows): ",
-                  paste(utils::head(ids, 10), collapse = ", "),
-                  if(length(ids) > 10) ", ..." else "",
+                  " sample(s) (", sum(ov$duplicate_row), " duplicate rows)", listed,
                   ". Segments of a sample should not overlap; see ",
                   "check_segment_overlaps() and resolve_segment_overlaps().")
     if(action == "error") stop(text, call. = FALSE)

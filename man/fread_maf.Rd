@@ -4,7 +4,14 @@
 \alias{fread_maf}
 \title{Fread MAF.}
 \usage{
-fread_maf(maf_file_path, select_cols, return_cols = FALSE)
+fread_maf(
+  maf_file_path,
+  select_cols,
+  return_cols = FALSE,
+  genes = NULL,
+  sample_ids = NULL,
+  chunk_size = 5e+05
+)
 }
 \arguments{
 \item{maf_file_path}{Path to maf that is about to be read.}
@@ -12,6 +19,16 @@ fread_maf(maf_file_path, select_cols, return_cols = FALSE)
 \item{select_cols}{Optional parameter for specifying what columns are to be returned. If not specified, all columns will be kept.}
 
 \item{return_cols}{Optional parameter for returning the names of all available MAF columns. If set to TRUE a character vector of column names will be returned, and no MAF will be read. Default is FALSE.}
+
+\item{genes}{Optional gene symbols: keep only rows whose Hugo_Symbol is one
+of these. Applied while the file is read, so rows of other genes never
+reach memory.}
+
+\item{sample_ids}{Optional sample IDs: keep only rows whose
+Tumor_Sample_Barcode is one of these. Applied while the file is read.}
+
+\item{chunk_size}{Rows read at a time when \code{genes} or \code{sample_ids} is
+given. Default 500000.}
 }
 \value{
 A data frame containing MAF data from a MAF file.
@@ -24,6 +41,14 @@ This function lets the user specify a path to a MAF file on disk, this function 
 The user has the option to keep specific columns from the incoming MAF file (default is to keep all columns).
 To return all available columns, set \code{return_cols = TRUE}. For specifying columns of interest, refer to the \code{select_cols} parameter.
 For more information, refer to the parameter descriptions as well as function examples.
+
+With \code{genes} and/or \code{sample_ids}, the file is read in chunks
+(\link[readr:read_delim_chunked]{readr::read_tsv_chunked}) and only the matching rows of each chunk are
+kept, and columns outside \code{select_cols} are skipped rather than read, so
+peak memory follows the rows and columns kept instead of the whole file.
+Columns get the same types as a full read: those of
+\link{maf_column_classes}, and for any others readr's guess from the first 1000
+rows. Without them, the whole file is read as before.
 }
 \examples{
 \dontrun{
@@ -40,6 +65,11 @@ my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf",
                                    Start_Position = "integer",
                                    End_Position = "integer",
                                    Variant_Type = "character"))
+
+#only some genes and samples, without holding the whole file in memory
+my_maf = fread_maf(maf_file_path = "some_directory/this_is_a.maf",
+                   genes = c("MYD88", "CD79B"),
+                   sample_ids = c("sample_1", "sample_2"))
 }
 
 }

@@ -12,21 +12,28 @@ Depends:
     R (>= 4.1)
 Imports:
     AnnotationDbi,
+    Biostrings,
+    BSgenome,
     data.table,
     dplyr,
     GAMBLR.data (>= 1.3),
     GAMBLR.helpers (>= 1.3),
     GenomicDistributions,
+    GenomeInfoDb,
     GenomicRanges,
     ggplot2,
     ggpubr,
     ggrepel,
     glmnet,
+    IRanges,
     methods,
     org.Hs.eg.db,
+    purrr,
     readr,
+    Rsamtools,
     rtracklayer,
     stringr,
+    survival,
     S4Vectors,
     tibble,
     tidyr
@@ -42,3 +49,4 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0
+RoxygenNote: 7.3.3

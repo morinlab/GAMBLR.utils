@@ -10,9 +10,12 @@
 # A feature in more than one set gets one row per set, with the same name
 # and only feature_set (and set-specific settings) differing. Hand-curated
 # rows (empty feature_set) take priority over tool-specific ones when
-# get_cnv_features() is called without a set. Arm boundaries in every set
-# are at the hg19 cytoband centromere, as in the DLBClass GISTIC arms (not
-# the GAMBLR.data arm table, which leaves out the centromeric gaps).
+# get_cnv_features() is called without a set. Arm boundaries are at the hg19
+# cytoband centromere, as in the DLBClass GISTIC arms (not the GAMBLR.data
+# arm table, which leaves out the centromeric gaps), except in the
+# LymphGen_model set, whose arms use LymphGen's own boundaries
+# (Full.Uber.2020) and 75% of the covered arm, the rule its training arm
+# features follow.
 #
 # The rows tagged "DLBClass" in feature_set were seeded from the DLBClass
 # arm and focal definitions (DLBCL_broad_significance.18Aug2024 and

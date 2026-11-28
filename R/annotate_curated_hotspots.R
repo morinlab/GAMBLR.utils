@@ -37,14 +37,27 @@
 #' \code{genes_noncoding} alongside a coding MAF for many more genes. Its
 #' coding mutations are ignored, as are \code{unannotated_maf}'s non-coding
 #' ones. Default NULL uses \code{unannotated_maf} for both.
+#' @param noncoding_classes Optional character vector of
+#' \code{Variant_Classification} values that count as non-coding mutations,
+#' e.g. \code{c("Silent", "5'UTR")} for LymphGen's Synon features. Default
+#' NULL counts every non-coding class (anything not in
+#' \code{GAMBLR.helpers::vc_nonSynonymous}). Applied before
+#' \code{noncoding_window}. Non-coding mutations of other classes are kept
+#' only when they fall in a curated region of a gene in \code{genes_hotspot},
+#' \code{genes_driver} or \code{gene_reporting_policy} (e.g.
+#' \code{NFKBIZ_UTR}, a 3' UTR region), so those regions can still be
+#' annotated; the genes' other non-coding mutations (e.g. introns) follow
+#' \code{noncoding_classes} like any gene's.
 #' @param genes_hotspot Character vector of genes with hotspot annotations (default: MYD88).
 #' @param genes_driver Character vector of curated driver genes (default: CD79B, EZH2, NOTCH1, NOTCH2).
 #' @param gene_reporting_policy Optional named list of per-gene column output,
 #' passed to \code{\link{summarise_mutation_status}}. For example
 #' \code{list(detailed = "CREBBP")} gives one column per mutation alias
 #' (\code{CREBBP_KAT}, \code{CREBBP_trunc}) plus \code{CREBBP_other} for
-#' mutations matching no alias. Genes under \code{detailed} or \code{maximal}
-#' keep these columns (they are not collapsed into one gene column; a
+#' mutations matching no alias. \code{list(truncating = "TET2")} gives
+#' \code{TET2_trunc} and \code{TET2_nontrunc} (see
+#' \code{\link{summarise_mutation_status}}). Genes under \code{detailed},
+#' \code{maximal} or \code{truncating} keep these columns (they are not collapsed into one gene column; a
 #' \code{GENE_noncoding} column, if any, stays separate). A gene can't be both
 #' under a policy and in \code{genes_hotspot} or \code{genes_driver}.
 #' @param encoding_policy Named list of values used for coding/driver/noncoding/SV indicators.
@@ -236,6 +249,7 @@ assemble_genetic_features <- function(unannotated_maf,
                                      genes_noncoding,
                                      noncoding_window = NULL,
                                      noncoding_maf = NULL,
+                                     noncoding_classes = NULL,
                                      genes_hotspot = c("MYD88"),
                                      genes_driver = c("CD79B","EZH2","NOTCH1","NOTCH2"),
                                      gene_reporting_policy = NULL,
@@ -274,7 +288,7 @@ assemble_genetic_features <- function(unannotated_maf,
   }
   # genes reported per alias keep their alias columns rather than being
   # collapsed into one gene column
-  alias_genes = unique(unlist(gene_reporting_policy[c("detailed", "maximal")]))
+  alias_genes = unique(unlist(gene_reporting_policy[c("detailed", "maximal", "truncating")]))
   # the MAF's own genome_build attribute, unless genome_build is given; it's
   # passed on explicitly because combining MAFs (e.g. with rbind or
   # bind_rows, as below) drops the attribute
@@ -285,7 +299,16 @@ assemble_genetic_features <- function(unannotated_maf,
   if(use_window && (!is.numeric(noncoding_window) || length(noncoding_window) != 2)){
     stop("noncoding_window must be c(start, end), in bp relative to the TSS")
   }
-  if(!is.null(noncoding_maf) || use_window){
+  if(!is.null(noncoding_classes)){
+    if(!is.character(noncoding_classes) || length(noncoding_classes) == 0){
+      stop("noncoding_classes must be a character vector of Variant_Classification values")
+    }
+    coding_given = intersect(noncoding_classes, GAMBLR.helpers::vc_nonSynonymous)
+    if(length(coding_given) > 0){
+      stop("noncoding_classes can't include coding classes: ", paste(coding_given, collapse = ", "))
+    }
+  }
+  if(!is.null(noncoding_maf) || use_window || !is.null(noncoding_classes)){
     # coding mutations come from unannotated_maf; non-coding ones from
     # noncoding_maf if given, otherwise also from unannotated_maf
     maf = as.data.frame(unannotated_maf)
@@ -294,6 +317,29 @@ assemble_genetic_features <- function(unannotated_maf,
     noncoding_source = if(is.null(noncoding_maf)) maf else as.data.frame(noncoding_maf)
     noncoding_rows = noncoding_source[!noncoding_source$Variant_Classification %in%
                                         GAMBLR.helpers::vc_nonSynonymous, , drop = FALSE]
+    if(!is.null(noncoding_classes)){
+      # only these classes count as non-coding mutations, except mutations
+      # in a curated region of a curated gene (e.g. NFKBIZ_UTR, a 3' UTR
+      # region), which must stay available for annotation. Other non-coding
+      # mutations in those genes (e.g. SGK1 introns) follow noncoding_classes.
+      keep = noncoding_rows$Variant_Classification %in% noncoding_classes
+      curated_genes = unique(c(genes_hotspot, genes_driver, policy_genes))
+      in_curated = which(!keep & noncoding_rows$Hugo_Symbol %in% curated_genes)
+      if(length(in_curated) > 0){
+        candidates = noncoding_rows[in_curated, , drop = FALSE]
+        candidates$.row = in_curated
+        annotated = as.data.frame(annotate_curated_drivers(maf_data = candidates,
+                                                           genes_of_interest = curated_genes,
+                                                           genome_build = genome_build))
+        keep[annotated$.row[grepl("_driver$", annotated$driver_alias)]] = TRUE
+      }
+      if(verbose){
+        message("noncoding_classes: kept ", sum(keep), " of ", nrow(noncoding_rows),
+                " non-coding mutations (", paste(noncoding_classes, collapse = ", "),
+                ", plus any in curated non-coding regions)")
+      }
+      noncoding_rows = noncoding_rows[keep, , drop = FALSE]
+    }
     if(use_window){
       # only non-coding mutations in each gene's TSS window count for it,
       # assigned to genes by position
@@ -630,6 +676,14 @@ assemble_genetic_features <- function(unannotated_maf,
 #'       per-alias columns, \code{GENE_driver}/\code{GENE_other}, and
 #'       \code{GENE_any}. If the gene is also in \code{genes_noncoding},
 #'       \code{GENE_noncoding} is included in \code{GENE_any}.}
+#'     \item{\code{truncating}}{Produce \code{GENE_trunc} (truncating
+#'       mutations: those matching the gene's curated \code{GENE_trunc} alias,
+#'       which can include splice-region or start-loss changes, plus any
+#'       \code{vc_truncating} class) and \code{GENE_nontrunc} (every other
+#'       coding mutation: missense, in-frame and the rest), each encoded with
+#'       \code{encoding_policy$coding}. No \code{GENE_coding}, driver or
+#'       hotspot columns are made for these genes. Works for any gene, with or
+#'       without curated aliases.}
 #'   }
 #'   A gene may appear under only one key. Default \code{NULL} (all genes use
 #'   the default driver/coding behaviour).
@@ -800,6 +854,14 @@ summarise_mutation_status = function(annotated_maf,
   if(is.null(maximal_genes)){
     maximal_genes = character(0)
   }
+  truncating_genes = gene_reporting_policy$truncating
+  if(is.null(truncating_genes)){
+    truncating_genes = character(0)
+  }
+  overlap = intersect(truncating_genes, c(detailed_genes, coding_policy_genes, maximal_genes))
+  if(length(overlap) > 0){
+    stop(paste0("Genes cannot be in gene_reporting_policy$truncating and another policy: ", paste(overlap, collapse=", ")))
+  }
   overlap = intersect(detailed_genes, coding_policy_genes)
   if(length(overlap) > 0){
     stop(paste0("Genes cannot be in both gene_reporting_policy$detailed and $coding: ", paste(overlap, collapse=", ")))
@@ -819,6 +881,9 @@ summarise_mutation_status = function(annotated_maf,
     }
     if(length(maximal_genes) > 0){
       message("Will produce maximal columns (_coding, _driver, _other, aliases, _any) for genes: ", paste(maximal_genes, collapse = ", "))
+    }
+    if(length(truncating_genes) > 0){
+      message("Will produce _trunc and _nontrunc columns for genes: ", paste(truncating_genes, collapse = ", "))
     }
   }
 
@@ -891,7 +956,7 @@ summarise_mutation_status = function(annotated_maf,
   # genes with no aliases can fall back to _coding and coding-policy genes are
   # always represented
   genes_coding = union(genes_coding,
-                       union(detailed_genes, union(coding_policy_genes, maximal_genes)))
+                       union(detailed_genes, union(coding_policy_genes, union(maximal_genes, truncating_genes))))
 
   coding_maf = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% genes_coding) %>%
@@ -947,6 +1012,25 @@ summarise_mutation_status = function(annotated_maf,
   if(length(maximal_genes) > 0){
     driver_report_genes = setdiff(driver_report_genes, maximal_genes)
   }
+  driver_report_genes = setdiff(driver_report_genes, truncating_genes)
+
+  # truncating policy: GENE_trunc (curated GENE_trunc alias or a vc_truncating class) and GENE_nontrunc (the rest)
+  truncating_count = NULL
+  if(length(truncating_genes) > 0){
+    tmaf = coding_maf %>% dplyr::filter(Hugo_Symbol %in% truncating_genes)
+    if(nrow(tmaf) > 0){
+      alias_all = if("mutation_alias_all" %in% colnames(tmaf)) as.character(tmaf$mutation_alias_all) else rep(NA_character_, nrow(tmaf))
+      curated_trunc = mapply(function(a, g){
+        !is.na(a) && paste0(g, "_trunc") %in% trimws(strsplit(a, ";")[[1]])
+      }, alias_all, as.character(tmaf$Hugo_Symbol), USE.NAMES = FALSE)
+      is_trunc = curated_trunc | tmaf$Variant_Classification %in% vc_truncating
+      truncating_count = tmaf %>%
+        dplyr::mutate(Variant = paste0(Hugo_Symbol, ifelse(is_trunc, "_trunc", "_nontrunc"))) %>%
+        dplyr::count(Variant, Tumor_Sample_Barcode, name = "n") %>%
+        dplyr::mutate(mutated = resolve_mutated_value(Variant, n, encoding_policy$coding, genes_use_counts)) %>%
+        dplyr::select(-n)
+    }
+  }
   driver_count = coding_maf %>%
     dplyr::filter(Hugo_Symbol %in% driver_report_genes) %>%
     dplyr::select(driver_alias, Tumor_Sample_Barcode) %>%
@@ -973,7 +1057,8 @@ summarise_mutation_status = function(annotated_maf,
     hotspot_count = annotated_maf %>%
       dplyr::filter(!is.na(hotspot_alias), hotspot_alias != "",
                     !Hugo_Symbol %in% detailed_genes,
-                    !Hugo_Symbol %in% maximal_genes) %>%
+                    !Hugo_Symbol %in% maximal_genes,
+                    !Hugo_Symbol %in% truncating_genes) %>%
       dplyr::select(hotspot_alias, Tumor_Sample_Barcode) %>%
       dplyr::count(hotspot_alias, Tumor_Sample_Barcode, name = "n") %>%
       rename(Variant=hotspot_alias) %>%
@@ -1009,7 +1094,7 @@ summarise_mutation_status = function(annotated_maf,
       paste(detailed_genes_fallback, collapse = ", ")
     )
   }
-  skip_genes_coding <- union(driver_report_genes, detailed_genes_with_aliases)
+  skip_genes_coding <- union(union(driver_report_genes, detailed_genes_with_aliases), truncating_genes)
 
   # catch-all for detailed genes: mutations with no alias coverage become GENE_other.
   # Without this, samples with unannotated mutations in a detailed gene are silently
@@ -1056,6 +1141,7 @@ summarise_mutation_status = function(annotated_maf,
     long = bind_rows(
       noncoding_count,
       coding_count,
+      truncating_count,
       detailed_driver_count,
       detailed_other_count,
       maximal_driver_count,
@@ -1065,6 +1151,7 @@ summarise_mutation_status = function(annotated_maf,
   }else{
     long = bind_rows(
       coding_count,
+      truncating_count,
       detailed_driver_count,
       detailed_other_count,
       maximal_driver_count,
@@ -1852,7 +1939,7 @@ get_driver_coordinates = function(genome_build){
   if(is.null(gene_reporting_policy) || length(gene_reporting_policy) == 0){
     return(invisible(TRUE))
   }
-  valid = c("detailed", "coding", "maximal")
+  valid = c("detailed", "coding", "maximal", "truncating")
   keys = names(gene_reporting_policy)
   if(!is.list(gene_reporting_policy) || is.null(keys) || any(keys == "")){
     stop("gene_reporting_policy must be a named list, e.g. list(detailed = c(\"CREBBP\", \"EZH2\"))")

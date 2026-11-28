@@ -11,10 +11,12 @@
 #' @param ensembl_id A vector of one or more Ensembl IDs.
 #' @param projection Reference genome build. Possible values are "grch37" (default) or "hg38".
 #' @param return_as Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".
+#' "bed" returns a `bed_data` object (see [GAMBLR.utils::create_bed_data]) with columns chrom, start, end and name (the gene symbol),
+#' tagged with `projection` as its genome build, so it can go straight to functions that take one (e.g. `regions_bed` of `get_ssm_by_regions`).
 #' @param sort_regions A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.
 #' @param pad_length Optionally, specify integer by how much to pad the region. Default 0 (no padding).
 #'
-#' @return A data frame, or a string with region(s) for the provided gene(s).
+#' @return A named character vector of regions ("region"), a `bed_data` object ("bed") or a data frame ("df").
 #'
 #' @import dplyr
 #' @export
@@ -25,6 +27,11 @@
 #'
 #' bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
 #'                              projection = "grch37")
+#'
+#' # a bed_data object, ready for functions that take regions_bed
+#' lymphoma_bed = gene_to_region(gene_symbol = c("BCL2", "MYC", "EZH2"),
+#'                               return_as = "bed")
+#' get_genome_build(lymphoma_bed)
 #'
 gene_to_region = function(gene_symbol,
                           ensembl_id,
@@ -40,6 +47,16 @@ gene_to_region = function(gene_symbol,
         c("region", "bed", "df"))
   stopifnot(`One and only one of the \`gene_symbol\` and \`ensembl_id\` parameters must be given to this function` = sum(missing(gene_symbol),
         missing(ensembl_id)) == 1)
+  if(!missing(gene_symbol)){
+    stopifnot(`\`gene_symbol\` must be a character vector of gene symbols (e.g. a column pulled from a data frame, not the data frame)` =
+                is.atomic(gene_symbol))
+    gene_symbol = as.character(gene_symbol)
+  }
+  if(!missing(ensembl_id)){
+    stopifnot(`\`ensembl_id\` must be a character vector of Ensembl IDs (e.g. a column pulled from a data frame, not the data frame)` =
+                is.atomic(ensembl_id))
+    ensembl_id = as.character(ensembl_id)
+  }
 
   # Load the appropriate coordinate table and define the expected chromosome name format.
   if(projection == "grch37"){
@@ -130,8 +147,9 @@ gene_to_region = function(gene_symbol,
 
   # Format the output according to return_as.
   if(return_as == "bed"){
-    # Return the first four standard BED columns.
-    region = dplyr::select(region, chromosome, start, end, hugo_symbol)
+    # The first four standard BED columns, as a bed_data object tagged with the build.
+    region = create_bed_data(dplyr::select(region, chromosome, start, end, hugo_symbol),
+                             genome_build = projection)
   }else if(return_as == "df"){
     region = region
   }else{
@@ -151,10 +169,10 @@ gene_to_region = function(gene_symbol,
   # Report how many regions were returned relative to how many genes were requested.
   if(return_as %in% c("bed", "df")){
     if(!missing(gene_symbol)){
-      message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(gene_symbol), " gene(s)"))
+      message(paste0(sum(!is.na(region[[1]])), " region(s) returned for ", length(gene_symbol), " gene(s)"))
     }
     if(!missing(ensembl_id)){
-      message(paste0(nrow(region[!is.na(region$chromosome),]), " region(s) returned for ", length(ensembl_id), " gene(s)"))
+      message(paste0(sum(!is.na(region[[1]])), " region(s) returned for ", length(ensembl_id), " gene(s)"))
     }
   }else{
     if(!missing(gene_symbol)){

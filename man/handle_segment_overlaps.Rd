@@ -4,7 +4,12 @@
 \alias{handle_segment_overlaps}
 \title{Check loaded segments for overlaps}
 \usage{
-handle_segment_overlaps(seg_data, action = "warn", by = NULL)
+handle_segment_overlaps(
+  seg_data,
+  action = "warn",
+  by = NULL,
+  list_samples = TRUE
+)
 }
 \arguments{
 \item{seg_data}{Segmented data.}
@@ -14,6 +19,9 @@ handle_segment_overlaps(seg_data, action = "warn", by = NULL)
 "none": skip the check.}
 
 \item{by}{Columns identifying one profile (see \link{check_segment_overlaps}).}
+
+\item{list_samples}{Name (up to 10 of) the samples in the message. Default
+TRUE.}
 }
 \value{
 \code{seg_data}, cleaned up with \code{action = "resolve"}.

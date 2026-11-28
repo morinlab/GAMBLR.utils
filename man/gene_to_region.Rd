@@ -20,14 +20,16 @@ gene_to_region(
 
 \item{projection}{Reference genome build. Possible values are "grch37" (default) or "hg38".}
 
-\item{return_as}{Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".}
+\item{return_as}{Specify the type of return. Default is "region" (chr:start-end), other acceptable arguments are "bed" and "df".
+"bed" returns a \code{bed_data} object (see \link{create_bed_data}) with columns chrom, start, end and name (the gene symbol),
+tagged with \code{projection} as its genome build, so it can go straight to functions that take one (e.g. \code{regions_bed} of \code{get_ssm_by_regions}).}
 
 \item{sort_regions}{A boolean parameter (TRUE is the default) indicating whether regions should be sorted by chomosome and start location.}
 
 \item{pad_length}{Optionally, specify integer by how much to pad the region. Default 0 (no padding).}
 }
 \value{
-A data frame, or a string with region(s) for the provided gene(s).
+A named character vector of regions ("region"), a \code{bed_data} object ("bed") or a data frame ("df").
 }
 \description{
 Return coordinates for a given gene or a set of genes.
@@ -44,5 +46,10 @@ bcl2_region = gene_to_region(gene_symbol = "BCL2",
 
 bcl2_region = gene_to_region(ensembl_id = "ENSG00000171791",
                              projection = "grch37")
+
+# a bed_data object, ready for functions that take regions_bed
+lymphoma_bed = gene_to_region(gene_symbol = c("BCL2", "MYC", "EZH2"),
+                              return_as = "bed")
+get_genome_build(lymphoma_bed)
 
 }
