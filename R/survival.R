@@ -15,7 +15,8 @@
 #' @param time_col Column with the follow-up time (e.g. "OS_YEARS").
 #' @param event_col Column with the event code: 1 = event, 0 = censored
 #'   (e.g. "CODE_OS").
-#' @param group_col Optional column to summarize and compare by.
+#' @param group_col Optional column to summarize and compare by. Groups are
+#'   listed in factor level order for a factor, otherwise sorted.
 #' @param strata_col Optional column to stratify the log-rank test by.
 #' @param timepoints Times at which to report survival, in the units of
 #'   `time_col`. Default: 2 and 5.
@@ -45,6 +46,7 @@ summarize_survival = function(data, time_col = "OS_YEARS", event_col = "CODE_OS"
   if(nrow(d) == 0) stop("no rows with both a time and an event", call. = FALSE)
   d$.time = as.numeric(d[[time_col]])
   d$.event = as.numeric(d[[event_col]])
+  groups = if(is.null(group_col)) "all" else group_values(d[[group_col]])
   d$.group = if(is.null(group_col)) "all" else as.character(d[[group_col]])
 
   one_group = function(g){
@@ -68,7 +70,6 @@ summarize_survival = function(data, time_col = "OS_YEARS", event_col = "CODE_OS"
     }
     row
   }
-  groups = sort(unique(d$.group))
   summary_df = do.call(rbind, lapply(groups, one_group))
   rownames(summary_df) = NULL
 
@@ -103,7 +104,9 @@ summarize_survival = function(data, time_col = "OS_YEARS", event_col = "CODE_OS"
 #' @param covariates Columns to include as covariates.
 #' @param strata_col Optional column to stratify the baseline hazard by.
 #' @param reference Optional named list giving the reference level of
-#'   categorical covariates, e.g. `list(COO_consensus = "GCB")`.
+#'   categorical covariates, e.g. `list(COO_consensus = "GCB")`. Without one,
+#'   a character covariate's reference is its most common value and a
+#'   factor's is its first level.
 #'
 #' @return A list with `coefficients` (a data frame: term, hr, hr_lower,
 #'   hr_upper, p, ph_p), `n`, `events`, `ph_global_p`, `stratified_by`,
@@ -132,6 +135,14 @@ survival_cox = function(data, time_col = "OS_YEARS", event_col = "CODE_OS", cova
       ref = if(!is.null(reference[[cv]])) reference[[cv]] else names(sort(table(v), decreasing = TRUE))[1]
       if(!ref %in% v) stop("reference level ", ref, " isn't a value of ", cv, call. = FALSE)
       d[[cv]] = stats::relevel(factor(v), ref = ref)
+    }else if(is.factor(d[[cv]])){
+      # a factor keeps its level order; its reference is the given one, else its first level present
+      d[[cv]] = droplevels(d[[cv]])
+      ref = reference[[cv]]
+      if(!is.null(ref)){
+        if(!ref %in% levels(d[[cv]])) stop("reference level ", ref, " isn't a value of ", cv, call. = FALSE)
+        d[[cv]] = stats::relevel(d[[cv]], ref = ref)
+      }
     }
   }
   rhs = paste(sprintf("`%s`", covariates), collapse = " + ")
@@ -180,7 +191,8 @@ survival_cox = function(data, time_col = "OS_YEARS", event_col = "CODE_OS", cova
 #'
 #' @param data A data frame with one row per patient.
 #' @param variables Columns to summarize.
-#' @param group_col Optional column to split the table by.
+#' @param group_col Optional column to split the table by. Groups (and the
+#'   levels of factor variables) follow factor level order, otherwise sorted.
 #' @param test Whether to add p-values when grouped. Default: TRUE.
 #'
 #' @return A data frame with one row per variable level (categorical) or per
@@ -198,7 +210,7 @@ table_one = function(data, variables, group_col = NULL, test = TRUE){
   check_survival_columns(data, c(variables, group_col))
   d = as.data.frame(data)
   if(!is.null(group_col)) d = d[!is.na(d[[group_col]]), , drop = FALSE]
-  groups = if(is.null(group_col)) character(0) else sort(unique(as.character(d[[group_col]])))
+  groups = if(is.null(group_col)) character(0) else group_values(d[[group_col]])
   pct = function(k, n) if(n == 0) "0 (0%)" else sprintf("%d (%.0f%%)", k, 100 * k / n)
   med = function(x){
     x = x[!is.na(x)]
@@ -222,8 +234,8 @@ table_one = function(data, variables, group_col = NULL, test = TRUE){
           stats::kruskal.test(x ~ factor(d[[group_col]]))$p.value, error = function(e) NA_real_)
       }
     }else{
+      levels_v = group_values(x)
       x = as.character(x)
-      levels_v = sort(unique(stats::na.omit(x)))
       if(length(levels_v) == 0){
         # no values at all: only the missing row below
         rows = data.frame(variable = character(0), level = character(0), overall = character(0),
@@ -280,3 +292,9 @@ check_survival_columns = function(data, columns){
 
 # columns survfit/survdiff formulas refer to inside summarize_survival()
 utils::globalVariables(c(".time", ".event", ".group"))
+
+# The values of a grouping column in display order: a factor's levels (those present), otherwise sorted
+group_values = function(x){
+  if(is.factor(x)) return(levels(droplevels(x[!is.na(x)])))
+  sort(unique(stats::na.omit(as.character(x))))
+}

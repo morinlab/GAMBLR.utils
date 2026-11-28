@@ -25,7 +25,9 @@ survival_cox(
 \item{strata_col}{Optional column to stratify the baseline hazard by.}
 
 \item{reference}{Optional named list giving the reference level of
-categorical covariates, e.g. \code{list(COO_consensus = "GCB")}.}
+categorical covariates, e.g. \code{list(COO_consensus = "GCB")}. Without one,
+a character covariate's reference is its most common value and a
+factor's is its first level.}
 }
 \value{
 A list with \code{coefficients} (a data frame: term, hr, hr_lower,

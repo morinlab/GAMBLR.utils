@@ -21,7 +21,8 @@ summarize_survival(
 \item{event_col}{Column with the event code: 1 = event, 0 = censored
 (e.g. "CODE_OS").}
 
-\item{group_col}{Optional column to summarize and compare by.}
+\item{group_col}{Optional column to summarize and compare by. Groups are
+listed in factor level order for a factor, otherwise sorted.}
 
 \item{strata_col}{Optional column to stratify the log-rank test by.}
 

@@ -11,7 +11,8 @@ table_one(data, variables, group_col = NULL, test = TRUE)
 
 \item{variables}{Columns to summarize.}
 
-\item{group_col}{Optional column to split the table by.}
+\item{group_col}{Optional column to split the table by. Groups (and the
+levels of factor variables) follow factor level order, otherwise sorted.}
 
 \item{test}{Whether to add p-values when grouped. Default: TRUE.}
 }
